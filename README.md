@@ -37,4 +37,4 @@ Automated speech events do not verify native speech recognition. A real micropho
 
 ## Deployment
 
-Only `dist/` is configured as the Sites static directory. Keep tests, backups and verification fixtures out of the deployed directory. Do not publish this preview until requested.
+The requested production workflow is GitHub (`theexousiamatt/Ogastv`, branch `main`) → Hostinger. This is buildless HTML and JavaScript: deploy `dist/` as the web root. The root `index.html` redirects to `/dist/` for hosts that serve the repository root. Keep test harnesses and backups outside the public web root when configuring hosting. The retained `.openai/hosting.json` identifies the original Sites project; publishing through Sites is a separate workflow. Hosting the editor does not add a CMS, authentication or shared story storage.
