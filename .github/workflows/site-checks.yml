@@ -39,6 +39,7 @@ jobs:
       CMS_CONTENT_SOURCE: wordpress
       NEXT_TELEMETRY_DISABLED: '1'
       ALLOW_FIRST_ADMIN_SETUP: 'false'
+      DATABASE_TLS_REQUIRED: 'false' # CI uses an isolated non-TLS PostgreSQL service.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
