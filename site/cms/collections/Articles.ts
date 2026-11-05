@@ -118,7 +118,7 @@ export const Articles: CollectionConfig = {
     { name: 'firstPublishedAt', type: 'date', admin: { readOnly: true } },
     { name: 'originalWordpressId', type: 'number', unique: true, admin: { readOnly: true } },
     { name: 'originalWordpressUrl', type: 'text' },
-    { name: 'legacyHtml', type: 'textarea', admin: { description: 'Original WordPress HTML preserved for review. Sanitized when rendered publicly.' } },
+    { name: 'legacyHtml', type: 'textarea', maxLength: 2000000, admin: { description: 'Original WordPress HTML preserved for review. Sanitized when rendered publicly.' } },
     { name: 'legacyFeaturedImageUrl', type: 'text' },
     { name: 'legacyFeaturedImageAlt', type: 'text' },
     { name: 'legacyMediaWordpressId', type: 'number' },
