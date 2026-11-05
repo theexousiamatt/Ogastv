@@ -8,7 +8,7 @@ export const Homepage: GlobalConfig = {
     read: () => true,
     update: ({ req }) => canPublish(req.user),
   },
-  versions: { drafts: true, maxPerDoc: 20 },
+  versions: { drafts: true },
   fields: [
     { name: 'leadStory', type: 'relationship', relationTo: 'articles' },
     { name: 'latestHighlights', type: 'relationship', relationTo: 'articles', hasMany: true,
