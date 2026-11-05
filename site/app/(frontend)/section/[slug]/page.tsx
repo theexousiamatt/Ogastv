@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { getCategories, getArticlesInCategory } from '@/lib/content';
 import { StoryCard } from '@/components/StoryCard';
 
+export const dynamic = 'force-dynamic';
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
