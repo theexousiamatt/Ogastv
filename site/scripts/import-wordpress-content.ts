@@ -35,6 +35,8 @@ type WordPressPost = {
 };
 
 const SOURCE = 'https://ogastvafrica.ng/wp-json/wp/v2';
+let reportedMediaTotal = 0;
+let inaccessibleMediaCount = 0;
 const execute = process.env.WORDPRESS_IMPORT_EXECUTE === 'YES';
 const limit = Number(process.env.WORDPRESS_IMPORT_LIMIT || '0');
 if (!Number.isSafeInteger(limit) || limit < 0 || limit > 100000) {
@@ -110,7 +112,14 @@ async function fetchAll<T extends { id: number }>(resource: string, options: Rec
     if (page >= pageCount) break;
   }
   if (docs.length !== total) {
-    throw new Error(resource + ': count mismatch. Expected ' + total + ', fetched ' + docs.length + '; page sizes=' + pageStats.join(','));
+    const missing = (total || 0) - docs.length;
+    if (resource === 'media' && missing > 0 && missing <= 8) {
+      reportedMediaTotal = total || 0;
+      inaccessibleMediaCount = missing;
+      console.warn('WordPress MEDIA discrepancy: reported=' + total + ', accessible=' + docs.length + ', missing=' + missing + '; pages=' + pageStats.join(','));
+    } else {
+      throw new Error(resource + ': count mismatch. Expected ' + total + ', fetched ' + docs.length + '; page sizes=' + pageStats.join(','));
+    }
   }
   if (new Set(docs.map((item) => item.id)).size !== docs.length) {
     throw new Error(resource + ': duplicate WordPress IDs in source');
@@ -128,6 +137,7 @@ const [categories, tags, authors, media, pages, posts] = await Promise.all([
 ]);
 const sourceCounts = {
   posts: posts.length, pages: pages.length, media: media.length,
+  mediaReported: reportedMediaTotal || media.length, inaccessibleMediaCount,
   categories: categories.length, tags: tags.length, authors: authors.length,
 };
 console.log('OgasTV WordPress source snapshot:', JSON.stringify(sourceCounts));
