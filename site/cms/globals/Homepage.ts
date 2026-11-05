@@ -3,7 +3,7 @@ import { canPublish } from '../access';
 
 export const Homepage: GlobalConfig = {
   slug: 'homepage',
-  admin: { group: 'Editorial' },
+  admin: { group: 'Publishing' },
   access: {
     read: () => true,
     update: ({ req }) => canPublish(req.user),
