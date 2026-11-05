@@ -11,18 +11,25 @@ async function signal(eventId:number|undefined,body:object) {
   return json;
 }
 async function gather(pc:RTCPeerConnection){
-  if(pc.iceGatheringState==='complete') return;
-  await new Promise<void>((resolve,reject)=>{
-    const timer=setTimeout(()=>{cleanup();reject(new Error('Network setup timed out'))},15000);
-    const change=()=>{if(pc.iceGatheringState==='complete'){cleanup();resolve()}};
-    function cleanup(){clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',change)}
-    pc.addEventListener('icegatheringstatechange',change);
-  });
+  if(pc.iceGatheringState!=='complete') {
+    // On restricted networks, STUN can remain in "gathering" indefinitely.
+    // Continue with candidates collected so far rather than always failing at 15s.
+    await new Promise<void>(resolve=>{
+      const timer=setTimeout(finish,8000);
+      function finish(){clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',check);resolve()}
+      function check(){if(pc.iceGatheringState==='complete')finish()}
+      pc.addEventListener('icegatheringstatechange',check);
+      check();
+    });
+  }
+  if(!pc.localDescription?.sdp.includes('a=candidate:')) {
+    throw new Error('Your browser could not find a video network path. Try another connection or allow WebRTC/UDP traffic.');
+  }
 }
 function connected(pc:RTCPeerConnection){
   if(pc.connectionState==='connected') return Promise.resolve();
   return new Promise<void>((resolve,reject)=>{
-    const timer=setTimeout(()=>{cleanup();reject(new Error('Could not connect to streaming network'))},20000);
+    const timer=setTimeout(()=>{cleanup();reject(new Error('Could not connect to Cloudflare. Try another Wi-Fi or mobile connection; your network may block WebRTC traffic.'))},20000);
     const onChange=()=>{
       if(pc.connectionState==='connected'){cleanup();resolve()}
       else if(['failed','closed','disconnected'].includes(pc.connectionState)){cleanup();reject(new Error('Streaming connection failed'))}
@@ -105,6 +112,7 @@ export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:stri
     }catch(e){
       connection.current?.close();connection.current=null;
       setError(e instanceof Error?e.message:'Could not start broadcasting');
+      session.current='';
       setStatus('preview');
     }
   }
