@@ -38,6 +38,12 @@ export const Articles: CollectionConfig = {
         if (operation === 'create' && actor) data.createdBy = actor.id;
         if (operation === 'update' && originalDoc) data.createdBy = originalDoc.createdBy;
 
+        // A published article is an editorial record: updates must be supervised
+        // by a publishing authority, even if the incoming patch omits _status.
+        if (operation === 'update' && originalDoc?._status === 'published' && !canPublish(req.user)) {
+          throw new Error('Only the Editor-in-Chief or Administrator may edit published articles.');
+        }
+
         if (hasRole(req.user, 'journalist')) {
           if (data._status === 'published' || originalDoc?._status === 'published') {
             throw new Error('Journalists cannot publish or modify published articles.');
