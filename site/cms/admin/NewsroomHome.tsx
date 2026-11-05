@@ -69,7 +69,7 @@ function ActivityChart({values}:{values:number[]}) {
   });
   const total = values.reduce((sum,val)=>sum+val,0);
   return <div className="ogas-admin-activity">
-    <div className="ogas-admin-activity__metric"><strong>{total.toLocaleString('en-NG')}</strong><span>stories published this week</span></div>
+    <div className="ogas-admin-activity__metric"><strong>{total.toLocaleString('en-NG')}</strong><span>published-story updates this week</span></div>
     <div className="ogas-admin-activity__bars" role="img" aria-label={'Daily published story counts: '+values.map((v,i)=>days[i]+': '+v).join(', ')}>
       {values.map((value,i)=><div className="ogas-admin-activity__day" key={days[i]+'-'+i}>
         <span className={'ogas-admin-activity__bar'+(value===max&&value>0?' ogas-admin-activity__bar--highlight':'')}
@@ -77,7 +77,7 @@ function ActivityChart({values}:{values:number[]}) {
         <small>{days[i]}</small>
       </div>)}
     </div>
-    {!total && <p className="ogas-admin-activity__note">Your publishing trend will build as stories go live. This chart uses real newsroom data.</p>}
+    {!total && <p className="ogas-admin-activity__note">The chart tracks updates to published stories. Data will appear once reports go live.</p>}
   </div>;
 }
 
