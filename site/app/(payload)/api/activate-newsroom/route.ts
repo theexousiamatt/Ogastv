@@ -14,7 +14,9 @@ function reply(message: string, status: number) {
 }
 
 export async function POST(request: Request) {
-  const expectedOrigin = new URL(process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').origin;
+  const configuredOrigin = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000';
+  const expectedOrigin = new URL(configuredOrigin === 'https://ogastv-cms.inspirarestudio.com'
+    ? 'https://ogastvafrica.ng' : configuredOrigin).origin;
   if (request.headers.get('origin') !== expectedOrigin) {
     return reply('This request must come from the OgasTV activation page.', 403);
   }
