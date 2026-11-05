@@ -86,6 +86,8 @@ jobs:
             git add migrations/
             if ! git diff --cached --quiet; then
               git commit -m 'chore(cms): track generated Payload schema migration'
+              # Discard disposable Next.js/TypeScript build edits in this CI checkout.
+              git reset --hard HEAD
               git fetch origin refs/heads/${{ github.head_ref }}
               git rebase FETCH_HEAD
               git push origin HEAD:refs/heads/${{ github.head_ref }}
