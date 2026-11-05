@@ -1,0 +1,65 @@
+name: OgasTV HeroUI newsroom checks
+
+on:
+  push:
+    branches:
+      - design/ogastv-heroui-newsroom-2026-11-05
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/newsroom-ui.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  newsroom:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: ogastv_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: temporary-ci-db-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ogastv_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: site
+    env:
+      DATABASE_URL: postgresql://postgres:temporary-ci-db-password@localhost:5432/ogastv_ci
+      DATABASE_TLS_REQUIRED: 'false'
+      PAYLOAD_SECRET: ogastv-ci-isolated-test-only-never-use-in-production
+      NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+      CMS_CONTENT_SOURCE: payload
+      ALLOW_FIRST_ADMIN_SETUP: 'false'
+      READER_SIGNUP_ENABLED: 'false'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install packages
+        run: npm install --no-audit --no-fund
+      - name: Prepare private CMS schema
+        env:
+          PGPASSWORD: temporary-ci-db-password
+        run: psql -h localhost -U postgres -d ogastv_ci -c 'CREATE SCHEMA IF NOT EXISTS ogastv;'
+      - name: Apply committed Payload migrations
+        run: npm run cms:migrate
+      - name: Typecheck app and custom newsroom components
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
+      - name: Verify admin and HeroUI assets
+        run: |
+          test -f .next/standalone/server.js
+          test -d .next/standalone/.next/static
+          grep -q '"@heroui/react"' package.json
+          echo "HeroUI newsroom build validated."
