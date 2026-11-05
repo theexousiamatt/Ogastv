@@ -144,6 +144,7 @@ jobs:
           echo "Unauthenticated reader creation HTTP $reader_status; staff creation HTTP $staff_status"
           case "$reader_status" in 401|403) ;; *) echo 'Public reader creation unexpectedly allowed'; exit 1;; esac
           case "$staff_status" in 401|403) ;; *) echo 'Public staff creation unexpectedly allowed'; exit 1;; esac
+          node scripts/smoke-editorial.mjs
       - name: Archive generated migrations for review
         uses: actions/upload-artifact@v4
         with:
