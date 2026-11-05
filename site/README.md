@@ -73,3 +73,6 @@ The current Payload media collection accepts public editorial images and stores 
 Hostinger Business supports Next.js applications, but the Node runtime must meet the pinned Payload requirements and the account must have resources to run the CMS. Deploy the `site/` directory as the Node app after verifying build and database connectivity; do not overwrite the existing `ogastv.inspirarestudio.com` directory without a staging backup and explicit cutover.
 
 Hostinger limits background workers and WebSockets. Use provider-managed video streaming and scheduled external jobs for future publishing sync and real-time features.
+
+## Email and reader registration
+Configure the official Payload Nodemailer SMTP adapter through Hostinger environment variables: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `SMTP_FROM_ADDRESS`. Use an OgasTV-owned verified sender. Never commit or share SMTP credentials. Real staff email verification and password recovery must be tested before administrator activation. Public reader sign-up is disabled with `READER_SIGNUP_ENABLED=false` and remains denied unless email is configured.
