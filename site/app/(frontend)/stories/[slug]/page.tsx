@@ -4,6 +4,8 @@ import sanitizeHtml from 'sanitize-html';
 import { notFound } from 'next/navigation';
 import { getArticle, prettyDate } from '@/lib/content';
 
+export const dynamic = 'force-dynamic';
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
