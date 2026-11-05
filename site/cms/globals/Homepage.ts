@@ -13,7 +13,7 @@ export const Homepage: GlobalConfig = {
     { name: 'leadStory', type: 'relationship', relationTo: 'articles' },
     { name: 'latestHighlights', type: 'relationship', relationTo: 'articles', hasMany: true,
       admin: { description: 'Editorial priority order: select up to five published stories.' },
-      maxRows: 5 },
+      },
     { name: 'lagosWatchStories', type: 'relationship', relationTo: 'articles', hasMany: true },
     { name: 'governmentStories', type: 'relationship', relationTo: 'articles', hasMany: true },
     { name: 'grassrootsVoices', type: 'relationship', relationTo: 'articles', hasMany: true },
