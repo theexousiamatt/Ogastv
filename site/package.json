@@ -33,16 +33,14 @@
     "sanitize-html": "^2.17.0",
     "html-entities": "^2.6.0",
     "@payloadcms/email-nodemailer": "3.93.0",
-    "nodemailer": "^7.0.10",
-    "jsdom": "^27.2.0"
+    "nodemailer": "^7.0.10"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
-    "@types/sanitize-html": "^2.16.0",
-    "@types/jsdom": "^27.0.0"
+    "@types/sanitize-html": "^2.16.0"
   },
   "overrides": {
     "dompurify": "3.4.17"
