@@ -1,0 +1,32 @@
+name: WordPress content inventory (read only)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'site/scripts/audit-wordpress-source.mjs'
+      - '.github/workflows/wordpress-audit.yml'
+      - 'site/scripts/import-wordpress-content.ts'
+
+permissions:
+  contents: read
+jobs:
+  audit-source:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Inventory published WordPress content and metadata
+        run: node scripts/audit-wordpress-source.mjs
+      - name: Archive source inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ogastv-wordpress-source-inventory
+          path: site/reports/wordpress-inventory.json
+          if-no-files-found: warn
+          retention-days: 14
