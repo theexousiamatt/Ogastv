@@ -17,7 +17,9 @@ export const Readers: CollectionConfig = {
   admin: { useAsTitle: 'email', hidden: true },
   access: {
     admin: () => false,
-    create: () => true,
+    // Prevent public signup until a real verification-email provider exists.
+    create: () => process.env.READER_SIGNUP_ENABLED === 'true' &&
+      Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM_ADDRESS),
     read: ({ req }) => own(req.user) == null ? false : { id: { equals: own(req.user)! } },
     update: ({ req }) => own(req.user) == null ? false : { id: { equals: own(req.user)! } },
     delete: ({ req }) => own(req.user) == null ? false : { id: { equals: own(req.user)! } },
