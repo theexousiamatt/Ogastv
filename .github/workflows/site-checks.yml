@@ -69,8 +69,17 @@ jobs:
           else
             echo 'Existing committed migrations detected, skipping generation.'
           fi
-      - name: Apply migrations to disposable PostgreSQL
+      - name: Apply existing migrations to disposable PostgreSQL
         run: npm run cms:migrate
+      - name: Generate verification-field upgrade migration
+        run: npm run cms:migrate:create -- ogastv_auth_verification --skip-empty
+      - name: Apply verification upgrade migration
+        run: npm run cms:migrate
+      - name: Verify verification columns
+        env:
+          PGPASSWORD: temporary-ci-db-password
+        run: |
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='ogastv' AND table_name IN ('staff_users','readers') AND column_name IN ('_verified','_verificationtoken')" | grep -qx 4
       - name: Verify created editorial tables
         env:
           PGPASSWORD: temporary-ci-db-password
