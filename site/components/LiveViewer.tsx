@@ -10,13 +10,16 @@ async function call(eventId:number,body:object) {
   return json;
 }
 async function iceDone(pc:RTCPeerConnection){
-  if(pc.iceGatheringState==='complete')return;
-  await new Promise<void>((resolve,reject)=>{
-    const timer=setTimeout(()=>{cleanup();reject(new Error('Connection timeout'))},15000);
-    const check=()=>{if(pc.iceGatheringState==='complete'){cleanup();resolve()}};
-    function cleanup(){clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',check)}
-    pc.addEventListener('icegatheringstatechange',check);
-  });
+  if(pc.iceGatheringState!=='complete'){
+    await new Promise<void>(resolve=>{
+      const timer=setTimeout(finish,8000);
+      function finish(){clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',check);resolve()}
+      function check(){if(pc.iceGatheringState==='complete')finish()}
+      pc.addEventListener('icegatheringstatechange',check);
+      check();
+    });
+  }
+  if(!pc.localDescription?.sdp.includes('a=candidate:'))throw new Error('Unable to establish a WebRTC network path. Try another network.');
 }
 export function LiveViewer({eventId}:{eventId:number}){
   const video=useRef<HTMLVideoElement>(null);
