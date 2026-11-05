@@ -5,7 +5,7 @@ import { FIRST_ADMIN_EMAIL } from '../first-admin-invite';
 export const Staff: CollectionConfig = {
   slug: 'staff-users',
   auth: {
-    verify: process.env.NODE_ENV === 'production',
+    verify: true, // Must be identical in migration CLI, CI, staging and production.
     maxLoginAttempts: 5,
     lockTime: 15 * 60 * 1000,
     tokenExpiration: 60 * 60 * 8,
