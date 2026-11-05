@@ -66,7 +66,7 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
   ];
 
   const links = [
-    { name: 'My stories', href: '/admin/collections/articles', Icon: BookOpenText, shown: true },
+    { name: 'My stories', href: '/admin/my-stories', Icon: BookOpenText, shown: true },
     { name: 'Media library', href: '/admin/collections/media', Icon: Image, shown: snapshot.canWrite },
     { name: 'Categories', href: '/admin/collections/categories', Icon: Tags, shown: true },
     { name: 'Review queue', href: '/admin/review-queue', Icon: CheckCircle2, shown: snapshot.canManage },
@@ -139,7 +139,7 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
           <section className="nr-panel" aria-label="Recent articles">
             <div className="nr-panel__head">
               <div><h2 className="nr-panel__title">Recent articles</h2><p className="nr-panel__hint">Your latest drafts and published stories.</p></div>
-              <a className="nr-panel__all" href="/admin/collections/articles">My stories <ArrowRight aria-hidden="true" /></a>
+              <a className="nr-panel__all" href="/admin/my-stories">My stories <ArrowRight aria-hidden="true" /></a>
             </div>
             {hasStories ? (
               <>
