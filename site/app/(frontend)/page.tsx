@@ -1,135 +1,150 @@
 import Link from 'next/link';
-import { StoryCard } from '@/components/StoryCard';
-import { getArticles, getArticlesInCategory, getCategories } from '@/lib/content';
-import type { Article, Category } from '@/lib/content';
+import { ArrowRight, ArrowUpRight, BookOpenText, BriefcaseBusiness, Clock3, Landmark, MapPin, Radio, UsersRound, Newspaper, Play, Clapperboard } from 'lucide-react';
+import { getArticles, getHomepageCuration, prettyDate } from '@/lib/content';
+import type { Article } from '@/lib/content';
+import { FeaturedHero } from '@/components/FeaturedHero';
 
-const featureSections = [
-  {
-    id: 'government',
-    eyebrow: 'Decisions & impact',
-    title: 'Government & Policies',
-    preferred: ['government-policies', 'government-and-policies', 'politics'],
-    description: 'Government decisions, policy explainers and the impact on everyday life.',
-  },
-  {
-    id: 'grassroots',
-    eyebrow: 'People first',
-    title: 'Grassroots Voices',
-    preferred: ['grassroots-voices', 'community', 'grassroots'],
-    description: 'Local experiences, interviews and community perspectives.',
-  },
-  {
-    id: 'business',
-    eyebrow: 'Enterprise & opportunity',
-    title: 'Business & Investment',
-    preferred: ['business-investment', 'business-and-investment', 'business'],
-    description: 'Local businesses, entrepreneurs and economic developments.',
-  },
-  {
-    id: 'personalities',
-    eyebrow: 'People creating impact',
-    title: 'Personalities',
-    preferred: ['personalities', 'interviews', 'profiles'],
-    description: 'Interviews and profiles of the people shaping our communities.',
-  },
-] as const;
+export const dynamic = 'force-dynamic';
 
-function categorySlug(categories: Category[], candidates: readonly string[]): string {
-  return candidates.find((slug) => categories.some((c) => c.slug === slug)) || candidates[0];
+const sections = [
+  { name: 'All Stories', href: '/latest', Icon: Newspaper },
+  { name: 'News', href: '/latest?category=news', Icon: BookOpenText },
+  { name: 'Lagos', href: '/latest?category=lagos-watch', Icon: MapPin },
+  { name: 'Politics', href: '/latest?category=politics', Icon: Landmark },
+  { name: 'Culture', href: '/latest?category=culture', Icon: Clapperboard },
+  { name: 'Business', href: '/latest?category=business', Icon: BriefcaseBusiness },
+  { name: 'Community', href: '/latest?category=community', Icon: UsersRound },
+  { name: 'Live', href: '/live', Icon: Radio },
+];
+
+function ArticleThumb({ story, className = '' }: { story?: Article; className?: string }) {
+  return <div className={'ogas-editorial-thumb ' + className}>
+    {story?.image ? <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img loading="lazy" src={story.image.url} alt={story.image.alt || ''}/>
+    </> : <span aria-hidden="true" className="ogas-editorial-thumb__placeholder"><BookOpenText size={20}/></span>}
+  </div>;
 }
 
-function EditorialSection({
-  id, eyebrow, title, slug, description, articles,
-}: {
-  id: string;
-  eyebrow: string;
-  title: string;
-  slug: string;
-  description: string;
-  articles: Article[];
-}) {
-  return (
-    <section className="section-block wrap" aria-labelledby={id + '-heading'}>
-      <div className="section-heading section-heading--large">
-        <div>
-          <span className="eyebrow">{eyebrow}</span>
-          <h2 id={id + '-heading'}>{title}<span className="heading-period">.</span></h2>
-        </div>
-        <Link className="inline-arrow" href={'/section/' + slug}>View all stories ↗</Link>
-      </div>
-      {articles.length ? <div className="story-grid">
-        {articles.slice(0, 4).map((article) => <StoryCard article={article} key={article.id} />)}
-      </div> : <p className="empty-state">{description} Stories from this section will appear here when they are available.</p>}
-    </section>
-  );
+function ArticleDate({ story }: { story: Article }) {
+  return <span className="ogas-public-date"><Clock3 size={12}/><time dateTime={story.date}>{prettyDate(story.date)}</time></span>;
+}
+
+function NewsRow({ story }: { story: Article }) {
+  return <article className="ogas-news-row">
+    <Link href={'/stories/' + encodeURIComponent(story.slug)} className="ogas-news-row__image" aria-label={'Read ' + story.title}>
+      <ArticleThumb story={story}/>
+    </Link>
+    <div>
+      <ArticleDate story={story}/>
+      <h3><Link href={'/stories/' + encodeURIComponent(story.slug)}>{story.title}</Link></h3>
+      {story.category && <Link href={'/latest?category=' + encodeURIComponent(story.category.slug)} className="ogas-category-label">{story.category.name}</Link>}
+    </div>
+  </article>;
+}
+
+function NewsCard({ story }: { story: Article }) {
+  return <article className="ogas-home-news-card">
+    <Link href={'/stories/' + encodeURIComponent(story.slug)} className="ogas-home-news-card__image" aria-label={'Read '+story.title}><ArticleThumb story={story}/></Link>
+    <div className="ogas-home-news-card__content">
+      {story.category && <Link href={'/latest?category='+encodeURIComponent(story.category.slug)} className="ogas-category-label">{story.category.name}</Link>}
+      <h3><Link href={'/stories/' + encodeURIComponent(story.slug)}>{story.title}</Link></h3>
+      <ArticleDate story={story}/>
+    </div>
+  </article>;
+}
+
+function ServiceCard({ name, heading, copy, href, variant }: { name:string; heading:string; copy:string; href:string; variant:string }) {
+  return <Link href={href} className={'ogas-home-service-card ogas-home-service-card--'+variant}>
+    <span className="ogas-home-service-card__eyebrow">{name}</span>
+    <div className="ogas-home-service-card__symbol" aria-hidden="true"><span/><span/><span/></div>
+    <strong>{heading}</strong>
+    <span className="ogas-home-service-card__footer">{copy}<ArrowUpRight size={16}/></span>
+  </Link>;
 }
 
 export default async function HomePage() {
-  const categories = await getCategories();
-  const slugs = featureSections.map((section) => categorySlug(categories, section.preferred));
-  const [articles, lagos, government, grassroots, business, personalities] = await Promise.all([
-    getArticles(24),
-    getArticlesInCategory('lagos-watch', 4),
-    ...slugs.map((slug) => getArticlesInCategory(slug, 4)),
-  ]);
+  const [latest, curated] = await Promise.all([getArticles(40), getHomepageCuration()]);
+  const featured = [
+    ...(curated.lead ? [curated.lead] : []),
+    ...curated.highlights,
+    ...latest,
+  ].filter((story, index, list) => list.findIndex((item) => item.id === story.id) === index);
 
-  const [lead, ...rest] = articles;
-  const highlights = rest.slice(0, 5);
-  const sectionArticles = [government, grassroots, business, personalities];
+  const more = latest.filter((story) => story.id !== featured[0]?.id);
+  const latestList = (curated.highlights.length ? curated.highlights : more).slice(0, 4);
+  const pick = more.find((story) => !latestList.some((item)=>item.id === story.id)) || more[0];
+  const inFocus = more.filter((story)=>story.id !== pick?.id).slice(0,3);
+  const lower = more.filter((story) => story.id !== pick?.id && !latestList.some((item)=>item.id===story.id)).slice(0,3);
 
-  return (
-    <>
-      <header className="page-intro wrap">
-        <div className="eyebrow"><span className="rule-dot" /> Local voices. Wider perspectives.</div>
-        <div className="intro-line">
-          <h1>Stories that <em>move us.</em></h1>
-          <p>Grassroots journalism, essential developments and the people shaping Nigeria and beyond.</p>
-        </div>
-      </header>
+  return <div className="ogas-public-home">
+    <FeaturedHero stories={featured}/>
+    <nav className="ogas-category-tabs" aria-label="Explore news categories">
+      {sections.map(({name,href,Icon},index)=> <Link key={name} href={href} className={'ogas-category-tab'+(index===0?' ogas-category-tab--selected':'')}>
+        <Icon size={14} aria-hidden="true"/>{name}{name === 'Live' && <span className="ogas-live-dot" aria-hidden="true"/>}
+      </Link>)}
+    </nav>
 
-      <section className="lead-grid wrap" aria-label="Lead story and latest highlights">
-        <div className="lead-column">
-          <div className="section-heading"><h2>Lead grassroots story</h2><span>Editor's selection</span></div>
-          {lead ? <StoryCard article={lead} variant="lead" /> :
-            <p className="empty-state">The lead story will appear when the editorial archive is connected.</p>}
-        </div>
-        <div className="highlights-column">
-          <div className="section-heading"><h2>Latest highlights</h2><Link className="inline-arrow" href="/latest">All latest news ↗</Link></div>
-          {highlights.length ? highlights.map((article) => <StoryCard article={article} key={article.id} variant="compact" />)
-            : <p className="empty-state">The five latest highlights will appear here.</p>}
-        </div>
+    <div className="ogas-home-feature-grid">
+      <section className="ogas-home-panel ogas-home-latest" aria-labelledby="ogas-latest">
+        <div className="ogas-home-panel__title"><h2 id="ogas-latest">Latest Stories</h2><Link href="/latest">View all <ArrowRight size={14}/></Link></div>
+        {latestList.length ? <div className="ogas-home-latest__list">{latestList.map((story)=><NewsRow story={story} key={story.id}/>)}</div> :
+        <div className="ogas-home-small-empty">
+          <div className="ogas-home-small-empty__icon"><Newspaper size={24}/></div>
+          <strong>Fresh stories, coming soon.</strong>
+          <p>Our newsroom is preparing its first reports. Check back for local news and community voices.</p>
+          <Link href="/latest">Explore the newsroom <ArrowRight size={14}/></Link>
+        </div>}
       </section>
 
-      <section className="section-block wrap" aria-labelledby="lagos-watch-heading">
-        <div className="section-heading section-heading--large">
-          <div><span className="eyebrow">Close to home</span><h2 id="lagos-watch-heading">Lagos Watch<span className="heading-period">.</span></h2></div>
-          <Link className="inline-arrow" href="/section/lagos-watch">Explore Lagos reporting ↗</Link>
-        </div>
-        {lagos.length ? <div className="story-grid">{lagos.map((article) => <StoryCard article={article} key={article.id} />)}</div>
-          : <p className="empty-state">Stories from Lagos LGAs and LCDAs will appear here.</p>}
-      </section>
-
-      {featureSections.map((section, index) =>
-        <EditorialSection key={section.id}
-          id={section.id}
-          eyebrow={section.eyebrow}
-          title={section.title}
-          slug={slugs[index]}
-          description={section.description}
-          articles={sectionArticles[index]} />
-      )}
-
-      <section className="studio-panel" id="studio" aria-labelledby="studio-heading">
-        <div className="wrap studio-inner">
-          <div>
-            <span className="eyebrow">Programmes, live coverage & conversations</span>
-            <h2 id="studio-heading">OgasTV <em>Studio.</em></h2>
-            <p>Watch stories as they unfold, hear from community voices and explore recorded programmes.</p>
-            <Link href="/live" className="button-dark">Watch & explore ↗</Link>
+      <section className="ogas-home-panel ogas-home-picks" aria-labelledby="ogas-picks">
+        <div className="ogas-home-panel__title"><h2 id="ogas-picks">Editor&apos;s Picks</h2></div>
+        {pick ? <Link href={'/stories/'+encodeURIComponent(pick.slug)} className="ogas-home-spotlight">
+          <ArticleThumb story={pick}/>
+          <div className="ogas-home-spotlight__overlay">
+            {pick.category && <span className="ogas-category-label">{pick.category.name}</span>}
+            <h3>{pick.title}</h3><ArticleDate story={pick}/>
           </div>
-          <div className="studio-art" aria-hidden="true"><div className="studio-play">▶</div><span>OGASTV / STUDIO</span></div>
+        </Link> : <div className="ogas-home-pick-placeholder">
+          <div className="ogas-home-pick-placeholder__art" aria-hidden="true"><span/><span/><span/></div>
+          <span className="ogas-category-label">From the newsroom</span>
+          <h3>People, perspectives, and stories worth sharing.</h3>
+          <p>Our editors will spotlight standout reporting here.</p>
+        </div>}
+      </section>
+
+      <section className="ogas-home-panel ogas-home-focus" aria-labelledby="ogas-focus">
+        <div className="ogas-home-panel__title ogas-home-panel__title--toggle"><h2 id="ogas-focus">In Focus</h2><span className="ogas-focus-label">Latest</span></div>
+        {inFocus.length ? <ol className="ogas-home-focus__list">{inFocus.map((story,index)=> <li key={story.id}>
+          <span className="ogas-home-focus__number">{String(index+1).padStart(2,'0')}</span>
+          <div><Link href={'/stories/'+encodeURIComponent(story.slug)}>{story.title}</Link><ArticleDate story={story}/></div>
+        </li>)}</ol> : <div className="ogas-home-focus__empty">
+          <span className="ogas-home-focus__number">01</span><p>Discover perspectives on communities, people and the decisions shaping Africa.</p>
+          <span className="ogas-home-focus__rule"/><span className="ogas-home-focus__number">02</span><p>The latest stories will appear here as they are published.</p>
+        </div>}
+      </section>
+    </div>
+
+    <div className="ogas-home-bottom">
+      <section className="ogas-home-bottom__stories" aria-labelledby="ogas-more">
+        <div className="ogas-home-panel__title"><h2 id="ogas-more">More from OgasTV Africa</h2><Link href="/latest">More news <ArrowRight size={14}/></Link></div>
+        <div className="ogas-home-bottom__grid">
+          {lower.length ? lower.map((story)=><NewsCard story={story} key={story.id}/>) : <>
+            <ServiceCard name="Latest reporting" heading="Stories close to home" copy="Discover the latest" href="/latest" variant="lagos"/>
+            <ServiceCard name="Video & programmes" heading="OgasTV Studio" copy="Explore programmes" href="/live" variant="studio"/>
+            <ServiceCard name="Community" heading="Voices that matter" copy="Explore coverage" href="/latest?category=community" variant="community"/>
+          </>}
         </div>
       </section>
-    </>
-  );
+      <aside className="ogas-home-newsletter">
+        <span className="ogas-home-newsletter__mark" aria-hidden="true">✳</span>
+        <h2>Stay in the know<br/>with OgasTV Africa.</h2>
+        <p>Get closer to the people, culture and local stories shaping our continent.</p>
+        <div className="ogas-home-newsletter__form" aria-label="Newsletter availability">
+          <span>Newsletter sign-up coming soon</span>
+        </div>
+        <Link href="/latest" className="ogas-home-newsletter__button">Browse the latest <ArrowRight size={14}/></Link>
+      </aside>
+    </div>
+  </div>;
 }
