@@ -32,7 +32,24 @@ export async function POST(req:NextRequest) {
   if (!process.env.CLOUDFLARE_REALTIME_APP_ID || !process.env.CLOUDFLARE_REALTIME_API_TOKEN || !process.env.PAYLOAD_SECRET)
     return err('Broadcasting credentials are not configured.',503);
   const origin=req.headers.get('origin');
-  if(origin && new URL(origin).host !== req.nextUrl.host) return err('Origin not allowed',403);
+  if (origin) {
+    // Hostinger proxies Next.js through an internal address, so req.nextUrl.host
+    // can be localhost even for a legitimate request to ogastvafrica.ng.
+    // Trust only the public OgasTV origins, never arbitrary forwarded headers.
+    let allowed = false;
+    try {
+      const source = new URL(origin);
+      if (process.env.NODE_ENV === 'production') {
+        allowed = source.protocol === 'https:' && source.port === '' &&
+          (source.hostname === 'ogastvafrica.ng' || source.hostname === 'www.ogastvafrica.ng');
+      } else {
+        allowed = source.origin === req.nextUrl.origin;
+      }
+    } catch {
+      allowed = false;
+    }
+    if (!allowed) return err('Origin not allowed',403);
+  }
   let body:any;
   try{body=await req.json()}catch{return err('Invalid request')}
   try {
