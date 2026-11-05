@@ -77,7 +77,7 @@ export function PhoneBroadcaster({eventId,title}:{eventId:number;title:string}){
     if(!media.current || status!=='preview')return;
     setError('');setStatus('connecting');
     try{
-      const pc=new RTCPeerConnection();
+      const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.cloudflare.com:3478'}]});
       connection.current=pc;
       const tracks=media.current.getTracks().map(track=>{
         const t=pc.addTransceiver(track,{direction:'sendonly'});
