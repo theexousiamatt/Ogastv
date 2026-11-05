@@ -3,7 +3,7 @@ import { editorial, hasRole } from '../access';
 
 export const Media: CollectionConfig = {
   slug: 'media',
-  admin: { useAsTitle: 'alt', group: 'Editorial' },
+  admin: { useAsTitle: 'alt', group: 'Publishing' },
   // Public editorial media only. PRIVATE submission evidence must use separate restricted storage.
   upload: {
     staticDir: 'media',
