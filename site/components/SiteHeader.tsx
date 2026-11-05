@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
 const sections = [
+  ['Latest News', '/latest'],
   ['Lagos Watch', '/section/lagos-watch'],
-  ['Politics', '/section/politics'],
-  ['Business', '/section/business'],
-  ['Entertainment', '/section/entertainment'],
-  ['Sports', '/section/sports'],
+  ['Government & Policies', '/section/government-policies'],
+  ['Grassroots Voices', '/section/grassroots-voices'],
+  ['Business & Investment', '/section/business-investment'],
+  ['Personalities', '/section/personalities'],
+  ['OgasTV Studio', '/live'],
 ];
 
 export function SiteHeader() {
@@ -24,7 +26,7 @@ export function SiteHeader() {
         <div className="wrap nav-inner">
           <Link href="/">Home</Link>
           {sections.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}
-          <Link href="/#studio">OgasTV Studio</Link>
+
         </div>
       </nav>
     </header>
