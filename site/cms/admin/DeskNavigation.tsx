@@ -28,6 +28,15 @@ export function DeskNavigation({ user }: {user?: unknown}) {
     {review && <a href="/admin/collections/programmes" className="ogas-nav-v2__link"><Clapperboard size={18}/> Studio</a>}
     {admin && <a href="/admin/collections/staff-users" className="ogas-nav-v2__link"><UsersRound size={18}/> Team</a>}
     {admin && <a href="/admin/globals/homepage" className="ogas-nav-v2__link"><LayoutDashboard size={18}/> Homepage layout</a>}
+    <details className="ogas-nav-v2__more">
+      <summary>More newsroom tools</summary>
+      <div>
+        {review && <a href="/admin/collections/episodes">Video episodes</a>}
+        <a href="/admin/collections/locations">Locations</a>
+        <a href="/admin/collections/tags">Story tags</a>
+        {admin && <a href="/admin/collections/readers">Reader accounts</a>}
+      </div>
+    </details>
     <span className="ogas-nav-v2__eyebrow ogas-nav-v2__eyebrow--bottom">ACCOUNT</span>
     <a href="/admin/account" className="ogas-nav-v2__link"><Settings2 size={18}/> My settings</a>
     <div className="ogas-nav-v2__note">OgasTV Africa<br/><span>Stories that bring us closer.</span></div>
