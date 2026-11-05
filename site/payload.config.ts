@@ -11,6 +11,7 @@ import { Categories, Locations, Tags } from './cms/collections/Taxonomy';
 import { Programmes, Episodes, LiveEvents } from './cms/collections/Studio';
 import { CommunitySubmissions } from './cms/collections/Community';
 import { Homepage } from './cms/globals/Homepage';
+import { SUPABASE_ROOT_CA } from './cms/supabase-root-ca';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -22,6 +23,7 @@ export default buildConfig({
     schemaName: 'ogastv',
     pool: {
       connectionString: process.env.DATABASE_URL || '',
+      ssl: process.env.NODE_ENV === 'production' ? { ca: SUPABASE_ROOT_CA, rejectUnauthorized: true } : undefined,
     },
   }),
   editor: lexicalEditor(),
