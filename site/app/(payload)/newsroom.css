@@ -272,3 +272,101 @@ html[data-theme='light'] .pill { border-radius: 999px; }
   .nr-guide,.nr-shortcuts{padding:20px 18px;}
 }
 @media (prefers-reduced-motion: reduce) { .newsroom-dashboard * { animation-duration: .01ms!important; transition-duration:.01ms!important; } }
+
+
+/* — Writer-first OgasTV workflow, inspired by the original local writing desk — */
+.ogas-desk-nav { padding: 10px 7px 4px; }
+.ogas-desk-nav__label {
+  margin: 0 10px 13px; color: #96a0ad; font-size: 10px;
+  font-weight: 800; letter-spacing: .11em;
+}
+.ogas-desk-nav a {
+  min-height: 42px; display:flex; align-items:center; gap: 13px;
+  padding: 8px 11px; margin-bottom: 5px; border-radius: 9px;
+  color: #344150; font-size: 13px; font-weight: 600;
+  text-decoration: none; transition: background .16s, color .16s;
+}
+.ogas-desk-nav a span { font-size: 18px; color:#7b8898; width:19px; text-align:center; }
+.ogas-desk-nav a:hover { background:#f5f6f8; color:#991b20; }
+.ogas-desk-nav .ogas-desk-nav__new { background:#a71925; color:white; font-weight:750; }
+.ogas-desk-nav .ogas-desk-nav__new span { color:white; }
+.ogas-desk-nav .ogas-desk-nav__new:hover { background:#861720; color:white; }
+.ogas-desk-nav__caption { margin: 16px 11px 11px; font-size:11px; color:#97a1ad; line-height:1.5; }
+.ogas-desk-nav__separator { height:1px; margin:12px 5px 19px; background:#edf0f2; }
+
+/* Make the built-in Payload editor feel like a calm writing canvas. Keep
+   rich-text controls, autosave, roles and server-side workflow intact. */
+.ogas-headline-field { margin: 8px 0 27px!important; }
+.ogas-headline-field input {
+  min-height: 75px!important; border:0!important; background:transparent!important;
+  border-bottom:1px solid #e1e5e9!important; border-radius:0!important;
+  padding:12px 0!important; font:750 clamp(28px,3vw,44px)/1.2 'DM Sans',sans-serif!important;
+  letter-spacing:-.055em!important; box-shadow:none!important;
+}
+.ogas-headline-field input::placeholder {color:#b0b9c3!important; opacity:1!important;}
+.ogas-headline-field :is(.field-label,.field-type__label,.field-label__label) {
+  font-weight:800!important; font-size:11px!important; color:#778391!important;
+  letter-spacing:.07em; text-transform:uppercase;
+}
+.ogas-story-body {
+  border:1px solid #e5e8eb!important; border-radius:14px;
+  overflow:hidden; background:#fff; padding:12px!important; margin-bottom:28px!important;
+}
+.ogas-story-body [contenteditable="true"] {
+  min-height:350px!important;
+  font:400 17px/1.9 Georgia,serif!important;
+  padding:21px 16px!important; color:#24303d;
+}
+.ogas-story-body [contenteditable="true"]:focus-visible {
+  outline:2px solid #e0a1a8; outline-offset:-3px;
+}
+.ogas-story-body [contenteditable="true"] h2 {font-size:26px;line-height:1.35;}
+.ogas-story-body [contenteditable="true"] p {margin-bottom:18px;}
+.ogas-summary-field { margin-top:25px!important; }
+.ogas-summary-field textarea {min-height:95px;line-height:1.7;}
+.ogas-featured-media { margin-top:26px!important; padding:19px!important; background:#fafbfc; border:1px dashed #d4dce5; border-radius:12px; }
+.ogas-editor-details {margin:25px 0!important;border:1px solid #e7eaf0;border-radius:11px;overflow:hidden;}
+.ogas-editor-details :is(.collapsible__toggle,.collapsible__header){font-weight:750!important;}
+html[data-theme="light"] .doc-controls,
+html[data-theme="light"] .doc-controls__content {
+  border-radius:12px; 
+}
+html[data-theme="light"] .doc-controls :is(.btn--style-primary,.btn--style-secondary) { min-height:41px; }
+html[data-theme="light"] .document-fields { max-width:1100px; }
+html[data-theme="light"] .document-fields > .render-fields { row-gap:23px; }
+
+/* Review queue: no fake data, role-enforced server rendering. */
+.ogas-review-page {max-width:1230px; padding:16px 0 70px;}
+.ogas-review-back {display:inline-block;color:#a71925!important;font-size:12px;font-weight:800;text-decoration:none;margin-bottom:27px;}
+.ogas-review-heading {display:flex;gap:20px;align-items:end;justify-content:space-between;margin-bottom:30px;}
+.ogas-review-eyebrow {margin:0;color:#a71925;font-size:11px;font-weight:800;letter-spacing:.11em;}
+.ogas-review-heading h1 {font:750 clamp(32px,4vw,48px)/1.15 'DM Sans',sans-serif;letter-spacing:-.065em;margin:9px 0 8px;}
+.ogas-review-heading p:not(.ogas-review-eyebrow) {color:#8993a0;margin:0;}
+.ogas-review-all {border:1px solid #e1e6eb; border-radius:9px;padding:10px 15px;background:#fff;font-size:12px;font-weight:750;text-decoration:none;white-space:nowrap;}
+.ogas-review-empty {max-width:720px;border:1px solid #e7ebf1;border-radius:16px;background:white;padding:62px 32px;text-align:center;}
+.ogas-review-empty__icon{display:grid;place-items:center;margin:0 auto 15px;background:#e7f5ee;color:#19845d;border-radius:16px;width:58px;height:58px;font-size:27px;}
+.ogas-review-empty h2 {font-size:22px;margin:0 0 10px;letter-spacing:-.03em;}
+.ogas-review-empty p {font-size:13px;color:#8793a1;line-height:1.7;max-width:440px;margin:0 auto 20px;}
+.ogas-review-empty a {color:#a71925;font-weight:750;text-decoration:none;}
+.ogas-review-list {background:#fff;border:1px solid #e7ebf0;border-radius:14px;overflow-x:auto;}
+.ogas-review-list__top{font-size:12px;font-weight:750;color:#637182;padding:19px 22px;border-bottom:1px solid #edf0f3;}
+.ogas-review-list table {border-collapse:collapse;width:100%;min-width:620px;}
+.ogas-review-list th {background:#fafbfc;padding:14px 21px;color:#8792a1;text-align:left;text-transform:uppercase;letter-spacing:.075em;font-size:10px;}
+.ogas-review-list td {padding:17px 21px;border-top:1px solid #eff1f4;color:#657283;font-size:12px;}
+.ogas-review-list td strong {display:block;color:#253140;font-size:13px;line-height:1.45;}
+.ogas-review-list td small {display:block;margin-top:4px;color:#98a2af;}
+.ogas-review-list td a {color:#a71925;text-decoration:none;font-weight:750;}
+.ogas-review-more {padding:16px 22px;color:#8793a1;font-size:12px;}
+@media(max-width:800px) {
+  .ogas-story-body [contenteditable="true"] {min-height:290px;padding:16px 9px!important;font-size:16px!important;}
+  .ogas-headline-field input {font-size:30px!important;}
+  .ogas-review-heading{align-items:start;flex-direction:column;}
+  .ogas-review-page{padding-top:0;}
+}
+
+.nr-onboarding {display:flex;align-items:center;gap:15px;background:#fffbf6;border:1px solid #efe0c6;border-radius:13px;padding:19px 20px;margin:0 0 22px;}
+.nr-onboarding__mark {display:grid;place-items:center;flex-shrink:0;background:#fff0d9;color:#a46b21;width:39px;height:39px;border-radius:11px;}
+.nr-onboarding strong{display:block;font-size:13px;letter-spacing:-.015em;}
+.nr-onboarding p{margin:5px 0 0;font-size:12px;line-height:1.6;color:#877257;}
+.nr-onboarding a{margin-left:auto;color:#9f202c!important;font-weight:800;font-size:12px;white-space:nowrap;display:flex;align-items:center;gap:7px;text-decoration:none;}
+@media(max-width:650px){.nr-onboarding{flex-wrap:wrap;}.nr-onboarding a{width:100%;margin-left:54px;}}

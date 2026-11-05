@@ -26,6 +26,7 @@ export type NewsroomSnapshot = {
   review: number;
   media: number;
   stories: NewsroomStory[];
+  hasSections: boolean;
   canWrite: boolean;
   canManage: boolean;
   canPublish: boolean;
@@ -59,15 +60,16 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
 
   const stats = [
     { label: 'Published stories', value: snapshot.published, note: 'Live on your website', Icon: Globe2, tone: 'green' },
-    { label: 'Working drafts', value: snapshot.drafts, note: 'Saved, not yet published', Icon: FileText, tone: '' },
+    { label: 'Saved drafts', value: snapshot.drafts, note: 'Saved, not yet published', Icon: FileText, tone: '' },
     { label: 'Needs a review', value: snapshot.review, note: 'Waiting for an editor', Icon: Clock3, tone: 'amber' },
     { label: 'Media library', value: snapshot.media, note: 'Images available to use', Icon: Image, tone: 'red' },
   ];
 
   const links = [
-    { name: 'All articles', href: '/admin/collections/articles', Icon: BookOpenText, shown: true },
+    { name: 'My stories', href: '/admin/my-stories', Icon: BookOpenText, shown: true },
     { name: 'Media library', href: '/admin/collections/media', Icon: Image, shown: snapshot.canWrite },
     { name: 'Categories', href: '/admin/collections/categories', Icon: Tags, shown: true },
+    { name: 'Review queue', href: '/admin/review-queue', Icon: CheckCircle2, shown: snapshot.canManage },
     { name: 'Live events', href: '/admin/collections/live-events', Icon: Video, shown: true },
     { name: 'Homepage', href: '/admin/globals/homepage', Icon: LayoutGrid, shown: snapshot.canPublish },
     { name: 'Team access', href: '/admin/collections/staff-users', Icon: Users, shown: snapshot.role === 'administrator' },
@@ -91,7 +93,7 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
           <div className="nr-heading__kicker">Your editorial workspace · {snapshot.date}</div>
           <h1 className="nr-title">Welcome back, {firstName}.</h1>
           <p className="nr-heading__description">
-            A clearer view of your newsroom. Pick up a story, manage your content and keep publishing.
+            Pick up where you left off. Write a story, send it for review and keep the newsroom moving.
           </p>
         </div>
         <div className="nr-heading__actions">
@@ -100,11 +102,22 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
           </Button>
           {snapshot.canWrite && (
             <Button variant="primary" className="nr-button nr-button--primary" onPress={() => router.push('/admin/collections/articles/create')}>
-              <Plus aria-hidden="true" /> New article
+              <Plus aria-hidden="true" /> New story
             </Button>
           )}
         </div>
       </div>
+
+      {!snapshot.hasSections && snapshot.canManage && (
+        <div className="nr-onboarding" role="status">
+          <div className="nr-onboarding__mark" aria-hidden="true"><Tags size={18} /></div>
+          <div>
+            <strong>First, create a news section.</strong>
+            <p>Your CMS has no sections yet. Add “News” or “Lagos Watch” so every story has a place to appear.</p>
+          </div>
+          <a href="/admin/collections/categories/create">Create section <ArrowRight size={15} aria-hidden="true" /></a>
+        </div>
+      )}
 
       <section className="nr-stats" aria-label="Newsroom statistics">
         {stats.map(({label,value,note,Icon,tone})=>(
@@ -126,7 +139,7 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
           <section className="nr-panel" aria-label="Recent articles">
             <div className="nr-panel__head">
               <div><h2 className="nr-panel__title">Recent articles</h2><p className="nr-panel__hint">Your latest drafts and published stories.</p></div>
-              <a className="nr-panel__all" href="/admin/collections/articles">View all <ArrowRight aria-hidden="true" /></a>
+              <a className="nr-panel__all" href="/admin/my-stories">My stories <ArrowRight aria-hidden="true" /></a>
             </div>
             {hasStories ? (
               <>
@@ -156,7 +169,7 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
                 <p>The newsroom is ready. Create an article to start building your publication.</p>
                 {snapshot.canWrite && (
                   <Button variant="primary" className="nr-button nr-button--primary" onPress={() => router.push('/admin/collections/articles/create')}>
-                    <Plus aria-hidden="true"/> Write an article
+                    <Plus aria-hidden="true"/> Write a story
                   </Button>
                 )}
               </div>

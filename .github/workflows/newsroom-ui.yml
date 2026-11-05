@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - design/ogastv-heroui-newsroom-2026-11-05
+      - ux/ogastv-writer-first-2026-11-05
   pull_request:
     paths:
       - 'site/**'
@@ -55,6 +56,8 @@ jobs:
         run: npm run cms:migrate
       - name: Typecheck app and custom newsroom components
         run: npm run typecheck
+      - name: Verify real story creation and review transition
+        run: npx payload run ./scripts/check-writer-first.ts
       - name: Production build
         run: npm run build
       - name: Verify admin and HeroUI assets
