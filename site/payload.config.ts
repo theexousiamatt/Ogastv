@@ -50,12 +50,14 @@ export default buildConfig({
     theme: 'light',
     timezones: { defaultTimezone: 'Africa/Lagos' },
     components: {
+      beforeNavLinks: ['/cms/admin/DeskNavigation#DeskNavigation'],
       graphics: {
         Logo: '/cms/admin/NewsroomBrand#NewsroomLogo',
         Icon: '/cms/admin/NewsroomBrand#NewsroomIcon',
       },
       views: {
         dashboard: { Component: '/cms/admin/NewsroomDashboard#NewsroomDashboard' },
+        reviewQueue: { Component: '/cms/admin/ReviewQueue#ReviewQueue', path: '/review-queue' },
       },
     },
     importMap: {
