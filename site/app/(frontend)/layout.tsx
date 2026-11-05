@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { SiteHeader } from '@/components/SiteHeader';
 import '../globals.css';
+import './editorial.css';
 
 export const metadata: Metadata = {
   title: { default: 'OgasTV Africa — Stories that matter', template: '%s | OgasTV Africa' },
   description: 'Reporting from Lagos and beyond. Grassroots stories, culture, people and the developments shaping our communities.',
-  robots: { index: false, follow: false }, // Staging only: review before production cutover.
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
