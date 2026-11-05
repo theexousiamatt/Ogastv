@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload';
-import { canReview, canPublish } from '../access';
+import { canReview, canPublish, editorial } from '../access';
 
 const canEdit = ({ req }: { req: { user?: unknown } }) => canReview(req.user);
 const canDelete = ({ req }: { req: { user?: unknown } }) => canPublish(req.user);
@@ -45,7 +45,7 @@ export const LiveEvents: CollectionConfig = {
   versions: { drafts: true, maxPerDoc: 20 },
   access: {
     read: ({ req }) => canReview(req.user) ? true : { _status: { equals: 'published' } },
-    create: canEdit, update: canEdit, delete: canDelete,
+    create: ({ req }) => editorial(req.user), update: canEdit, delete: canDelete,
   },
   fields: [
     { name: 'title', type: 'text', required: true },
