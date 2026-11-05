@@ -117,3 +117,31 @@ export async function getArticlesInCategory(slug: string, limit = 24): Promise<A
   });
   return (result.docs as CmsArticle[]).map(mapArticle);
 }
+
+
+/**
+ * Editorial priority is controlled by Payload's Homepage settings. Only
+ * published stories are returned; draft relationships are never exposed.
+ * When no stories are selected, the public layout falls back to recent posts.
+ */
+export async function getHomepageCuration(): Promise<{ lead: Article | null; highlights: Article[] }> {
+  if (!payloadEnabled()) return { lead: null, highlights: [] };
+  try {
+    const api = await cms();
+    const homepage = await api.findGlobal({ slug: 'homepage', depth: 2, overrideAccess: false, draft: false });
+    const published = (item: unknown): Article | null => {
+      if (!item || typeof item !== 'object') return null;
+      const article = item as CmsArticle & { _status?: string };
+      if (article._status !== 'published' || !article.slug || !article.title) return null;
+      return mapArticle(article);
+    };
+    const lead = published(homepage.leadStory);
+    const highlights = (Array.isArray(homepage.latestHighlights) ? homepage.latestHighlights : [])
+      .map(published).filter((item): item is Article => item !== null).slice(0, 5);
+    return { lead, highlights };
+  } catch (error) {
+    // The public site must remain readable if homepage curation is unset.
+    console.error('[OgasTV] Could not load curated homepage selections', error);
+    return { lead: null, highlights: [] };
+  }
+}
