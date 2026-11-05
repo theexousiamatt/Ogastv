@@ -23,7 +23,8 @@ export function DeskNavigation({ user }: {user?: unknown}) {
     {review && <a href="/admin/review-queue" className="ogas-nav-v2__link"><CheckCheck size={18}/> Review queue</a>}
     <a href="/admin/collections/categories" className="ogas-nav-v2__link"><FolderClosed size={18}/> Categories</a>
     {editorial(actor) && <a href="/admin/collections/media" className="ogas-nav-v2__link"><Image size={18}/> Media</a>}
-    <a href="/admin/collections/live-events" className="ogas-nav-v2__link"><Radio size={18}/> Live</a>
+    <a href="/admin/collections/live-events" className="ogas-nav-v2__link"><Radio size={18}/> Live events</a>
+    {editorial(actor) && <a href="/broadcast-studio" className="ogas-nav-v2__link"><Radio size={18}/> Go live from phone</a>}
     {moderate && <a href="/admin/collections/community-submissions" className="ogas-nav-v2__link"><MailCheck size={18}/> Submissions</a>}
     {review && <a href="/admin/collections/programmes" className="ogas-nav-v2__link"><Clapperboard size={18}/> Studio</a>}
     {admin && <a href="/admin/collections/staff-users" className="ogas-nav-v2__link"><UsersRound size={18}/> Team</a>}
