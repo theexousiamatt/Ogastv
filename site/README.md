@@ -36,6 +36,15 @@ Staff signup must NOT be publicly open. During private local/staging initializat
 
 Staff email verification is enforced in production; integrate a transactional email provider before deployment, and test verification, recovery and reset flows. Development authentication without verified outbound mail is **not** acceptable for production.
 
+## Connected Supabase project (verified November 5, 2026)
+
+- Project reference: `cjyhayrxadyadaqdrlot` (active, region `eu-west-1`).
+- A dedicated PostgreSQL `ogastv` schema has been created and verified; it has **no application tables yet**.
+- `anon` and `authenticated` have no schema usage rights. This schema must not be added to the Supabase Data API exposed-schemas list.
+- Set the database connection in your private local environment or hosting secret manager. Use the **Supabase Session pooler**, port 5432, database `postgres`, as a starting point for IPv4-oriented application hosting. Copy the exact connection string from the Supabase Connect panel; the real password must not be committed or posted in chat.
+- Payload has been configured with `schemaName: 'ogastv'` (a currently experimental adapter feature). Verify its behavior and generated migration output on staging before public release.
+- Do not manually recreate Payload collection tables in the Supabase SQL editor; generate and apply Payload migrations using the app configuration.
+
 ## Database
 
 The primary database is PostgreSQL using `@payloadcms/db-postgres`. Use a distinct database for OgasTV; do not reuse another client or studio product's database. Supabase is a possible free development provider, but plan for provider quotas, backups and database pausing. Do not run production migrations without a verified backup. `npm run cms:migrate:create` creates a reviewed schema migration; `npm run cms:migrate` executes pending migrations.
