@@ -69,12 +69,14 @@ const summary = (rawExcerpt: string, html: string): string =>
 
 async function fetchAll<T extends { id: number }>(resource: string, options: Record<string, string> = {}): Promise<T[]> {
   const docs: T[] = [];
+  const pageSize = resource === 'media' ? 25 : 100;
+  const pageStats: string[] = [];
   let total: number | undefined;
   for (let page = 1; ; page++) {
     if (page > 1000) throw new Error(resource + ': pagination limit exceeded');
     const url = new URL(SOURCE + '/' + resource);
     url.searchParams.set('page', String(page));
-    url.searchParams.set('per_page', '100');
+    url.searchParams.set('per_page', String(pageSize));
     url.searchParams.set('orderby', 'id');
     url.searchParams.set('order', 'asc');
     for (const [key, value] of Object.entries(options)) url.searchParams.set(key, value);
@@ -104,10 +106,11 @@ async function fetchAll<T extends { id: number }>(resource: string, options: Rec
     }
     if (total === undefined) total = headerTotal;
     docs.push(...payload as T[]);
+    pageStats.push('p' + page + ':' + payload.length);
     if (page >= pageCount) break;
   }
   if (docs.length !== total) {
-    throw new Error(resource + ': count mismatch. Expected ' + total + ', fetched ' + docs.length);
+    throw new Error(resource + ': count mismatch. Expected ' + total + ', fetched ' + docs.length + '; page sizes=' + pageStats.join(','));
   }
   if (new Set(docs.map((item) => item.id)).size !== docs.length) {
     throw new Error(resource + ': duplicate WordPress IDs in source');
