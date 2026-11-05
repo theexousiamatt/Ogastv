@@ -2,7 +2,7 @@ import { getPayload } from 'payload';
 import config from '../../../payload.config';
 import { editorial, getStaff } from '../../../cms/access';
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,13 +35,24 @@ export async function POST(req:NextRequest) {
   if(origin && new URL(origin).host !== req.nextUrl.host) return err('Origin not allowed',403);
   let body:any;
   try{body=await req.json()}catch{return err('Invalid request')}
-  const id=Number(body?.eventId);
-  if(!Number.isSafeInteger(id) || id<1) return err('Invalid broadcast');
   try {
     const cms=await getPayload({config});
     const authentication=await cms.auth({headers:req.headers});
     const actor=getStaff(authentication.user);
     const canBroadcast=!!actor && editorial(actor);
+    if(body.action==='quick-create') {
+      if(!canBroadcast) return err('Authorized newsroom login required',403);
+      const title=typeof body.title==='string'?body.title.trim():'';
+      if(title.length<3 || title.length>120) return err('Enter a broadcast title (3–120 characters).');
+      // Create a draft first. Only go-live makes the event publicly visible.
+      const event=await cms.create({collection:'live-events',overrideAccess:true,draft:true,data:{
+        title,slug:'live-'+randomUUID(),scheduledStart:new Date().toISOString(),
+        sourceType:'cloudflare',broadcastStatus:'scheduled',_status:'draft'
+      }});
+      return NextResponse.json({eventId:event.id});
+    }
+    const id=Number(body?.eventId);
+    if(!Number.isSafeInteger(id) || id<1) return err('Invalid broadcast');
     const event:any=await cms.findByID({collection:'live-events',id,overrideAccess:true,depth:0,draft:true});
     if(!event) return err('Event not found',404);
     const owns=canBroadcast && event.publisherSessionId && body.sessionId===event.publisherSessionId &&
