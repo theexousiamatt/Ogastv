@@ -363,3 +363,10 @@ html[data-theme="light"] .document-fields > .render-fields { row-gap:23px; }
   .ogas-review-heading{align-items:start;flex-direction:column;}
   .ogas-review-page{padding-top:0;}
 }
+
+.nr-onboarding {display:flex;align-items:center;gap:15px;background:#fffbf6;border:1px solid #efe0c6;border-radius:13px;padding:19px 20px;margin:0 0 22px;}
+.nr-onboarding__mark {display:grid;place-items:center;flex-shrink:0;background:#fff0d9;color:#a46b21;width:39px;height:39px;border-radius:11px;}
+.nr-onboarding strong{display:block;font-size:13px;letter-spacing:-.015em;}
+.nr-onboarding p{margin:5px 0 0;font-size:12px;line-height:1.6;color:#877257;}
+.nr-onboarding a{margin-left:auto;color:#9f202c!important;font-weight:800;font-size:12px;white-space:nowrap;display:flex;align-items:center;gap:7px;text-decoration:none;}
+@media(max-width:650px){.nr-onboarding{flex-wrap:wrap;}.nr-onboarding a{width:100%;margin-left:54px;}}
