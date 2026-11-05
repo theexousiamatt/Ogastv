@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "exportedAt": "2026-11-05T12:58:53.713Z",
+  "source": "https://ogastvafrica.ng/wp-json/wp/v2",
+  "files": {
+    "published-content.json.gz": {
+      "bytes": 565964,
+      "sha256": "1d7440a930877b082c62d8e732fc41f1065accf0fff7fb9d6b055d4f91404443"
+    }
+  },
+  "counts": {
+    "posts": {
+      "apiReported": 193,
+      "archived": 193
+    },
+    "pages": {
+      "apiReported": 3,
+      "archived": 3
+    },
+    "media": {
+      "apiReported": 313,
+      "archived": 309
+    },
+    "categories": {
+      "apiReported": 28,
+      "archived": 28
+    },
+    "tags": {
+      "apiReported": 50,
+      "archived": 50
+    },
+    "users": {
+      "apiReported": 2,
+      "archived": 2
+    }
+  },
+  "mediaMissing": 4,
+  "onlyPublicContent": true
+}
