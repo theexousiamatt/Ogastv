@@ -19,9 +19,14 @@ export const Articles: CollectionConfig = {
     update: ({ req }) => {
       if (canReview(req.user)) return true;
       const actor = getStaff(req.user);
-      return actor?.role === 'journalist'
-        ? { and: [{ createdBy: { equals: actor.id } }, { _status: { not_equals: 'published' } }] }
-        as Where : false;
+      if (actor?.role === 'journalist') {
+        const where: Where = { and: [
+          { createdBy: { equals: actor.id } },
+          { _status: { not_equals: 'published' } },
+        ] };
+        return where;
+      }
+      return false;
     },
     delete: ({ req }) => canPublish(req.user),
   },
