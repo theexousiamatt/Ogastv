@@ -36,7 +36,9 @@ export default buildConfig({
     schemaName: 'ogastv',
     pool: {
       connectionString: process.env.DATABASE_URL || '',
-      ssl: process.env.NODE_ENV === 'production' ? { ca: SUPABASE_ROOT_CA, rejectUnauthorized: true } : undefined,
+      ssl: process.env.NODE_ENV === 'production' && process.env.DATABASE_TLS_REQUIRED !== 'false'
+        ? { ca: SUPABASE_ROOT_CA, rejectUnauthorized: true }
+        : undefined,
     },
   }),
   editor: lexicalEditor(),
