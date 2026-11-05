@@ -294,7 +294,7 @@ if (execute) {
       } as any,
     });
     counters.articles.created++;
-  }
+  });
 }
 
 const totals = { sourceCounts, executed: execute, importLimit: limit || null, counters, failures };
