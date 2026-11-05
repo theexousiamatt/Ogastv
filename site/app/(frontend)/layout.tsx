@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SiteHeader } from '@/components/SiteHeader';
 import '../globals.css';
+import '../editorial-v2.css';
 
 export const metadata: Metadata = {
   title: { default: 'OgasTV Africa — Stories that matter', template: '%s | OgasTV Africa' },
