@@ -2,6 +2,8 @@ import * as migration_20261105_040516_ogastv_initial_schema from './20261105_040
 import * as migration_20261105_051048_ogastv_auth_verification from './20261105_051048_ogastv_auth_verification';
 import * as migration_20261105_124606_ogastv_auth_verification from './20261105_124606_ogastv_auth_verification';
 
+import * as migration_20261105_193400_live_cloudflare_fields from './20261105_193400_live_cloudflare_fields';
+
 export const migrations = [
   {
     up: migration_20261105_040516_ogastv_initial_schema.up,
@@ -17,5 +19,10 @@ export const migrations = [
     up: migration_20261105_124606_ogastv_auth_verification.up,
     down: migration_20261105_124606_ogastv_auth_verification.down,
     name: '20261105_124606_ogastv_auth_verification'
+  },
+  {
+    up: migration_20261105_193400_live_cloudflare_fields.up,
+    down: migration_20261105_193400_live_cloudflare_fields.down,
+    name: '20261105_193400_live_cloudflare_fields',
   },
 ];
