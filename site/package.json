@@ -1,26 +1,39 @@
 {
   "name": "ogastv-publication",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "payload build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "cms:types": "payload generate:types",
+    "cms:importmap": "payload generate:importmap",
+    "cms:migrate": "payload migrate",
+    "cms:migrate:create": "payload migrate:create",
     "audit:wordpress": "node scripts/audit-wordpress.mjs"
   },
   "dependencies": {
-    "next": "^15.5.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "next": "16.2.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "payload": "3.93.0",
+    "@payloadcms/next": "3.93.0",
+    "@payloadcms/db-postgres": "3.93.0",
+    "@payloadcms/richtext-lexical": "3.93.0",
+    "sharp": "^0.34.5",
     "sanitize-html": "^2.17.0",
     "html-entities": "^2.6.0"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
-    "@types/node": "^22.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
     "@types/sanitize-html": "^2.16.0"
   }
 }
