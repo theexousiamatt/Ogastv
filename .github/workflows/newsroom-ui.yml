@@ -5,6 +5,7 @@ on:
     branches:
       - design/ogastv-heroui-newsroom-2026-11-05
       - ux/ogastv-writer-first-2026-11-05
+      - feat/ogastv-reference-ui-2026-11-05
   pull_request:
     paths:
       - 'site/**'
