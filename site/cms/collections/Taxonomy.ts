@@ -6,7 +6,7 @@ const editorialDelete = ({ req }: { req: { user?: unknown } }) => hasRole(req.us
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
-  admin: { useAsTitle: 'name', group: 'Editorial' },
+  admin: { useAsTitle: 'name', group: 'Organisation' },
   access: { read: () => true, create: editorialEdit, update: editorialEdit, delete: editorialDelete },
   fields: [
     { name: 'name', type: 'text', required: true, maxLength: 120 },
@@ -18,7 +18,7 @@ export const Categories: CollectionConfig = {
 
 export const Locations: CollectionConfig = {
   slug: 'locations',
-  admin: { useAsTitle: 'name', group: 'Editorial' },
+  admin: { useAsTitle: 'name', group: 'Organisation' },
   access: { read: () => true, create: editorialEdit, update: editorialEdit, delete: editorialDelete },
   fields: [
     { name: 'name', type: 'text', required: true },
@@ -35,7 +35,7 @@ export const Locations: CollectionConfig = {
 
 export const Tags: CollectionConfig = {
   slug: 'tags',
-  admin: { useAsTitle: 'name', group: 'Editorial' },
+  admin: { useAsTitle: 'name', group: 'Organisation' },
   access: { read: () => true, create: editorialEdit, update: editorialEdit, delete: editorialDelete },
   fields: [
     { name: 'name', type: 'text', required: true },
