@@ -37,6 +37,10 @@ export const Articles: CollectionConfig = {
         const actor = getStaff(req.user);
         if (operation === 'create' && actor) data.createdBy = actor.id;
         if (operation === 'update' && originalDoc) data.createdBy = originalDoc.createdBy;
+        // WordPress imports keep original bylines without synthetic user accounts.
+        if (!(data.author || originalDoc?.author) && !(data.originalWordpressId || originalDoc?.originalWordpressId)) {
+          throw new Error('A staff author is required for new newsroom stories.');
+        }
 
         // A published article is an editorial record: updates must be supervised
         // by a publishing authority, even if the incoming patch omits _status.
@@ -74,7 +78,8 @@ export const Articles: CollectionConfig = {
     { name: 'summary', type: 'textarea', required: true, maxLength: 800 },
     { name: 'body', type: 'richText', required: true },
     { name: 'featuredImage', type: 'upload', relationTo: 'media' },
-    { name: 'author', type: 'relationship', relationTo: 'staff-users', required: true },
+    { name: 'author', type: 'relationship', relationTo: 'staff-users',
+      admin: { description: 'Assign a staff author on new articles; historical WordPress bylines are preserved separately.' } },
     {
       name: 'createdBy', type: 'relationship', relationTo: 'staff-users',
       access: { create: () => false, update: () => false },
@@ -113,6 +118,10 @@ export const Articles: CollectionConfig = {
     { name: 'firstPublishedAt', type: 'date', admin: { readOnly: true } },
     { name: 'originalWordpressId', type: 'number', unique: true, admin: { readOnly: true } },
     { name: 'originalWordpressUrl', type: 'text' },
+    { name: 'legacyHtml', type: 'textarea', maxLength: 2000000, admin: { description: 'Original WordPress HTML preserved for review. Sanitized when rendered publicly.' } },
+    { name: 'legacyFeaturedImageUrl', type: 'text' },
+    { name: 'legacyFeaturedImageAlt', type: 'text' },
+    { name: 'legacyMediaWordpressId', type: 'number' },
     { name: 'metaTitle', type: 'text', maxLength: 180 },
     { name: 'metaDescription', type: 'textarea', maxLength: 320 },
   ],

@@ -13,6 +13,7 @@ import { Programmes, Episodes, LiveEvents } from './cms/collections/Studio';
 import { CommunitySubmissions } from './cms/collections/Community';
 import { Homepage } from './cms/globals/Homepage';
 import { SUPABASE_ROOT_CA } from './cms/supabase-root-ca';
+import { WordpressMediaInventory, WordpressPagesInventory } from './cms/collections/WordpressImport';
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const emailConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM_ADDRESS);
@@ -52,6 +53,7 @@ export default buildConfig({
   collections: [
     Staff, Readers, Media, Categories, Locations, Tags, Articles,
     Programmes, Episodes, LiveEvents, CommunitySubmissions,
+    WordpressMediaInventory, WordpressPagesInventory,
   ],
   globals: [Homepage],
   typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },

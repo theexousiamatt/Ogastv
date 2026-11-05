@@ -16,7 +16,10 @@
     "cms:migrate": "payload migrate",
     "cms:migrate:create": "payload migrate:create",
     "audit:wordpress": "node scripts/audit-wordpress.mjs",
-    "build:staging": "payload migrate && npm run build"
+    "build:staging": "payload migrate && npm run build",
+    "import:wordpress": "payload run ./scripts/import-wordpress-content.ts",
+    "audit:wordpress:strict": "node ./scripts/audit-wordpress-source.mjs",
+    "import:staging:once": "payload migrate && WORDPRESS_IMPORT_EXECUTE=YES payload run ./scripts/import-wordpress-content.ts && npm run build"
   },
   "dependencies": {
     "next": "16.4.5",
