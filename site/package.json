@@ -15,7 +15,8 @@
     "cms:importmap": "payload generate:importmap",
     "cms:migrate": "payload migrate",
     "cms:migrate:create": "payload migrate:create",
-    "audit:wordpress": "node scripts/audit-wordpress.mjs"
+    "audit:wordpress": "node scripts/audit-wordpress.mjs",
+    "build:staging": "payload migrate && next build"
   },
   "dependencies": {
     "next": "16.4.5",
