@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowUpRight, Menu, Play, Search, UserRound } from 'lucide-react';
+import { Play, Search, UserRound } from 'lucide-react';
 
 export const editorialNav = [
   { title: 'Home', href: '/' },
