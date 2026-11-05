@@ -14,7 +14,7 @@ export const Articles: CollectionConfig = {
   },
   access: {
     read: ({ req }) => getStaff(req.user) ? true : { _status: { equals: 'published' } },
-    readVersions: ({ req }) => canReview(req.user) || hasRole(req.user, 'journalist'),
+    readVersions: ({ req }) => canReview(req.user),
     create: ({ req }) => editorial(req.user),
     update: ({ req }) => {
       if (canReview(req.user)) return true;
@@ -42,6 +42,9 @@ export const Articles: CollectionConfig = {
           if (data._status === 'published' || originalDoc?._status === 'published') {
             throw new Error('Journalists cannot publish or modify published articles.');
           }
+          if (operation === 'update' && originalDoc && ['approved', 'in_review'].includes(String(originalDoc.workflowStatus))) {
+            data.workflowStatus = 'draft';
+          }
           if (['approved', 'changes_requested'].includes(String(data.workflowStatus || ''))) {
             throw new Error('An editor must review and approve this article.');
           }
@@ -61,6 +64,7 @@ export const Articles: CollectionConfig = {
     { name: 'title', type: 'text', required: true, maxLength: 250 },
     { name: 'slug', type: 'text', unique: true, required: true, index: true },
     { name: 'subtitle', type: 'text' },
+    { name: 'publicByline', type: 'text', admin: { description: 'Public-facing author attribution; never expose staff email addresses.' } },
     { name: 'summary', type: 'textarea', required: true, maxLength: 800 },
     { name: 'body', type: 'richText', required: true },
     { name: 'featuredImage', type: 'upload', relationTo: 'media' },
