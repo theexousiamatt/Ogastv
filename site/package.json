@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack && node scripts/prepare-standalone-assets.mjs",
+    "build": "payload generate:importmap && node scripts/check-admin-importmap.mjs && next build --webpack && node scripts/prepare-standalone-assets.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "cms:types": "payload generate:types",
