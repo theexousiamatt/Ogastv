@@ -1,0 +1,15 @@
+# Node/Next.js
+**/node_modules/
+**/.next/
+**/.turbo/
+**/coverage/
+**/*.tsbuildinfo
+*.log
+# Credentials: never commit real API keys or server configuration
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+.DS_Store
