@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getCategories, getArticlesInCategory } from '@/lib/wordpress';
+import { getCategories, getArticlesInCategory } from '@/lib/content';
 import { StoryCard } from '@/components/StoryCard';
 
 type Props = { params: Promise<{ slug: string }> };
