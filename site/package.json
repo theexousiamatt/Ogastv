@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build --webpack",
+    "build": "next build --webpack && node scripts/prepare-standalone-assets.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "cms:types": "payload generate:types",
@@ -16,7 +16,7 @@
     "cms:migrate": "payload migrate",
     "cms:migrate:create": "payload migrate:create",
     "audit:wordpress": "node scripts/audit-wordpress.mjs",
-    "build:staging": "payload migrate && next build --webpack"
+    "build:staging": "payload migrate && npm run build"
   },
   "dependencies": {
     "next": "16.4.5",
