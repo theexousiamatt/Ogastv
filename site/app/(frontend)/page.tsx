@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { StoryCard } from '@/components/StoryCard';
-import { getArticles, getArticlesInCategory } from '@/lib/wordpress';
+import { getArticles, getArticlesInCategory } from '@/lib/content';
 
 export default async function HomePage() {
   const [articles, lagosArticles] = await Promise.all([
