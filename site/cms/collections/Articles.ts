@@ -71,85 +71,99 @@ export const Articles: CollectionConfig = {
     ],
   },
   fields: [
-    {
-      type: 'tabs',
-      tabs: [
-        {
-          label: 'Write the story',
-          description: 'Everything readers will see: headline, introduction, article and cover image.',
-          fields: [
-    { name: 'title', type: 'text', required: true, maxLength: 250, admin: { description: 'A clear, specific headline that tells readers what happened.' } },
-    { name: 'slug', type: 'text', unique: true, required: true, index: true, admin: { description: 'A short URL-friendly name, e.g. lagos-community-project. Keep it stable after publication.' } },
-    { name: 'subtitle', type: 'text' },
-    { name: 'publicByline', type: 'text', admin: { description: 'Public-facing author attribution; never expose staff email addresses.' } },
-    { name: 'summary', type: 'textarea', required: true, maxLength: 800, admin: { description: 'Two or three clear sentences introducing the story; displayed in article previews.' } },
-    { name: 'body', type: 'richText', required: true, admin: { description: 'Write the complete report. Use headings, links and images to make it easy to read.' } },
-    { name: 'featuredImage', type: 'upload', relationTo: 'media' },
-          ],
-        },
-        {
-          label: 'Publishing details',
-          description: 'Choose the section, author, review stage and publishing information.',
-          fields: [
+    // The writing canvas is always first, just like the original OgasTV desk.
+    { name: 'title', type: 'text', required: true, maxLength: 250, label: 'Headline',
+      admin: { className: 'ogas-headline-field', placeholder: 'What’s the story?',
+        description: 'Be specific: tell readers what happened.' } },
+    { name: 'body', type: 'richText', required: true, label: 'Story',
+      admin: { className: 'ogas-story-body', description: 'Write or paste your reporting. Drafts save automatically.' } },
+    { name: 'summary', type: 'textarea', required: true, maxLength: 800, label: 'Short introduction',
+      admin: { className: 'ogas-summary-field', rows: 3, placeholder: 'In two or three sentences, what should readers know?',
+        description: 'This appears beneath the headline and in story previews.' } },
+    { name: 'featuredImage', type: 'upload', relationTo: 'media', label: 'Featured image',
+      admin: { className: 'ogas-featured-media', description: 'Choose or upload the photograph for this story.' } },
+
+    // Keep essential publishing information alongside Payload's native save
+    // and draft controls. Roles and workflow enforcement remain server-side.
+    { name: 'primaryCategory', type: 'relationship', relationTo: 'categories', required: true, index: true,
+      label: 'Section', admin: { position: 'sidebar', description: 'Where should this appear on the website?' } },
     { name: 'author', type: 'relationship', relationTo: 'staff-users',
-      admin: { description: 'Assign a staff author on new articles; historical WordPress bylines are preserved separately.' } },
-    {
-      name: 'createdBy', type: 'relationship', relationTo: 'staff-users',
-      access: { create: () => false, update: () => false },
-      admin: { readOnly: true },
-    },
-    { name: 'primaryCategory', type: 'relationship', relationTo: 'categories', required: true, index: true },
-    { name: 'secondaryCategories', type: 'relationship', relationTo: 'categories', hasMany: true },
-    { name: 'locations', type: 'relationship', relationTo: 'locations', hasMany: true },
-    { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true },
-    {
-      name: 'editorialType', type: 'select', required: true, defaultValue: 'news',
+      defaultValue: ({ user }) => getStaff(user)?.id,
+      admin: { position: 'sidebar', description: 'Defaults to you. Change only if another reporter wrote this story.' } },
+    { name: 'workflowStatus', type: 'select', required: true, defaultValue: 'draft',
+      admin: { position: 'sidebar', description: 'Writers: select “Submit for review”, then save. Editors approve before publishing.' },
       options: [
-        { label: 'News', value: 'news' }, { label: 'Analysis', value: 'analysis' },
-        { label: 'Explainer', value: 'explainer' }, { label: 'Opinion', value: 'opinion' },
-        { label: 'Interview', value: 'interview' }, { label: 'Sponsored', value: 'sponsored' },
-      ],
-    },
-    {
-      name: 'workflowStatus', type: 'select', required: true, defaultValue: 'draft',
-      options: [
-        { label: 'Draft', value: 'draft' }, { label: 'Submitted for review', value: 'in_review' },
+        { label: 'Draft', value: 'draft' },
+        { label: 'Submit for review', value: 'in_review' },
         { label: 'Changes requested', value: 'changes_requested' },
         { label: 'Approved', value: 'approved' },
+      ] },
+    { name: 'editorNotes', type: 'textarea',
+      access: { read: ({ req }) => editorial(req.user), update: ({ req }) => canReview(req.user) },
+      admin: { position: 'sidebar', rows: 3, description: 'Private editor feedback. Reporters can read it but only editors can change it.' } },
+
+    {
+      type: 'collapsible',
+      label: 'Story details',
+      admin: { initCollapsed: true, className: 'ogas-editor-details' },
+      fields: [
+        { name: 'subtitle', type: 'text', admin: { placeholder: 'Optional supporting headline' } },
+        { name: 'publicByline', type: 'text', label: 'Public byline',
+          admin: { placeholder: 'Name shown to readers', description: 'Never expose staff email addresses.' } },
+        { name: 'editorialType', type: 'select', required: true, defaultValue: 'news', options: [
+          { label: 'News', value: 'news' }, { label: 'Analysis', value: 'analysis' },
+          { label: 'Explainer', value: 'explainer' }, { label: 'Opinion', value: 'opinion' },
+          { label: 'Interview', value: 'interview' }, { label: 'Sponsored', value: 'sponsored' },
+        ] },
+        { name: 'secondaryCategories', type: 'relationship', relationTo: 'categories', hasMany: true },
+        { name: 'locations', type: 'relationship', relationTo: 'locations', hasMany: true },
+        { name: 'tags', type: 'relationship', relationTo: 'tags', hasMany: true },
+        { name: 'sourceLinks', type: 'array', label: 'Sources and reference links', fields: [
+          { name: 'label', type: 'text' },
+          { name: 'url', type: 'text', required: true },
+        ] },
+        { name: 'correctionNotice', type: 'textarea' },
       ],
     },
     {
-      name: 'editorNotes', type: 'textarea',
-      access: { read: ({ req }) => editorial(req.user), update: ({ req }) => canReview(req.user) },
-      admin: { description: 'Internal editorial notes; never public.' },
+      type: 'collapsible',
+      label: 'Search and story URL',
+      admin: { initCollapsed: true, className: 'ogas-editor-details' },
+      fields: [
+        { name: 'slug', type: 'text', unique: true, required: true, index: true,
+          admin: {
+            components: { Field: '/cms/admin/AutoSlugField#AutoSlugField' },
+            description: 'Generated from your headline. Edit only when necessary; changing a published URL can break links.',
+          },
+          hooks: {
+            beforeValidate: [({value, data, originalDoc}) => {
+              if (typeof value === 'string' && value.trim()) return value;
+              if (originalDoc?.slug) return originalDoc.slug;
+              const title = typeof data?.title === 'string' ? data.title : '';
+              return title.normalize('NFKD').toLowerCase().replace(/[\u0300-\u036f]/g,'')
+                .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,180) || value;
+            }],
+          },
+        },
+        { name: 'metaTitle', type: 'text', maxLength: 180 },
+        { name: 'metaDescription', type: 'textarea', maxLength: 320 },
+      ],
     },
-    { name: 'sourceLinks', type: 'array', fields: [
-      { name: 'label', type: 'text' },
-      { name: 'url', type: 'text', required: true },
-    ] },
-    { name: 'correctionNotice', type: 'textarea' },
-          ],
-        },
-        {
-          label: 'Search preview',
-          description: 'Help readers discover this report in search engines.',
-          fields: [
-    { name: 'metaTitle', type: 'text', maxLength: 180 },
-    { name: 'metaDescription', type: 'textarea', maxLength: 320 },          ],
-        },
-        {
-          label: 'Original archive',
-          description: 'Historical metadata from earlier OgasTV reports. Leave unchanged unless correcting an import.',
-          fields: [
-    { name: 'firstPublishedAt', type: 'date', admin: { readOnly: true } },
-    { name: 'originalWordpressId', type: 'number', unique: true, admin: { readOnly: true } },
-    { name: 'originalWordpressUrl', type: 'text' },
-    { name: 'legacyHtml', type: 'textarea', maxLength: 2000000, admin: { description: 'Original WordPress HTML preserved for review. Sanitized when rendered publicly.' } },
-    { name: 'legacyFeaturedImageUrl', type: 'text' },
-    { name: 'legacyFeaturedImageAlt', type: 'text' },
-    { name: 'legacyMediaWordpressId', type: 'number' },
-          ],
-        },
+    {
+      type: 'collapsible',
+      label: 'Original archive information',
+      admin: { initCollapsed: true, className: 'ogas-editor-details' },
+      fields: [
+        { name: 'createdBy', type: 'relationship', relationTo: 'staff-users',
+          access: { create: () => false, update: () => false }, admin: { readOnly: true } },
+        { name: 'firstPublishedAt', type: 'date', admin: { readOnly: true } },
+        { name: 'originalWordpressId', type: 'number', unique: true, admin: { readOnly: true } },
+        { name: 'originalWordpressUrl', type: 'text' },
+        { name: 'legacyHtml', type: 'textarea', maxLength: 2000000, admin: {
+          description: 'Original HTML retained from WordPress imports. It is sanitized when displayed publicly.' } },
+        { name: 'legacyFeaturedImageUrl', type: 'text' },
+        { name: 'legacyFeaturedImageAlt', type: 'text' },
+        { name: 'legacyMediaWordpressId', type: 'number' },
       ],
     },
   ],
