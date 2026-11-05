@@ -9,7 +9,7 @@ const own = (user: unknown) => {
 export const Readers: CollectionConfig = {
   slug: 'readers',
   auth: {
-    verify: process.env.NODE_ENV === 'production',
+    verify: true, // Must be identical in migration CLI, CI, staging and production.
     maxLoginAttempts: 5,
     lockTime: 15 * 60 * 1000,
     tokenExpiration: 60 * 60 * 24 * 7,
