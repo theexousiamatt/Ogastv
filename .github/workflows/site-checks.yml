@@ -69,6 +69,33 @@ jobs:
           PGPASSWORD: temporary-ci-db-password
         run: |
           psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='ogastv' AND table_name IN ('staff_users','articles','readers','categories','live_events','community_submissions')" | grep -qx 6
+      - name: Smoke-test admin and anonymous authorization
+        env:
+          READER_SIGNUP_ENABLED: 'false'
+          PORT: '3100'
+          HOSTNAME: '127.0.0.1'
+        run: |
+          node .next/standalone/server.js > /tmp/ogastv-smoke.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 45); do
+            if curl --silent --fail 'http://127.0.0.1:3100/api/categories?limit=1' > /dev/null; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo 'CMS API did not become ready'
+            tail -n 100 /tmp/ogastv-smoke.log
+            exit 1
+          fi
+          reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3100/api/readers')
+          staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3100/api/staff-users')
+          echo "Unauthenticated reader creation HTTP $reader_status; staff creation HTTP $staff_status"
+          case "$reader_status" in 401|403) ;; *) echo 'Public reader creation unexpectedly allowed'; exit 1;; esac
+          case "$staff_status" in 401|403) ;; *) echo 'Public staff creation unexpectedly allowed'; exit 1;; esac
       - name: Archive generated migrations for review
         uses: actions/upload-artifact@v4
         with:
