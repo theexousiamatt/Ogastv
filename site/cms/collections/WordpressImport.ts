@@ -4,7 +4,7 @@ import { canReview, hasRole } from '../access';
 // Records are preserved for reconciliation. These are NOT uploaded media files.
 export const WordpressMediaInventory: CollectionConfig = {
   slug: 'wordpress-media',
-  admin: { useAsTitle: 'sourceUrl', group: 'Migration', description: 'Legacy WordPress attachment metadata; bytes remain on WordPress until storage cutover.' },
+  admin: { hidden: true, useAsTitle: 'sourceUrl', group: 'Migration', description: 'Legacy WordPress attachment metadata; bytes remain on WordPress until storage cutover.' },
   access: {
     read: ({ req }) => canReview(req.user),
     create: ({ req }) => hasRole(req.user, 'administrator'),
@@ -27,7 +27,7 @@ export const WordpressMediaInventory: CollectionConfig = {
 // functional public pages and redirects have been verified.
 export const WordpressPagesInventory: CollectionConfig = {
   slug: 'wordpress-pages',
-  admin: { useAsTitle: 'title', group: 'Migration', description: 'WordPress static pages awaiting editorial layout and routing review.' },
+  admin: { hidden: true, useAsTitle: 'title', group: 'Migration', description: 'WordPress static pages awaiting editorial layout and routing review.' },
   access: {
     read: ({ req }) => canReview(req.user),
     create: ({ req }) => hasRole(req.user, 'administrator'),
