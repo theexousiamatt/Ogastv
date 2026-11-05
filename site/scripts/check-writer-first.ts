@@ -94,5 +94,5 @@ try {
   }
   console.log('Writer-first CI: draft saved, URL generated, review status updated, and article retrieved.');
 } finally {
-  await payload.db.destroy();
+  await payload.db.destroy?.();
 }
