@@ -35,9 +35,13 @@ export function FeaturedHero({ stories }: { stories: Article[] }) {
       <div className="ogas-home-hero__visual">
         {/* Photo is editorial atmosphere only until the client publishes real reports. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={story?.image?.url || lagosImage}
-          alt={story ? story.image?.alt || story.title : 'An aerial view of Lagos waterways and the city'}
-          loading="eager" />
+        {story && !story.image ? (
+          <div className="ogas-home-hero__illustration" aria-label="Editorial illustration"><span aria-hidden="true">OgasTV Africa</span></div>
+        ) : (
+          <img src={story?.image?.url || lagosImage}
+            alt={story ? story.image?.alt || story.title : 'An aerial view of Lagos waterways and the city'}
+            loading="eager" />
+        )}
         {!story && <span className="ogas-photo-credit">Lagos, Nigeria · Photo: Tunde Buremo / Unsplash</span>}
         {hasSlides && <div className="ogas-hero-controls">
           <button type="button" aria-label="Previous featured story" onClick={()=>move(-1)}><ArrowLeft size={16}/></button>
