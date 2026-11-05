@@ -51,6 +51,12 @@ jobs:
         env:
           PGPASSWORD: temporary-ci-db-password
         run: psql -h localhost -U postgres -d ogastv_ci -c 'CREATE SCHEMA IF NOT EXISTS ogastv;'
+      - name: Substitute a disposable invitation digest (CI only)
+        run: |
+          # The real invitation is never present in CI or the repository.
+          ci_token='ci-disposable-invite-only-never-deployed-2026-nov'
+          digest=$(printf '%s' "$ci_token" | sha256sum | cut -d' ' -f1)
+          sed -i "s/eac379f779b3c82d8db42177fff01edd5fb70b8648c2b2b1521680230c76ef7d/$digest/" cms/first-admin-invite.ts
       - name: Typecheck
         run: npm run typecheck
       - name: Production build with disposable database
@@ -63,8 +69,17 @@ jobs:
           else
             echo 'Existing committed migrations detected, skipping generation.'
           fi
-      - name: Apply migrations to disposable PostgreSQL
+      - name: Apply existing migrations to disposable PostgreSQL
         run: npm run cms:migrate
+      - name: Generate verification-field upgrade migration
+        run: npm run cms:migrate:create -- ogastv_auth_verification --skip-empty
+      - name: Apply verification upgrade migration
+        run: npm run cms:migrate
+      - name: Verify verification columns
+        env:
+          PGPASSWORD: temporary-ci-db-password
+        run: |
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='ogastv' AND table_name IN ('staff_users','readers') AND column_name IN ('_verified','_verificationtoken')" | grep -qx 4
       - name: Verify created editorial tables
         env:
           PGPASSWORD: temporary-ci-db-password
@@ -94,6 +109,38 @@ jobs:
           fi
           reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3100/api/readers')
           staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3100/api/staff-users')
+          activation_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
+            -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
+            -d '{"token":"invalid-token","password":"incorrect-but-long-test-password"}' \
+            'http://127.0.0.1:3100/api/activate-newsroom')
+          case "$activation_status" in 403) ;; *) echo "Invalid admin invite accepted or unexpected HTTP $activation_status"; exit 1;; esac
+          echo "Invalid administrator invitation correctly rejected"
+          activated=$(curl --silent --output /tmp/activate-response.json --write-out '%{http_code}' -X POST \
+            -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
+            -d '{"token":"ci-disposable-invite-only-never-deployed-2026-nov","password":"local-test-password-very-long-2026"}' \
+            'http://127.0.0.1:3100/api/activate-newsroom')
+          if [ "$activated" != '201' ]; then
+            echo "Invited first-admin activation failed with HTTP $activated"
+            cat /tmp/activate-response.json
+            exit 1
+          fi
+          login_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}' \
+            'http://127.0.0.1:3100/api/staff-users/login')
+          if [ "$login_status" != '200' ]; then
+            echo "Activated administrator cannot log in, HTTP $login_status"
+            exit 1
+          fi
+          replay_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
+            -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
+            -d '{"token":"ci-disposable-invite-only-never-deployed-2026-nov","password":"local-test-password-very-long-2026"}' \
+            'http://127.0.0.1:3100/api/activate-newsroom')
+          if [ "$replay_status" != '410' ]; then
+            echo "Invitation replay not blocked, HTTP $replay_status"
+            exit 1
+          fi
+          echo "First-admin activation, login and replay protection all passed"
           echo "Unauthenticated reader creation HTTP $reader_status; staff creation HTTP $staff_status"
           case "$reader_status" in 401|403) ;; *) echo 'Public reader creation unexpectedly allowed'; exit 1;; esac
           case "$staff_status" in 401|403) ;; *) echo 'Public staff creation unexpectedly allowed'; exit 1;; esac
