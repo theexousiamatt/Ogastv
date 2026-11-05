@@ -55,6 +55,13 @@ jobs:
 
       - name: Generate initial Payload migrations against disposable database
         run: npm run cms:migrate:create -- ogastv_initial_schema --skip-empty
+      - name: Apply migrations to disposable PostgreSQL
+        run: npm run cms:migrate
+      - name: Verify created editorial tables
+        env:
+          PGPASSWORD: temporary-ci-db-password
+        run: |
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='ogastv' AND table_name IN ('staff_users','articles','readers','categories','live_events','community_submissions')" | grep -qx 6
       - name: Archive generated migrations for review
         uses: actions/upload-artifact@v4
         with:
