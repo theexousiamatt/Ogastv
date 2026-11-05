@@ -39,7 +39,7 @@ export const WordpressPagesInventory: CollectionConfig = {
     { name: 'title', type: 'text', required: true },
     { name: 'slug', type: 'text', required: true, unique: true },
     { name: 'originalUrl', type: 'text', required: true },
-    { name: 'originalHtml', type: 'textarea' },
+    { name: 'originalHtml', type: 'textarea', maxLength: 2000000 },
     { name: 'excerpt', type: 'textarea' },
     { name: 'publishedAt', type: 'date' },
     { name: 'parentWordpressId', type: 'number' },
