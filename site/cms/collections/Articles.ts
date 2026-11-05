@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload';
+import type { CollectionConfig, Where } from 'payload';
 import { canPublish, canReview, editorial, getStaff, hasRole } from '../access';
 
 export const Articles: CollectionConfig = {
@@ -21,7 +21,7 @@ export const Articles: CollectionConfig = {
       const actor = getStaff(req.user);
       return actor?.role === 'journalist'
         ? { and: [{ createdBy: { equals: actor.id } }, { _status: { not_equals: 'published' } }] }
-        : false;
+        as Where : false;
     },
     delete: ({ req }) => canPublish(req.user),
   },
