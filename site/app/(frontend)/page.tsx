@@ -57,8 +57,8 @@ function EditorialSection({
         </div>
         <Link className="inline-arrow" href={'/section/' + slug}>View all stories ↗</Link>
       </div>
-      {articles.length ? <div className="story-grid">
-        {articles.slice(0, 4).map((article) => <StoryCard article={article} key={article.id} />)}
+      {articles.length ? <div className="story-grid story-grid--feature">
+        {articles.slice(0, 3).map((article) => <StoryCard article={article} key={article.id} />)}
       </div> : <p className="empty-state">{description} Stories from this section will appear here when they are available.</p>}
     </section>
   );
@@ -80,21 +80,21 @@ export default async function HomePage() {
   return (
     <>
       <header className="page-intro wrap">
-        <div className="eyebrow"><span className="rule-dot" /> Local voices. Wider perspectives.</div>
+        <div className="eyebrow"><span className="rule-dot" /> Independent stories from the ground</div>
         <div className="intro-line">
           <h1>Stories that <em>move us.</em></h1>
-          <p>Grassroots journalism, essential developments and the people shaping Nigeria and beyond.</p>
+          <p>Reporting from the streets of Lagos to the conversations shaping Nigeria and beyond.</p>
         </div>
       </header>
 
       <section className="lead-grid wrap" aria-label="Lead story and latest highlights">
         <div className="lead-column">
-          <div className="section-heading"><h2>Lead grassroots story</h2><span>Editor's selection</span></div>
+          <div className="section-heading"><h2>01 / The lead story</h2><span>Editor's selection</span></div>
           {lead ? <StoryCard article={lead} variant="lead" /> :
             <p className="empty-state">The lead story will appear when the editorial archive is connected.</p>}
         </div>
         <div className="highlights-column">
-          <div className="section-heading"><h2>Latest highlights</h2><Link className="inline-arrow" href="/latest">All latest news ↗</Link></div>
+          <div className="section-heading"><h2>Latest / The briefing</h2><Link className="inline-arrow" href="/latest">All stories ↗</Link></div>
           {highlights.length ? highlights.map((article) => <StoryCard article={article} key={article.id} variant="compact" />)
             : <p className="empty-state">The five latest highlights will appear here.</p>}
         </div>
@@ -105,7 +105,14 @@ export default async function HomePage() {
           <div><span className="eyebrow">Close to home</span><h2 id="lagos-watch-heading">Lagos Watch<span className="heading-period">.</span></h2></div>
           <Link className="inline-arrow" href="/section/lagos-watch">Explore Lagos reporting ↗</Link>
         </div>
-        {lagos.length ? <div className="story-grid">{lagos.map((article) => <StoryCard article={article} key={article.id} />)}</div>
+        <div className="lagos-discovery">
+          <div>
+            <h3>Where&apos;s your story?</h3>
+            <p>Follow verified reporting from Lagos communities and local governments.</p>
+          </div>
+          <Link href="/section/lagos-watch">Explore Lagos Watch ↗</Link>
+        </div>
+        {lagos.length ? <div className="story-grid story-grid--feature">{lagos.slice(0, 3).map((article) => <StoryCard article={article} key={article.id} />)}</div>
           : <p className="empty-state">Stories from Lagos LGAs and LCDAs will appear here.</p>}
       </section>
 
@@ -122,10 +129,10 @@ export default async function HomePage() {
       <section className="studio-panel" id="studio" aria-labelledby="studio-heading">
         <div className="wrap studio-inner">
           <div>
-            <span className="eyebrow">Programmes, live coverage & conversations</span>
+            <span className="eyebrow">OGASTV / Studio & broadcast</span>
             <h2 id="studio-heading">OgasTV <em>Studio.</em></h2>
-            <p>Watch stories as they unfold, hear from community voices and explore recorded programmes.</p>
-            <Link href="/live" className="button-dark">Watch & explore ↗</Link>
+            <p>Live reporting, community conversations and documentary features in a dedicated broadcast space.</p>
+            <Link href="/live" className="button-dark">Explore the Studio ↗</Link>
           </div>
           <div className="studio-art" aria-hidden="true"><div className="studio-play">▶</div><span>OGASTV / STUDIO</span></div>
         </div>
