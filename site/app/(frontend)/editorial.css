@@ -243,3 +243,7 @@ body button,body input{font:inherit}
 @media(max-width:1100px){.ogas-latest-v2 .story-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:800px){.ogas-latest-v2__top{align-items:stretch;flex-direction:column;}.ogas-latest-v2__search{min-width:0;max-width:none;width:100%;}.ogas-latest-v2 .story-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:520px){.ogas-latest-v2{padding-top:25px;}.ogas-latest-v2 .story-grid{grid-template-columns:1fr;}.ogas-latest-v2__top h1{font-size:43px;}}
+
+.ogas-home-hero__illustration{position:absolute;inset:0;background:radial-gradient(circle at 75% 25%,#ebbf8a,#d4a97e 14%,transparent 37%),linear-gradient(155deg,#adbba6,#52756b 65%,#334e51);display:grid;place-items:center;overflow:hidden;}
+.ogas-home-hero__illustration::before{content:'';position:absolute;width:410px;height:410px;border:2px solid #fff5;border-radius:50%;left:38%;top:-25%;box-shadow:0 0 0 80px #ffffff13,0 0 0 160px #ffffff0e;}
+.ogas-home-hero__illustration span{position:relative;z-index:1;color:#ffffffed;font-size:clamp(27px,4vw,51px);font-weight:800;letter-spacing:-.07em;text-shadow:0 5px 24px #102c2050;}
