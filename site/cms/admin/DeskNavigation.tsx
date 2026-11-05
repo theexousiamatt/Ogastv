@@ -12,7 +12,7 @@ export function DeskNavigation({ user }: { user?: unknown }) {
           <span aria-hidden="true">＋</span> New story
         </a>
       )}
-      <a href="/admin/collections/articles" className="ogas-desk-nav__link">
+      <a href="/admin/my-stories" className="ogas-desk-nav__link">
         <span aria-hidden="true">▤</span> My stories
       </a>
       {canReview(actor) && (
