@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Camera, CameraOff, Mic, MicOff, Radio, RotateCcw, Square } from 'lucide-react';
+import { Camera, Mic, MicOff, Radio, RotateCcw, Square } from 'lucide-react';
 
-async function signal(eventId:number,body:object) {
+async function signal(eventId:number|undefined,body:object) {
   const response=await fetch('/api/ogas-live',{method:'POST',credentials:'same-origin',
     headers:{'Content-Type':'application/json'},body:JSON.stringify({eventId,...body})});
   const json=await response.json();
@@ -31,11 +31,13 @@ function connected(pc:RTCPeerConnection){
     pc.addEventListener('connectionstatechange',onChange);
   });
 }
-export function PhoneBroadcaster({eventId,title}:{eventId:number;title:string}){
+export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:string}){
   const video=useRef<HTMLVideoElement>(null);
   const media=useRef<MediaStream|null>(null);
   const connection=useRef<RTCPeerConnection|null>(null);
   const session=useRef<string>('');
+  const activeEventId=useRef<number|undefined>(eventId);
+  const [quickTitle,setQuickTitle]=useState(title);
   const [status,setStatus]=useState<'idle'|'preview'|'connecting'|'live'|'ended'>('idle');
   const [error,setError]=useState('');
   const [muted,setMuted]=useState(false);
@@ -86,14 +88,19 @@ export function PhoneBroadcaster({eventId,title}:{eventId:number;title:string}){
       const offer=await pc.createOffer();
       await pc.setLocalDescription(offer);
       await gather(pc);
-      const created=await signal(eventId,{action:'start'});
+      if(!activeEventId.current) {
+        const createdEvent=await signal(undefined,{action:'quick-create',title:quickTitle});
+        activeEventId.current=createdEvent.eventId;
+      }
+      const currentId=activeEventId.current!;
+      const created=await signal(currentId,{action:'start'});
       session.current=created.sessionId;
-      const result=await signal(eventId,{action:'publish',sessionId:session.current,
+      const result=await signal(currentId,{action:'publish',sessionId:session.current,
         sessionDescription:pc.localDescription,
         tracks:tracks.map(t=>({trackName:t.trackName,mid:t.transceiver.mid}))});
       await pc.setRemoteDescription(result.sessionDescription);
       await connected(pc);
-      await signal(eventId,{action:'go-live',sessionId:session.current});
+      await signal(currentId,{action:'go-live',sessionId:session.current});
       setSeconds(0);setStatus('live');
     }catch(e){
       connection.current?.close();connection.current=null;
@@ -103,7 +110,7 @@ export function PhoneBroadcaster({eventId,title}:{eventId:number;title:string}){
   }
   async function end(){
     setError('');
-    try{if(session.current)await signal(eventId,{action:'stop',sessionId:session.current})}
+    try{if(session.current&&activeEventId.current)await signal(activeEventId.current,{action:'stop',sessionId:session.current})}
     catch(e){setError(e instanceof Error?e.message:'Could not mark broadcast ended')}
     finally {
       connection.current?.close();connection.current=null;
@@ -115,8 +122,12 @@ export function PhoneBroadcaster({eventId,title}:{eventId:number;title:string}){
   const live=status==='live';
   return <section style={{maxWidth:800,margin:'32px auto 70px',padding:'0 18px',fontFamily:'system-ui'}}>
     <a href="/broadcast-studio" style={{color:'#8e2027'}}>← Broadcast studio</a>
-    <h1 style={{fontSize:'clamp(28px,5vw,44px)',letterSpacing:'-.05em',margin:'22px 0 5px'}}>{title}</h1>
-    <p style={{color:'#646967',marginBottom:22}}>Report from your phone. Your viewers watch directly on OgasTV Africa.</p>
+    <h1 style={{fontSize:'clamp(28px,5vw,44px)',letterSpacing:'-.05em',margin:'22px 0 5px'}}>{eventId?title:'Go live'}</h1>
+    <p style={{color:'#646967',marginBottom:22}}>Your camera, your story. Viewers watch directly on OgasTV.</p>
+    {!eventId&&status!=='live'&&status!=='ended'&&<label style={{display:'block',fontWeight:650,marginBottom:16}}>Broadcast title
+      <input value={quickTitle} onChange={e=>setQuickTitle(e.target.value)} maxLength={120} placeholder="What are you covering?" required
+        style={{display:'block',width:'100%',boxSizing:'border-box',fontSize:16,padding:'14px 16px',marginTop:7,border:'1px solid #dadbd8',borderRadius:12,background:'white'}}/>
+    </label>}
     <div style={{position:'relative',aspectRatio:'9/13',maxHeight:'68vh',borderRadius:22,background:'#12191b',overflow:'hidden',margin:'0 auto',display:'grid',placeItems:'center'}}>
       <video ref={video} muted autoPlay playsInline style={{width:'100%',height:'100%',objectFit:'cover',transform:front?'scaleX(-1)':'none'}}/>
       {status==='idle'||status==='ended'?<div style={{position:'absolute',color:'#fff',textAlign:'center'}}><Camera size={36}/><p>Camera preview is off</p></div>:null}
@@ -124,12 +135,13 @@ export function PhoneBroadcaster({eventId,title}:{eventId:number;title:string}){
     </div>
     <div style={{display:'flex',gap:10,marginTop:20,justifyContent:'center',flexWrap:'wrap'}}>
       {status==='idle'||status==='ended'?<button onClick={()=>preview(front?'user':'environment')} style={primary}><Camera size={18}/> Enable camera</button>:null}
-      {status==='preview'&&<><button onClick={switchCamera} style={secondary}><RotateCcw size={18}/> Switch camera</button><button onClick={toggleMic} style={secondary}>{muted?<MicOff size={18}/>:<Mic size={18}/>} {muted?'Unmute':'Mute'}</button><button onClick={goLive} style={primary}><Radio size={18}/> Go live</button></>}
+      {status==='preview'&&<><button onClick={switchCamera} style={secondary}><RotateCcw size={18}/> Switch camera</button><button onClick={toggleMic} style={secondary}>{muted?<MicOff size={18}/>:<Mic size={18}/>} {muted?'Unmute':'Mute'}</button><button onClick={goLive} disabled={!eventId&&quickTitle.trim().length<3} style={{...primary,opacity:!eventId&&quickTitle.trim().length<3?0.5:1}}><Radio size={18}/> Go live</button></>}
       {live&&<><button onClick={toggleMic} style={secondary}>{muted?<MicOff size={18}/>:<Mic size={18}/>} {muted?'Unmute':'Mute'}</button><button onClick={end} style={primary}><Square size={17}/> End broadcast</button></>}
       {status==='connecting'&&<span role="status" style={{padding:12}}>Connecting to Cloudflare…</span>}
     </div>
     {error&&<p role="alert" style={{padding:14,color:'#a21d24',background:'#fff1f1',borderRadius:12,marginTop:15}}>{error}</p>}
-    <p style={{fontSize:12,color:'#777',textAlign:'center',marginTop:15}}>Keep this page open and your phone awake while broadcasting. A stable Wi-Fi or mobile data connection is recommended.</p>
+    {live&&<p style={{textAlign:'center',marginTop:12}}><a href="/live" target="_blank" rel="noopener noreferrer" style={{color:'#a52227',fontWeight:700}}>View public live page ↗</a></p>}
+    <p style={{fontSize:12,color:'#777',textAlign:'center',marginTop:15}}>Keep this tab open during your broadcast. You'll need a stable connection.</p>
   </section>;
 }
 const primary:React.CSSProperties={background:'#a52227',color:'white',border:0,borderRadius:99,padding:'12px 19px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:8,cursor:'pointer'};
