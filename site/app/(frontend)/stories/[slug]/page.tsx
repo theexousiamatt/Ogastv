@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import sanitizeHtml from 'sanitize-html';
 import { notFound } from 'next/navigation';
-import { getArticle, prettyDate } from '@/lib/wordpress';
+import { getArticle, prettyDate } from '@/lib/content';
 
 type Props = { params: Promise<{ slug: string }> };
 
