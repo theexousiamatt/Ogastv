@@ -58,6 +58,7 @@ export default buildConfig({
       views: {
         dashboard: { Component: '/cms/admin/NewsroomDashboard#NewsroomDashboard' },
         reviewQueue: { Component: '/cms/admin/ReviewQueue#ReviewQueue', path: '/review-queue' },
+        myStories: { Component: '/cms/admin/MyStories#MyStories', path: '/my-stories' },
       },
     },
     importMap: {
