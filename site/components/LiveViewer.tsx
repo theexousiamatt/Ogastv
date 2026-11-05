@@ -28,7 +28,7 @@ export function LiveViewer({eventId}:{eventId:number}){
     let alive=true;
     async function join(){
       try {
-        const pc=new RTCPeerConnection();
+        const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.cloudflare.com:3478'}]});
         connection.current=pc;
         const stream=new MediaStream();
         pc.addEventListener('track',e=>{stream.addTrack(e.track);if(video.current)video.current.srcObject=stream});
