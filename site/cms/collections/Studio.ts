@@ -6,7 +6,7 @@ const canDelete = ({ req }: { req: { user?: unknown } }) => canPublish(req.user)
 
 export const Programmes: CollectionConfig = {
   slug: 'programmes',
-  admin: { useAsTitle: 'title', group: 'Studio' },
+  admin: { useAsTitle: 'title', group: 'Video & Live' },
   access: { read: () => true, create: canEdit, update: canEdit, delete: canDelete },
   fields: [
     { name: 'title', type: 'text', required: true },
@@ -19,7 +19,7 @@ export const Programmes: CollectionConfig = {
 
 export const Episodes: CollectionConfig = {
   slug: 'episodes',
-  admin: { useAsTitle: 'title', group: 'Studio' },
+  admin: { useAsTitle: 'title', group: 'Video & Live' },
   versions: { drafts: true, maxPerDoc: 20 },
   access: {
     read: ({ req }) => canReview(req.user) ? true : { _status: { equals: 'published' } },
@@ -41,7 +41,7 @@ export const Episodes: CollectionConfig = {
 
 export const LiveEvents: CollectionConfig = {
   slug: 'live-events',
-  admin: { useAsTitle: 'title', group: 'Studio' },
+  admin: { useAsTitle: 'title', group: 'Video & Live' },
   versions: { drafts: true, maxPerDoc: 20 },
   access: {
     read: ({ req }) => canReview(req.user) ? true : { _status: { equals: 'published' } },

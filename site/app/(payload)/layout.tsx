@@ -2,6 +2,7 @@ import type { ServerFunctionClient } from 'payload';
 import config from '@payload-config';
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts';
 import '@payloadcms/next/css';
+import './newsroom.css';
 import React from 'react';
 import { importMap } from './admin/importMap';
 

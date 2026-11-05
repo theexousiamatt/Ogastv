@@ -5,7 +5,7 @@ export const Articles: CollectionConfig = {
   slug: 'articles',
   admin: {
     useAsTitle: 'title',
-    group: 'Editorial',
+    group: 'Publishing',
     defaultColumns: ['title', 'primaryCategory', 'workflowStatus', '_status', 'updatedAt'],
   },
   versions: {
@@ -71,13 +71,26 @@ export const Articles: CollectionConfig = {
     ],
   },
   fields: [
-    { name: 'title', type: 'text', required: true, maxLength: 250 },
-    { name: 'slug', type: 'text', unique: true, required: true, index: true },
+    {
+      type: 'tabs',
+      tabs: [
+        {
+          label: 'Write the story',
+          description: 'Everything readers will see: headline, introduction, article and cover image.',
+          fields: [
+    { name: 'title', type: 'text', required: true, maxLength: 250, admin: { description: 'A clear, specific headline that tells readers what happened.' } },
+    { name: 'slug', type: 'text', unique: true, required: true, index: true, admin: { description: 'A short URL-friendly name, e.g. lagos-community-project. Keep it stable after publication.' } },
     { name: 'subtitle', type: 'text' },
     { name: 'publicByline', type: 'text', admin: { description: 'Public-facing author attribution; never expose staff email addresses.' } },
-    { name: 'summary', type: 'textarea', required: true, maxLength: 800 },
-    { name: 'body', type: 'richText', required: true },
+    { name: 'summary', type: 'textarea', required: true, maxLength: 800, admin: { description: 'Two or three clear sentences introducing the story; displayed in article previews.' } },
+    { name: 'body', type: 'richText', required: true, admin: { description: 'Write the complete report. Use headings, links and images to make it easy to read.' } },
     { name: 'featuredImage', type: 'upload', relationTo: 'media' },
+          ],
+        },
+        {
+          label: 'Publishing details',
+          description: 'Choose the section, author, review stage and publishing information.',
+          fields: [
     { name: 'author', type: 'relationship', relationTo: 'staff-users',
       admin: { description: 'Assign a staff author on new articles; historical WordPress bylines are preserved separately.' } },
     {
@@ -115,6 +128,19 @@ export const Articles: CollectionConfig = {
       { name: 'url', type: 'text', required: true },
     ] },
     { name: 'correctionNotice', type: 'textarea' },
+          ],
+        },
+        {
+          label: 'Search preview',
+          description: 'Help readers discover this report in search engines.',
+          fields: [
+    { name: 'metaTitle', type: 'text', maxLength: 180 },
+    { name: 'metaDescription', type: 'textarea', maxLength: 320 },          ],
+        },
+        {
+          label: 'Original archive',
+          description: 'Historical metadata from earlier OgasTV reports. Leave unchanged unless correcting an import.',
+          fields: [
     { name: 'firstPublishedAt', type: 'date', admin: { readOnly: true } },
     { name: 'originalWordpressId', type: 'number', unique: true, admin: { readOnly: true } },
     { name: 'originalWordpressUrl', type: 'text' },
@@ -122,7 +148,9 @@ export const Articles: CollectionConfig = {
     { name: 'legacyFeaturedImageUrl', type: 'text' },
     { name: 'legacyFeaturedImageAlt', type: 'text' },
     { name: 'legacyMediaWordpressId', type: 'number' },
-    { name: 'metaTitle', type: 'text', maxLength: 180 },
-    { name: 'metaDescription', type: 'textarea', maxLength: 320 },
+          ],
+        },
+      ],
+    },
   ],
 };
