@@ -1,4 +1,6 @@
 name: OgasTV application checks
+permissions:
+  contents: write
 on:
   pull_request:
     paths:
@@ -54,7 +56,12 @@ jobs:
         run: npm run build
 
       - name: Generate initial Payload migrations against disposable database
-        run: npm run cms:migrate:create -- ogastv_initial_schema --skip-empty
+        run: |
+          if [ ! -f migrations/index.ts ]; then
+            npm run cms:migrate:create -- ogastv_initial_schema --skip-empty
+          else
+            echo 'Existing committed migrations detected, skipping generation.'
+          fi
       - name: Apply migrations to disposable PostgreSQL
         run: npm run cms:migrate
       - name: Verify created editorial tables
@@ -69,3 +76,18 @@ jobs:
           path: site/migrations/
           if-no-files-found: error
           retention-days: 7
+
+      - name: Commit reviewed initial migrations to OgasTV branch
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        run: |
+          if [ -f migrations/index.ts ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add migrations/
+            if ! git diff --cached --quiet; then
+              git commit -m 'chore(cms): track generated Payload schema migration'
+              git push origin HEAD:refs/heads/${{ github.head_ref }}
+            else
+              echo 'Payload migration files already committed.'
+            fi
+          fi
