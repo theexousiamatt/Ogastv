@@ -28,12 +28,13 @@ export async function NewsroomDashboard({
 
   // Only use the req-scoped API with access enforcement. Do not bypass role
   // checks to populate dashboard metrics.
-  const [published, drafts, review, media, recent] = await Promise.all([
+  const [published, drafts, review, media, recent, categories] = await Promise.all([
     req.payload.count({ collection: 'articles', req, overrideAccess: false, where: { _status: { equals: 'published' } } }),
     req.payload.count({ collection: 'articles', req, overrideAccess: false, where: { _status: { equals: 'draft' } } }),
     req.payload.count({ collection: 'articles', req, overrideAccess: false, where: { workflowStatus: { equals: 'in_review' }, _status: { not_equals: 'published' } } }),
     req.payload.count({ collection: 'media', req, overrideAccess: false }),
     req.payload.find({ collection: 'articles', req, overrideAccess: false, limit: 7, sort: '-updatedAt', depth: 1 }),
+    req.payload.count({ collection: 'categories', req, overrideAccess: false }),
   ]);
 
   const stories: NewsroomStory[] = (recent.docs as ArticleRow[]).map((item) => ({
@@ -75,6 +76,7 @@ export async function NewsroomDashboard({
           review={review.totalDocs}
           media={media.totalDocs}
           stories={stories}
+          hasSections={categories.totalDocs > 0}
           canWrite={editorial(principal)}
           canManage={canReview(principal)}
           canPublish={canPublish(principal)}
