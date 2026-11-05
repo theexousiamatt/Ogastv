@@ -30,7 +30,9 @@ export default buildConfig({
       auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
     },
   }) : undefined,
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL === 'https://ogastv-cms.inspirarestudio.com'
+    ? 'https://ogastvafrica.ng'
+    : (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'),
   secret: process.env.PAYLOAD_SECRET || '',
   db: postgresAdapter({
     // Dedicated, unexposed Supabase schema; do not use Supabase's public schema.
