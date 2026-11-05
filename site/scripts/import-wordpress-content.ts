@@ -9,8 +9,6 @@
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { getPayload } from 'payload';
-import { editorConfigFactory, convertHTMLToLexical } from '@payloadcms/richtext-lexical';
-import { JSDOM } from 'jsdom';
 import { decode } from 'html-entities';
 import config from '../payload.config';
 
@@ -68,6 +66,30 @@ function asString(value: string | undefined, max: number): string {
 }
 const summary = (rawExcerpt: string, html: string): string =>
   asString(textValue(rawExcerpt) || textValue(html) || 'Archived OgasTV Africa report.', 800);
+
+// Lossless article rendering uses legacyHtml. This lightweight Lexical view
+// gives editors readable paragraphs without requiring a DOM emulation package.
+function toLegacyLexical(html: string, fallback: string) {
+  const text = decode(html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/(?:p|div|h[1-6]|li|blockquote|section|article)>/gi, '\n\n')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[\t ]+/g, ' ')
+    .trim());
+  const paragraphs = (text || fallback).split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+  return {
+    root: {
+      type: 'root', version: 1, direction: 'ltr', format: '', indent: 0,
+      children: paragraphs.map(s => ({
+        type: 'paragraph', version: 1, direction: 'ltr', format: '', indent: 0,
+        textFormat: 0, textStyle: '',
+        children: [{ type: 'text', text: s, mode: 'normal', detail: 0, format: 0, style: '', version: 1 }],
+      })),
+    },
+  };
+}
 
 async function fetchAll<T extends { id: number }>(resource: string, options: Record<string, string> = {}): Promise<T[]> {
   const docs: T[] = [];
@@ -151,7 +173,6 @@ const failures: { collection: string; wordpressId: number; reason: string }[] = 
 
 if (execute) {
   const cms = await getPayload({ config });
-  const lexicalEditorConfig = await editorConfigFactory.default({ config: cms.config });
   const categoryIds = new Map<number, number | string>();
   const tagIds = new Map<number, number | string>();
   const authorNames = new Map(authors.map((a) => [a.id, textValue(a.name)]));
@@ -270,22 +291,8 @@ if (execute) {
     const featured = mediaById.get(post.featured_media || -1)
       || post._embedded?.['wp:featuredmedia']?.[0];
     const html = post.content?.rendered || '';
-    let richText;
-    try {
-      richText = convertHTMLToLexical({ editorConfig: lexicalEditorConfig, html, JSDOM });
-    } catch (error) {
-      const excerpt = summary(post.excerpt?.rendered || '', html);
-      richText = {
-        root: {
-          type: 'root', version: 1, direction: 'ltr', format: '', indent: 0,
-          children: [{
-            type: 'paragraph', version: 1, direction: 'ltr', format: '', indent: 0, textFormat: 0, textStyle: '',
-            children: [{ type: 'text', text: excerpt, mode: 'normal', detail: 0, format: 0, style: '', version: 1 }],
-          }],
-        },
-      };
-      console.warn('WordPress #' + post.id + ': HTML-to-Lexical partial fallback; full source HTML remains archived.');
-    }
+    const richText = toLegacyLexical(html, summary(post.excerpt?.rendered || '', html));
+
 
     await cms.create({
       collection: 'articles', overrideAccess: true, draft: true,
