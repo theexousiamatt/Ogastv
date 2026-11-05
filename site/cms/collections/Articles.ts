@@ -5,7 +5,7 @@ export const Articles: CollectionConfig = {
   slug: 'articles',
   admin: {
     useAsTitle: 'title',
-    group: 'Editorial',
+    group: 'Publishing',
     defaultColumns: ['title', 'primaryCategory', 'workflowStatus', '_status', 'updatedAt'],
   },
   versions: {
