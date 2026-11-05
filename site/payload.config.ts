@@ -47,6 +47,17 @@ export default buildConfig({
   editor: lexicalEditor(),
   admin: {
     user: 'staff-users',
+    theme: 'light',
+    timezones: { defaultTimezone: 'Africa/Lagos' },
+    components: {
+      graphics: {
+        Logo: '/cms/admin/NewsroomBrand#NewsroomLogo',
+        Icon: '/cms/admin/NewsroomBrand#NewsroomIcon',
+      },
+      views: {
+        dashboard: { Component: '/cms/admin/NewsroomDashboard#NewsroomDashboard' },
+      },
+    },
     importMap: {
       baseDir: dirname,
     },
