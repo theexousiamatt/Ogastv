@@ -9,23 +9,46 @@ on:
     paths:
       - 'site/**'
       - '.github/workflows/site-checks.yml'
+
 jobs:
-  typecheck:
+  application:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: ogastv_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: temporary-ci-db-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ogastv_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: site
+    env:
+      # The database and credentials below exist only inside this disposable CI job.
+      DATABASE_URL: postgresql://postgres:temporary-ci-db-password@localhost:5432/ogastv_ci
+      PAYLOAD_SECRET: ogastv-ci-only-disposable-placeholder-secret-2026
+      NEXT_PUBLIC_SERVER_URL: http://localhost:3000
+      CMS_CONTENT_SOURCE: wordpress
+      NEXT_TELEMETRY_DISABLED: '1'
+      ALLOW_FIRST_ADMIN_SETUP: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - run: npm install --no-audit --no-fund
-      - run: npm run typecheck
-      - name: Production build (requires configured database)
-        if: env.DATABASE_URL != '' && env.PAYLOAD_SECRET != ''
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Prepare isolated OgasTV schema
         env:
-          DATABASE_URL: ${{ secrets.OGASTV_DATABASE_URL }}
-          PAYLOAD_SECRET: ${{ secrets.OGASTV_PAYLOAD_SECRET }}
-          NEXT_TELEMETRY_DISABLED: '1'
+          PGPASSWORD: temporary-ci-db-password
+        run: psql -h localhost -U postgres -d ogastv_ci -c 'CREATE SCHEMA IF NOT EXISTS ogastv;'
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Production build with disposable database
         run: npm run build
