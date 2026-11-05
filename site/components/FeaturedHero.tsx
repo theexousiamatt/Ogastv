@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Clock3, Star } from 'lucide-react';
-import type { Article } from '@/lib/content';
-import { prettyDate } from '@/lib/content';
+import type { Article } from '@/lib/wordpress';
+
+const prettyDate = (value: string) => {
+  const date = new Date(value);
+  return Number.isNaN(date.valueOf()) ? '' : new Intl.DateTimeFormat('en-NG', { day:'numeric', month:'short', year:'numeric' }).format(date);
+};
 
 // Free-to-use Lagos photograph by Tunde Buremo, Unsplash.
 // Decorative only when the CMS has no published hero story.
