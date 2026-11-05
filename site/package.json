@@ -18,7 +18,7 @@
     "audit:wordpress": "node scripts/audit-wordpress.mjs"
   },
   "dependencies": {
-    "next": "16.2.6",
+    "next": "16.4.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "payload": "3.93.0",
