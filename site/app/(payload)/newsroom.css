@@ -1,6 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 @import "@heroui/styles";
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap");
 
 /* OgasTV Newsroom — HeroUI v3 + Payload administration. Public site styles are untouched. */
 :root[data-theme='light'], html[data-theme='light'] {
