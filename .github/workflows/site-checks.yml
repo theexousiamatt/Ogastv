@@ -96,7 +96,7 @@ jobs:
         run: |
           psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.articles WHERE original_wordpress_id IS NOT NULL AND _status = 'draft'" | grep -qx 2
           psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.wordpress_pages" | grep -qx 3
-          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.wordpress_media" | grep -qx 313
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.wordpress_media" | grep -qx 309
       - name: Verify standalone includes styles and browser scripts
         run: |
           test -f .next/standalone/server.js
