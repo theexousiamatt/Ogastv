@@ -3,6 +3,7 @@
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html';
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical';
 import * as wp from './wordpress';
+import sanitizeHtml from 'sanitize-html';
 import type { Article, Category } from './wordpress';
 
 export type { Article, Category } from './wordpress';
@@ -15,6 +16,9 @@ type CmsArticle = {
   title: string;
   summary?: string;
   body?: SerializedEditorState;
+  legacyHtml?: string | null;
+  legacyFeaturedImageUrl?: string | null;
+  legacyFeaturedImageAlt?: string | null;
   firstPublishedAt?: string;
   createdAt?: string;
   publishedAt?: string;
@@ -34,17 +38,33 @@ async function cms() {
 function mapArticle(doc: CmsArticle): Article {
   const category = doc.primaryCategory && typeof doc.primaryCategory === 'object' ? doc.primaryCategory : null;
   const image = doc.featuredImage && typeof doc.featuredImage === 'object' ? doc.featuredImage : null;
+  const legacyMedia = doc.legacyFeaturedImageUrl && doc.legacyFeaturedImageUrl.startsWith('https://ogastvafrica.ng/')
+    ? doc.legacyFeaturedImageUrl : null;
+  const importedBody = doc.legacyHtml ? sanitizeHtml(doc.legacyHtml, {
+    allowedTags: [...sanitizeHtml.defaults.allowedTags, 'figure', 'figcaption', 'img', 'picture', 'source', 'iframe', 'video', 'audio'],
+    allowedAttributes: {
+      ...sanitizeHtml.defaults.allowedAttributes,
+      img: ['src', 'alt', 'width', 'height', 'loading', 'srcset', 'sizes'],
+      source: ['src', 'srcset', 'type', 'media', 'sizes'],
+      iframe: ['src', 'title', 'width', 'height', 'allow', 'allowfullscreen', 'loading'],
+      video: ['src', 'controls', 'poster'],
+      audio: ['src', 'controls'],
+    },
+    allowedIframeHostnames: ['www.youtube.com', 'youtube.com', 'www.youtube-nocookie.com'],
+    allowedSchemes: ['https', 'http', 'mailto'],
+    allowedSchemesByTag: { img: ['https'], iframe: ['https'], source: ['https'], video: ['https'], audio: ['https'] },
+  }) : null;
   return {
     id: Number(doc.id),
     slug: doc.slug,
     title: doc.title,
     excerpt: doc.summary || '',
-    html: doc.body ? convertLexicalToHTML({ data: doc.body }) : '',
+    html: importedBody ?? (doc.body ? convertLexicalToHTML({ data: doc.body }) : ''),
     date: doc.firstPublishedAt || doc.publishedAt || doc.createdAt || new Date(0).toISOString(),
     originalUrl: doc.originalWordpressUrl || '',
     category: category?.slug && category?.name ? { slug: category.slug, name: category.name } : null,
     author: doc.publicByline || null,
-    image: image?.url ? { url: image.url, alt: image.alt || doc.title } : null,
+    image: image?.url ? { url: image.url, alt: image.alt || doc.title } : legacyMedia ? { url: legacyMedia, alt: doc.legacyFeaturedImageAlt || doc.title } : null,
   };
 }
 
