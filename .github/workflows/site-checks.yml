@@ -52,3 +52,13 @@ jobs:
         run: npm run typecheck
       - name: Production build with disposable database
         run: npm run build
+
+      - name: Generate initial Payload migrations against disposable database
+        run: npm run cms:migrate:create -- ogastv_initial_schema --skip-empty
+      - name: Archive generated migrations for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: ogastv-generated-migrations
+          path: site/migrations/
+          if-no-files-found: error
+          retention-days: 7
