@@ -18,6 +18,8 @@ export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
   secret: process.env.PAYLOAD_SECRET || '',
   db: postgresAdapter({
+    // Dedicated, unexposed Supabase schema; do not use Supabase's public schema.
+    schemaName: 'ogastv',
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },
