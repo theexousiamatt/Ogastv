@@ -85,6 +85,15 @@ jobs:
           PGPASSWORD: temporary-ci-db-password
         run: |
           psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='ogastv' AND table_name IN ('staff_users','articles','readers','categories','live_events','community_submissions')" | grep -qx 6
+      - name: Verify standalone includes styles and browser scripts
+        run: |
+          test -f .next/standalone/server.js
+          css_file=$(find .next/standalone/.next/static -type f -name '*.css' -print -quit)
+          js_file=$(find .next/standalone/.next/static -type f -name '*.js' -print -quit)
+          test -n "$css_file"
+          test -n "$js_file"
+          echo "CSS bundled: $css_file"
+          echo "JavaScript bundled: $js_file"
       - name: Smoke-test admin and anonymous authorization
         env:
           READER_SIGNUP_ENABLED: 'false'
@@ -107,6 +116,14 @@ jobs:
             tail -n 100 /tmp/ogastv-smoke.log
             exit 1
           fi
+          css_file=$(find .next/standalone/.next/static -type f -name '*.css' -print -quit)
+          css_path="/_next/static/${css_file#*.next/standalone/.next/static/}"
+          css_response=$(curl --silent --output /tmp/ogastv-style.css --write-out '%{http_code}' "http://127.0.0.1:3100$css_path")
+          if [ "$css_response" != '200' ] || [ ! -s /tmp/ogastv-style.css ]; then
+            echo "CSS asset is not served from standalone runtime: HTTP $css_response ($css_path)"
+            exit 1
+          fi
+          echo 'Stylesheet available over HTTP from standalone server'
           reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3100/api/readers')
           staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3100/api/staff-users')
           activation_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
