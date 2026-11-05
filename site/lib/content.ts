@@ -28,7 +28,12 @@ type CmsArticle = {
   publicByline?: string;
 };
 
-const payloadEnabled = () => process.env.CMS_CONTENT_SOURCE === 'payload';
+// The original WordPress site is retired. A stale Hostinger environment
+// setting must not make production fetch the deleted WordPress endpoint.
+const payloadEnabled = () =>
+  process.env.CMS_CONTENT_SOURCE === 'payload' ||
+  process.env.NEXT_PUBLIC_SERVER_URL === 'https://ogastv-cms.inspirarestudio.com' ||
+  process.env.NEXT_PUBLIC_SERVER_URL === 'https://ogastvafrica.ng';
 
 async function cms() {
   const [{ getPayload }, module] = await Promise.all([import('payload'), import('@payload-config')]);
