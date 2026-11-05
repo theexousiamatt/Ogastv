@@ -94,6 +94,12 @@ jobs:
           fi
           reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3100/api/readers')
           staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3100/api/staff-users')
+          activation_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
+            -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
+            -d '{"token":"invalid-token","password":"incorrect-but-long-test-password"}' \
+            'http://127.0.0.1:3100/api/activate-newsroom')
+          case "$activation_status" in 403) ;; *) echo "Invalid admin invite accepted or unexpected HTTP $activation_status"; exit 1;; esac
+          echo "Invalid administrator invitation correctly rejected"
           echo "Unauthenticated reader creation HTTP $reader_status; staff creation HTTP $staff_status"
           case "$reader_status" in 401|403) ;; *) echo 'Public reader creation unexpectedly allowed'; exit 1;; esac
           case "$staff_status" in 401|403) ;; *) echo 'Public staff creation unexpectedly allowed'; exit 1;; esac
