@@ -26,6 +26,7 @@ export type NewsroomSnapshot = {
   review: number;
   media: number;
   stories: NewsroomStory[];
+  hasSections: boolean;
   canWrite: boolean;
   canManage: boolean;
   canPublish: boolean;
@@ -106,6 +107,17 @@ export function NewsroomHome(snapshot: NewsroomSnapshot) {
           )}
         </div>
       </div>
+
+      {!snapshot.hasSections && snapshot.canManage && (
+        <div className="nr-onboarding" role="status">
+          <div className="nr-onboarding__mark" aria-hidden="true"><Tags size={18} /></div>
+          <div>
+            <strong>First, create a news section.</strong>
+            <p>Your CMS has no sections yet. Add “News” or “Lagos Watch” so every story has a place to appear.</p>
+          </div>
+          <a href="/admin/collections/categories/create">Create section <ArrowRight size={15} aria-hidden="true" /></a>
+        </div>
+      )}
 
       <section className="nr-stats" aria-label="Newsroom statistics">
         {stats.map(({label,value,note,Icon,tone})=>(
