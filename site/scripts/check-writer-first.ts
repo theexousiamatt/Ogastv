@@ -34,6 +34,7 @@ try {
 
   const article = await payload.create({
     collection: 'articles',
+    draft: true,
     overrideAccess: true,
     data: {
       title: 'Community report from Lagos',
