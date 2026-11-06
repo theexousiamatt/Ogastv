@@ -56,7 +56,8 @@ jobs:
           # The real invitation is never present in CI or the repository.
           ci_token='ci-disposable-invite-only-never-deployed-2026-nov'
           digest=$(printf '%s' "$ci_token" | sha256sum | cut -d' ' -f1)
-          sed -i "s/eac379f779b3c82d8db42177fff01edd5fb70b8648c2b2b1521680230c76ef7d/$digest/" cms/first-admin-invite.ts
+          sed -i -E "s/const INVITE_TOKEN_DIGEST = '[0-9a-f]{64}';/const INVITE_TOKEN_DIGEST = '$digest';/" cms/first-admin-invite.ts
+          grep -Fq "const INVITE_TOKEN_DIGEST = '$digest';" cms/first-admin-invite.ts
       - name: Typecheck
         run: npm run typecheck
       - name: Production build with disposable database
