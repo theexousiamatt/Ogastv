@@ -7,7 +7,7 @@ import {
   ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, Bell, BookOpen,
   CalendarDays, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft,
   ChevronRight, CircleHelp, Clock3, ExternalLink, FilePenLine, FileText,
-  FolderOpen, Home, Image as ImageIcon, ImagePlus, LayoutGrid, Link2,
+  FolderOpen, Home, Image as ImageIcon, ImagePlus, LayoutGrid, Link2, Copy,
   LogOut, Menu, MoreHorizontal, Newspaper, PencilLine, Plus, Radio,
   Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, X,
 } from 'lucide-react';
@@ -67,6 +67,12 @@ function mediaUrl(m?: Media | string | number | null): string {
   return m.thumbnailURL || m.url || '';
 }
 function titleOf(a: Article) { return a.title?.trim() || 'Untitled article'; }
+function ArticleImage({url,alt='',missingText='Image unavailable'}:{url:string;alt?:string;missingText?:string}) {
+  const [failed,setFailed]=useState(false);
+  useEffect(()=>setFailed(false),[url]);
+  if(!url||failed)return <span className="ogas-image-fallback" role="img" aria-label={failed?missingText:'No image'}><ImageIcon size={20}/><small>{failed?missingText:'No image'}</small></span>;
+  return <img src={url} alt={alt} loading="lazy" onError={()=>setFailed(true)}/>;
+}
 function lexicalText(input: unknown): string {
   if (!input || typeof input !== 'object') return '';
   const x = input as {text?: unknown;children?: unknown[];root?: unknown;type?: string};
@@ -110,6 +116,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [page,setPage] = useState(1);
   const [search,setSearch] = useState('');
   const [filter,setFilter] = useState('all');
+  const [selectedArticles,setSelectedArticles] = useState<Set<string>>(()=>new Set());
+  const [articleMenu,setArticleMenu] = useState<string|null>(null);
   const [categories,setCategories] = useState<Category[]>([]);
   const [locations,setLocations] = useState<TaxonomyItem[]>([]);
   const [tags,setTags] = useState<TaxonomyItem[]>([]);
@@ -131,6 +139,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [adEditor,setAdEditor] = useState(false);
   const canWrite = ['administrator','editor_in_chief','editor','journalist'].includes(role);
   const canPublish = ['administrator','editor_in_chief'].includes(role);
+  const canDelete = canPublish;
   const canAds = ['administrator','advertising_manager','editor_in_chief'].includes(role);
   const canUpload = canWrite || canAds;
   const firstName = name.trim().split(/\s+/)[0] || 'there';
@@ -208,8 +217,14 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     if (category && typeof category === 'object') return category.name;
     return categories.find(c=>String(c.id)===String(category))?.name || 'Uncategorised';
   };
-  const changeSearch=(value:string)=>{setPage(1);setSearch(value);};
-  const changeFilter=(value:string)=>{setPage(1);setFilter(value);};
+  const changeSearch=(value:string)=>{setPage(1);setSearch(value);setSelectedArticles(new Set());setArticleMenu(null);};
+  const changeFilter=(value:string)=>{setPage(1);setFilter(value);setSelectedArticles(new Set());setArticleMenu(null);};
+  const visibleIds=articles.map(a=>String(a.id));
+  const selectedOnPage=visibleIds.filter(id=>selectedArticles.has(id));
+  const toggleArticle=(id:string,checked:boolean)=>setSelectedArticles(current=>{
+    const next=new Set(current);if(checked)next.add(id);else next.delete(id);return next;
+  });
+  const toggleAllArticles=(checked:boolean)=>setSelectedArticles(checked?new Set(visibleIds):new Set());
 
   const begin = () => {setEditor(emptyEditor());setAutoSaveState('idle');setPicker(false);navigate('write');};
   const openArticle = async (id: string | number) => {
@@ -312,6 +327,60 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     finally {setBusy(false);}
   };
   const chosenImage=media.find(m=>String(m.id)===editor.featuredImage);
+  const duplicateArticle=async(article:Article)=>{
+    if(!canWrite || busy)return;
+    setArticleMenu(null);setBusy(true);setError('');setMessage('');
+    try{
+      const source=await jsonFetch('/api/articles/'+encodeURIComponent(String(article.id))+'?draft=true&depth=0');
+      if(!source?.body?.root)throw new Error('This article has no content to copy.');
+      const asId=(value:unknown)=>{const id=normalizeId(value);return id?(/^\\d+$/.test(id)?Number(id):id):null;};
+      const payload={
+        title:(String(source.title||'Untitled article')+' (copy)').slice(0,250),
+        slug:(String(source.slug||'article').slice(0,155)+'-copy-'+Date.now().toString(36)).slice(0,180),
+        body:source.body,summary:source.summary||String(source.title||'Article'),
+        subtitle:source.subtitle||'',publicByline:source.publicByline||'',
+        editorialType:source.editorialType||'news',primaryCategory:asId(source.primaryCategory),
+        secondaryCategories:(source.secondaryCategories||[]).map(asId).filter(Boolean),
+        locations:(source.locations||[]).map(asId).filter(Boolean),
+        tags:(source.tags||[]).map(asId).filter(Boolean),
+        featuredImage:asId(source.featuredImage),author:asId(staffId),
+        metaTitle:source.metaTitle||'',metaDescription:source.metaDescription||'',
+        sourceLinks:(source.sourceLinks||[]).map((x:{label?:string;url?:string})=>({label:x.label||'',url:x.url||''})),
+        correctionNotice:source.correctionNotice||'',
+        legacyHtml:source.legacyHtml||'',legacyFeaturedImageUrl:source.legacyFeaturedImageUrl||'',
+        legacyFeaturedImageAlt:source.legacyFeaturedImageAlt||'',
+        workflowStatus:'draft',_status:'draft'
+      };
+      const response=await jsonFetch('/api/articles?draft=true',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const newId=response.doc?.id||response.id;
+      if(!newId)throw new Error('The article copy could not be opened.');
+      setSelectedArticles(new Set());setPage(1);setFilter('all');setSearch('');
+      await loadArticles(1,'','all');
+      await openArticle(newId);
+      setMessage('Draft copy created. Review it before publishing.');
+    }catch(e){setError(e instanceof Error?e.message:'Could not duplicate this article.');}
+    finally{setBusy(false);}
+  };
+  const deleteArticles=async(items:Article[])=>{
+    if(!canDelete||busy||!items.length)return;
+    setArticleMenu(null);
+    const label=items.length===1?'“'+titleOf(items[0])+'”':items.length+' selected articles';
+    if(!window.confirm('Permanently delete '+label+'? This cannot be undone.'))return;
+    setBusy(true);setError('');setMessage('');
+    let completed=0;
+    try{
+      for(const article of items){
+        await jsonFetch('/api/articles/'+encodeURIComponent(String(article.id)),{method:'DELETE'});
+        completed+=1;
+      }
+      setMessage(completed===1?'Article deleted.':completed+' articles deleted.');
+    }catch(e){setError((e instanceof Error?e.message:'Could not delete the article.')+(completed?' '+completed+' already deleted.':''));}
+    finally{
+      setSelectedArticles(new Set());
+      try{await loadArticles(page,search,filter);}catch{setError('Changes were made, but the article list could not refresh.');}
+      setBusy(false);
+    }
+  };
 
   const submitAd = async () => {
     setError('');setMessage('');
