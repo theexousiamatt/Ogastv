@@ -59,7 +59,12 @@ jobs:
         run: npm run typecheck
       - name: Verify real story creation and review transition
         run: npx payload run ./scripts/check-writer-first.ts
-      - name: Production build
+      - name: Production build with Supabase S3 adapter enabled
+        # This is an isolated build; fake credentials never reach Supabase.
+        # The editorial upload smoke below uses local disposable storage.
+        env:
+          OGASTV_MEDIA_S3_ACCESS_KEY_ID: ci-disposable-storage-key
+          OGASTV_MEDIA_S3_SECRET_ACCESS_KEY: ci-disposable-storage-secret
         run: npm run build
       - name: Verify admin and HeroUI assets
         run: |
