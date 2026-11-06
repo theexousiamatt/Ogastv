@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { StudioAdvanced } from './StudioAdvanced';
+import { StudioRichEditor, canEditRichBody } from './StudioRichEditor';
 import {
   ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, Bell, BookOpen,
   CalendarDays, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft,
@@ -10,9 +12,10 @@ import {
   Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, X,
 } from 'lucide-react';
 
-type Tab = 'home' | 'articles' | 'write' | 'media' | 'live' | 'ads';
+type Tab = 'home' | 'articles' | 'write' | 'media' | 'live' | 'ads' | 'advanced';
 type Media = { id: string | number; url?: string; thumbnailURL?: string; alt?: string; filename?: string; mimeType?: string };
 type Category = { id: string | number; name: string };
+type TaxonomyItem = {id:string|number;name:string;slug?:string;};
 type Article = {
   id: string | number; title?: string; summary?: string; slug?: string;
   body?: unknown; publicByline?: string; updatedAt?: string;
@@ -26,20 +29,27 @@ type Ad = {
   startsAt?: string; endsAt?: string; placement?: string; banner?: Media | number | string | null;
 };
 type Editor = {
-  id: string; title: string; summary: string; bodyText: string;
+  id: string; title: string; summary: string; bodyText: string; body: Record<string,any>|null;
   primaryCategory: string; featuredImage: string; slug: string;
   published: boolean; lockedBody: boolean; touchedBody: boolean;
+  subtitle:string; publicByline:string; editorialType:string;
+  secondaryCategories:string[]; locations:string[]; tags:string[];
+  metaTitle:string; metaDescription:string; correctionNotice:string;
+  sourceLinks:{label:string;url:string}[];
 };
 const emptyEditor = (): Editor => ({
-  id: '', title: '', summary: '', bodyText: '', primaryCategory: '',
+  id: '', title: '', summary: '', bodyText: '', body:null, primaryCategory: '',
   featuredImage: '', slug: '', published: false, lockedBody: false, touchedBody: false,
+  subtitle:'',publicByline:'',editorialType:'news',secondaryCategories:[],locations:[],tags:[],
+  metaTitle:'',metaDescription:'',correctionNotice:'',sourceLinks:[],
 });
 const pageSize = 30;
-const icons = {home: Home, articles: Newspaper, write: Plus, media: ImageIcon, live: Radio, ads: LayoutGrid};
+const icons = {home: Home, articles: Newspaper, write: Plus, media: ImageIcon, live: Radio, ads: LayoutGrid, advanced: Settings2};
 const topNav: {key: Tab; label: string}[] = [
   {key: 'home',label: 'Home'}, {key: 'articles',label: 'Articles'},
   {key: 'write',label: 'Write'}, {key: 'live',label: 'Go live'},
   {key: 'media',label: 'Media'}, {key: 'ads',label: 'Ads'},
+  {key: 'advanced',label: 'Advanced'},
 ];
 function shortDate(input?: string): string {
   if (!input) return 'Just now';
@@ -101,6 +111,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [search,setSearch] = useState('');
   const [filter,setFilter] = useState('all');
   const [categories,setCategories] = useState<Category[]>([]);
+  const [locations,setLocations] = useState<TaxonomyItem[]>([]);
+  const [tags,setTags] = useState<TaxonomyItem[]>([]);
   const [media,setMedia] = useState<Media[]>([]);
   const [ads,setAds] = useState<Ad[]>([]);
   const [busy,setBusy] = useState(false);
@@ -108,6 +120,9 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [message,setMessage] = useState('');
   const [error,setError] = useState('');
   const [editor,setEditor] = useState<Editor>(emptyEditor);
+  const editorRef=useRef(editor);
+  useEffect(()=>{editorRef.current=editor},[editor]);
+  const [autoSaveState,setAutoSaveState]=useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [picker,setPicker] = useState(false);
   const [fileDescription,setFileDescription] = useState('');
   const [uploadFile,setUploadFile] = useState<File|null>(null);
@@ -141,6 +156,17 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     setTotal(Number(response.totalDocs || 0));
   }, []);
 
+  const loadTaxonomy=useCallback(async()=>{
+    const [c,l,t]=await Promise.all([
+      jsonFetch('/api/categories?limit=100&sort=name'),
+      jsonFetch('/api/locations?limit=100&sort=name'),
+      jsonFetch('/api/tags?limit=100&sort=name'),
+    ]);
+    setCategories(Array.isArray(c.docs)?c.docs:[]);
+    setLocations(Array.isArray(l.docs)?l.docs:[]);
+    setTags(Array.isArray(t.docs)?t.docs:[]);
+  },[]);
+
   const loadMedia = useCallback(async () => {
     const response = await jsonFetch('/api/media?limit=100&sort=-createdAt&depth=0');
     setMedia(Array.isArray(response.docs) ? response.docs : []);
@@ -161,11 +187,10 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     const back=()=>{const u=new URL(window.location.href);const next=u.searchParams.get('tab') as Tab;setTab(topNav.some(x=>x.key===next)?next:'home');};
     window.addEventListener('popstate',back);
     Promise.all([
-      jsonFetch('/api/categories?limit=100&sort=name').then(x=>setCategories(x.docs || [])),
-      loadMedia(), loadAds(),
+      loadTaxonomy(), loadMedia(), loadAds(),
     ]).catch(e=>setError(e instanceof Error?e.message:'Could not load the newsroom.'));
     return ()=>window.removeEventListener('popstate',back);
-  }, [loadMedia,loadAds]);
+  }, [loadMedia,loadAds,loadTaxonomy]);
 
   useEffect(()=>{
     let ignore=false;
@@ -193,11 +218,18 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       const article=await jsonFetch('/api/articles/'+encodeURIComponent(String(id))+'?draft=true&depth=1');
       setEditor({
         id:String(article.id),title:article.title||'',summary:article.summary||'',
-        bodyText:lexicalText(article.body),primaryCategory:normalizeId(article.primaryCategory),
+        bodyText:lexicalText(article.body),body:article.body||null,primaryCategory:normalizeId(article.primaryCategory),
         featuredImage:normalizeId(article.featuredImage),slug:article.slug||'',
         published:article._status==='published',
-        lockedBody:complexLexical(article.body),touchedBody:false,
+        lockedBody:!canEditRichBody(article.body),touchedBody:false,
+        subtitle:article.subtitle||'',publicByline:article.publicByline||'',editorialType:article.editorialType||'news',
+        secondaryCategories:(article.secondaryCategories||[]).map(normalizeId),
+        locations:(article.locations||[]).map(normalizeId),tags:(article.tags||[]).map(normalizeId),
+        metaTitle:article.metaTitle||'',metaDescription:article.metaDescription||'',
+        correctionNotice:article.correctionNotice||'',
+        sourceLinks:Array.isArray(article.sourceLinks)?article.sourceLinks.map((v:any)=>({label:String(v.label||''),url:String(v.url||'')})):[],
       });
+      setAutoSaveState('idle');
       navigate('write',String(id));
     } catch (e) {setError(e instanceof Error?e.message:'Could not open this article.');}
     finally {setBusy(false);}
