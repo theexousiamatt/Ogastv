@@ -72,10 +72,10 @@ export async function ReviewQueue({
                 <thead><tr><th>Story</th><th>Section</th><th>Updated</th><th>Action</th></tr></thead>
                 <tbody>{(stories.docs as ReviewRow[]).map((story) => (
                   <tr key={String(story.id)}>
-                    <td><strong>{story.title || 'Untitled story'}</strong>{story.publicByline && <small>{story.publicByline}</small>}</td>
-                    <td>{story.primaryCategory && typeof story.primaryCategory === 'object' ? story.primaryCategory.name || '—' : '—'}</td>
-                    <td>{story.updatedAt ? new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Lagos' }).format(new Date(story.updatedAt)) : '—'}</td>
-                    <td><a href={'/admin/collections/articles/' + encodeURIComponent(story.id)}>Open story ↗</a></td>
+                    <td data-label="Story"><strong>{story.title || 'Untitled story'}</strong>{story.publicByline && <small>{story.publicByline}</small>}</td>
+                    <td data-label="Section">{story.primaryCategory && typeof story.primaryCategory === 'object' ? story.primaryCategory.name || '—' : '—'}</td>
+                    <td data-label="Updated">{story.updatedAt ? new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Africa/Lagos' }).format(new Date(story.updatedAt)) : '—'}</td>
+                    <td data-label="Action"><a href={'/admin/collections/articles/' + encodeURIComponent(story.id)}>Open story ↗</a></td>
                   </tr>
                 ))}</tbody>
               </table>
