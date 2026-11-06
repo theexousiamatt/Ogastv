@@ -13,7 +13,7 @@ export async function prepareEditorialImage(file: File): Promise<File> {
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
-    const ctx = canvas.getContext('2d', { alpha: false });
+    const ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return file;
     ctx.drawImage(bitmap, 0, 0, width, height);
     const compressed = await new Promise<Blob | null>(resolve =>
