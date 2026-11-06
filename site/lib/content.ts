@@ -145,3 +145,49 @@ export async function getHomepageCuration(): Promise<{ lead: Article | null; hig
     return { lead: null, highlights: [] };
   }
 }
+
+/**
+ * Search the full published Payload archive on the server. Unlike filtering
+ * getArticles(100), results are not restricted to the first 100 stories.
+ */
+export async function searchPublicArticles(options: {
+  query?: string; category?: string; page?: number; limit?: number;
+}): Promise<{ stories: Article[]; total: number; page: number; totalPages: number }> {
+  const query = (options.query || '').trim().slice(0, 120);
+  const categorySlug = (options.category || '').trim().slice(0, 120);
+  const page = Math.max(1, Math.min(10000, Math.floor(options.page || 1)));
+  const limit = Math.max(1, Math.min(48, Math.floor(options.limit || 24)));
+
+  if (!payloadEnabled()) {
+    const all = await wp.getArticles(100);
+    const filtered = all.filter(article =>
+      (!categorySlug || article.category?.slug === categorySlug) &&
+      (!query || [article.title, article.excerpt, article.category?.name || '']
+        .some(value => value.toLowerCase().includes(query.toLowerCase())))
+    );
+    return { stories: filtered.slice((page - 1) * limit, page * limit),
+      total: filtered.length, page, totalPages: Math.max(1, Math.ceil(filtered.length / limit)) };
+  }
+  const api = await cms();
+  const where: import('payload').Where = { and: [{ _status: { equals: 'published' } }] };
+  if (categorySlug) {
+    const result = await api.find({
+      collection: 'categories', overrideAccess: false, depth: 0, limit: 1,
+      where: { slug: { equals: categorySlug } },
+    });
+    if (!result.docs[0]) return { stories: [], total: 0, page, totalPages: 1 };
+    where.and!.push({ primaryCategory: { equals: result.docs[0].id } });
+  }
+  if (query) {
+    where.and!.push({ or: [
+      { title: { like: query } },
+      { summary: { like: query } },
+    ] });
+  }
+  const results = await api.find({
+    collection: 'articles', overrideAccess: false, depth: 2,
+    where, page, limit, sort: '-createdAt',
+  });
+  return { stories: (results.docs as CmsArticle[]).map(mapArticle),
+    total: results.totalDocs, page: results.page || page, totalPages: results.totalPages };
+}
