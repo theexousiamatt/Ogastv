@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
+import { s3Storage } from '@payloadcms/storage-s3';
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer';
 import { Staff } from './cms/collections/Staff';
 import { Readers } from './cms/collections/Readers';
@@ -19,6 +20,19 @@ import { WordpressMediaInventory, WordpressPagesInventory } from './cms/collecti
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const emailConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM_ADDRESS);
 const smtpPort = Number(process.env.SMTP_PORT || '465');
+
+// Hostinger replaces build directories on deployment. Keep public editorial images in
+// Supabase Storage rather than the ephemeral local ./media folder.
+// S3 credentials are read only on the server; never expose them in NEXT_PUBLIC_* vars.
+const mediaS3AccessKey = process.env.OGASTV_MEDIA_S3_ACCESS_KEY_ID || '';
+const mediaS3SecretKey = process.env.OGASTV_MEDIA_S3_SECRET_ACCESS_KEY || '';
+const mediaS3Enabled = Boolean(mediaS3AccessKey && mediaS3SecretKey);
+const mediaS3Bucket = 'ogastv-public-media';
+const mediaS3PublicRoot = 'https://cjyhayrxadyadaqdrlot.supabase.co/storage/v1/object/public/' + mediaS3Bucket;
+const mediaS3Endpoint = process.env.OGASTV_MEDIA_S3_ENDPOINT
+  || 'https://cjyhayrxadyadaqdrlot.storage.supabase.co/storage/v1/s3';
+const mediaS3Region = process.env.OGASTV_MEDIA_S3_REGION || 'eu-west-1';
+
 
 export default buildConfig({
   email: emailConfigured ? nodemailerAdapter({
@@ -46,6 +60,29 @@ export default buildConfig({
     },
   }),
   editor: lexicalEditor(),
+  plugins: [
+    s3Storage({
+      enabled: mediaS3Enabled,
+      bucket: mediaS3Bucket,
+      collections: {
+        media: {
+          // Public editorial media uses an intentionally public Supabase bucket.
+          // Upload/change/delete authorization still comes from the Media collection.
+          disablePayloadAccessControl: true,
+          generateFileURL: ({ filename, prefix }) => {
+            const key = [prefix, filename].filter(Boolean).map(encodeURIComponent).join('/');
+            return mediaS3PublicRoot + '/' + key;
+          },
+        },
+      },
+      config: {
+        endpoint: mediaS3Endpoint,
+        region: mediaS3Region,
+        forcePathStyle: true,
+        credentials: { accessKeyId: mediaS3AccessKey, secretAccessKey: mediaS3SecretKey },
+      },
+    }),
+  ],
   admin: {
     user: 'staff-users',
     theme: 'light',
