@@ -70,7 +70,7 @@ export default buildConfig({
           // Upload/change/delete authorization still comes from the Media collection.
           disablePayloadAccessControl: true,
           generateFileURL: ({ filename, prefix }) => {
-            const key = [prefix, filename].filter(Boolean).map(encodeURIComponent).join('/');
+            const key = [prefix, filename].filter((part): part is string => Boolean(part)).map(encodeURIComponent).join('/');
             return mediaS3PublicRoot + '/' + key;
           },
         },
