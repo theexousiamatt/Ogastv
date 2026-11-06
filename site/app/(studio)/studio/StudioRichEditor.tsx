@@ -9,6 +9,7 @@ import { LexicalComposer } from '@payloadcms/richtext-lexical/lexical/react/Lexi
 import { RichTextPlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@payloadcms/richtext-lexical/lexical/react/LexicalContentEditable';
 import { HistoryPlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalHistoryPlugin';
+import { LexicalErrorBoundary } from '@payloadcms/richtext-lexical/lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalOnChangePlugin';
 import { ListPlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalListPlugin';
 import { LinkPlugin } from '@payloadcms/richtext-lexical/lexical/react/LexicalLinkPlugin';
@@ -129,7 +130,7 @@ export function StudioRichEditor({value,onChange,disabled=false}:Props){
         <RichTextPlugin
           contentEditable={<ContentEditable className="ogas-rich-content" aria-label="Article body" />}
           placeholder={<div className="ogas-rich-placeholder">Write your article here…</div>}
-          ErrorBoundary={({children}:{children?:React.ReactNode})=><>{children}</>}
+          ErrorBoundary={LexicalErrorBoundary}
         />
       </div>
       <HistoryPlugin/>
