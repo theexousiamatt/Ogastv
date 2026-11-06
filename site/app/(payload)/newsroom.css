@@ -1,6 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap");
-@import "tailwindcss";
-@import "@heroui/styles";
 
 /* OgasTV Newsroom — HeroUI v3 + Payload administration. Public site styles are untouched. */
 :root[data-theme='light'], html[data-theme='light'] {
@@ -529,4 +527,54 @@ html[data-theme="light"] .ogas-review-page {min-width:0;max-width:100%;}
   html[data-theme="light"] .document-fields,
   html[data-theme="light"] .collection-list,
   html[data-theme="light"] .list-controls {max-width:100%;}
+}
+
+
+/* Native Payload documents and media: the editor/upload UI must not inherit
+   constraints from page-level newsroom cards. Keep native drawer behavior,
+   including close, scroll, focus trapping, and inline featured-image selection. */
+html[data-theme="light"] .drawer .document-fields,
+html[data-theme="light"] .drawer .render-fields,
+html[data-theme="light"] .drawer .field-type,
+html[data-theme="light"] .drawer .upload {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+html[data-theme="light"] .drawer .document-fields {
+  flex: 1 1 auto;
+}
+html[data-theme="light"] .drawer .field-type input,
+html[data-theme="light"] .drawer .field-type textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+/* Document views share the same constraints without overflow on phones. */
+html[data-theme="light"] .document-fields,
+html[data-theme="light"] .document-fields .render-fields {
+  min-width: 0;
+  max-width: 100%;
+}
+html[data-theme="light"] .ogas-featured-media {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+html[data-theme="light"] .ogas-featured-media :is(button, a) {
+  min-height: 40px;
+}
+@media (max-width: 690px) {
+  html[data-theme="light"] .drawer .document-fields,
+  html[data-theme="light"] .drawer .render-fields,
+  html[data-theme="light"] .drawer .field-type,
+  html[data-theme="light"] .drawer .upload {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  html[data-theme="light"] .drawer .doc-header,
+  html[data-theme="light"] .drawer .doc-controls {
+    max-width: 100%;
+    min-width: 0;
+  }
 }
