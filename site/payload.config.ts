@@ -21,8 +21,8 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 const emailConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM_ADDRESS);
 const smtpPort = Number(process.env.SMTP_PORT || '465');
 const mediaStorage = {
-  endpoint: process.env.OGASTV_MEDIA_S3_ENDPOINT || '',
-  region: process.env.OGASTV_MEDIA_S3_REGION || '',
+  endpoint: process.env.OGASTV_MEDIA_S3_ENDPOINT || 'https://cjyhayrxadyadaqdrlot.storage.supabase.co/storage/v1/s3',
+  region: process.env.OGASTV_MEDIA_S3_REGION || 'eu-west-1',
   keyId: process.env.OGASTV_MEDIA_S3_ACCESS_KEY_ID || '',
   secret: process.env.OGASTV_MEDIA_S3_SECRET_ACCESS_KEY || '',
 };
