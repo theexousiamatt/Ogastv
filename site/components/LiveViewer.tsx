@@ -27,6 +27,7 @@ export function LiveViewer({eventId}:{eventId:number}){
   const [state,setState]=useState<'loading'|'playing'|'offline'|'error'>('loading');
   const [message,setMessage]=useState('');
   const [muted,setMuted]=useState(true);
+  const [portrait,setPortrait]=useState(false);
   useEffect(()=>{
     let alive=true;
     async function join(){
@@ -54,8 +55,8 @@ export function LiveViewer({eventId}:{eventId:number}){
     void join();
     return ()=>{alive=false;connection.current?.close();connection.current=null};
   },[eventId]);
-  return <div style={{background:'#121719',borderRadius:20,overflow:'hidden',position:'relative',aspectRatio:'16/9',display:'grid',placeItems:'center',color:'white'}}>
-    <video ref={video} autoPlay playsInline muted={muted} controls={state==='playing'} style={{width:'100%',height:'100%',objectFit:'contain'}}/>
+  return <div className={'ogas-live-viewer'+(portrait?' ogas-live-viewer--portrait':'')} style={{background:'#121719',overflow:'hidden',position:'relative',display:'grid',placeItems:'center',color:'white'}}>
+    <video ref={video} autoPlay playsInline muted={muted} controls={state==='playing'} onLoadedMetadata={event=>setPortrait(event.currentTarget.videoHeight>event.currentTarget.videoWidth)} style={{width:'100%',height:'100%',objectFit:'contain'}}/>
     {state!=='playing'&&<div style={{position:'absolute',textAlign:'center',padding:25}}>
       <Radio size={35} style={{margin:'auto'}}/>
       <h2 style={{fontSize:22,margin:'12px 0'}}>{state==='loading'?'Connecting to live coverage…':state==='offline'?'Currently off air':'Unable to connect'}</h2>
