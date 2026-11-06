@@ -93,7 +93,36 @@ try {
   if (!found || found.title !== article.title) {
     throw new Error('Saved article was not retrievable.');
   }
-  console.log('Writer-first CI: draft saved, URL generated, review status updated, and article retrieved.');
+
+  // Test the actual editorial media workflow in disposable CI: upload image,
+  // attach it to a draft, and verify it survives a Payload read.
+  const image = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nQAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  const media = await payload.create({
+    collection: 'media',
+    overrideAccess: true,
+    data: { alt: 'CI editorial featured image', caption: 'Test upload, not a public image' },
+    file: { data: image, name: 'ci-editorial-image.png', mimetype: 'image/png', size: image.byteLength },
+  });
+  if (!media.id) throw new Error('Media upload did not return an ID.');
+
+  await payload.update({
+    collection: 'articles',
+    id: article.id,
+    draft: true,
+    overrideAccess: true,
+    data: { featuredImage: media.id },
+  });
+  const withImage = await payload.findByID({
+    collection: 'articles', id: article.id, draft: true, overrideAccess: true, depth: 1,
+  });
+  const linkedImage = withImage.featuredImage;
+  if (!linkedImage || typeof linkedImage !== 'object' || linkedImage.id !== media.id) {
+    throw new Error('Uploaded media did not attach to the article.');
+  }
+  console.log('Writer-first CI: draft saved, URL generated, review status updated, media uploaded and attached.');
 } finally {
   await payload.db.destroy?.();
 }
