@@ -152,15 +152,16 @@ requireStatus(await api('/api/articles/' + writerArticle.id, {
 
 const uploaded = new FormData();
 uploaded.append('_payload', JSON.stringify({ alt: '1x1 CI image upload test' }));
-uploaded.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nQAAAABJRU5ErkJggg==','base64')], { type: 'image/png' }), 'qa-1px.png');
+uploaded.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGNsNNdmYGBgYmBgYGBgAAALJADnu5XVPgAAAABJRU5ErkJggg==','base64')], { type: 'image/png' }), 'qa-1px.png');
 const media = await api('/api/media', { method: 'POST', token: admin.token, form: uploaded });
 requireStatus(media, 201, 'editorial media image upload');
 assert.ok(media.body.doc?.id, 'Media record created');
+assert.equal(media.body.doc.mimeType, 'image/webp', 'New uploads are converted to compact WebP files');
 
 
 const optionalDescriptionFile = new FormData();
 optionalDescriptionFile.append('_payload', JSON.stringify({}));
-optionalDescriptionFile.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nQAAAABJRU5ErkJggg==', 'base64')], {type:'image/png'}), 'qa-optional-description.png');
+optionalDescriptionFile.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGNsNNdmYGBgYmBgYGBgAAALJADnu5XVPgAAAABJRU5ErkJggg==', 'base64')], {type:'image/png'}), 'qa-optional-description.png');
 const optionalMedia = await api('/api/media', {method:'POST',token:admin.token,form:optionalDescriptionFile});
 requireStatus(optionalMedia,201,'image upload without a description');
 assert.ok(optionalMedia.body.doc?.id,'Optional-description media record created');
@@ -186,5 +187,13 @@ const invalidDestination = await api('/api/ad-banners',{
   data:{...adBase,name:'Invalid link',destinationUrl:'ftp://example.com',startsAt:'2030-02-15T08:00:00.000Z',endsAt:'2030-02-16T08:00:00.000Z'}
 });
 assert.ok(invalidDestination.status>=400,'Unsupported link protocol is rejected');
-console.log('PASS: drafts, editorial review, staff permissions, publishing, media with optional descriptions and advertising bookings');
+// Verify the media library delete flow and its server-side safeguards.
+const forbiddenMediaDelete = await api('/api/media/' + media.body.doc.id, {method:'DELETE',token:journalist.token});
+assert.ok([401,403].includes(forbiddenMediaDelete.status),'Journalists cannot delete shared media');
+const protectedMediaDelete = await api('/api/media/' + optionalMedia.body.doc.id, {method:'DELETE',token:admin.token});
+assert.ok(protectedMediaDelete.status >= 400,'An active advertisement image cannot be deleted');
+requireStatus(await api('/api/media/' + media.body.doc.id,{method:'DELETE',token:editor.token}),200,'Editor deletes an unreferenced image');
+requireStatus(await api('/api/ad-banners/' + scheduledAd.body.doc.id,{method:'DELETE',token:admin.token}),200,'Administrator removes test advertisement');
+requireStatus(await api('/api/media/' + optionalMedia.body.doc.id,{method:'DELETE',token:admin.token}),200,'Administrator deletes image after advertisement removed');
+console.log('PASS: drafts, review, permissions, publishing, WebP image optimization, media deletion guards and advertising bookings');
 

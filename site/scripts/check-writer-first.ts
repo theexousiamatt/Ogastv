@@ -97,7 +97,7 @@ try {
   // Test the actual editorial media workflow in disposable CI: upload image,
   // attach it to a draft, and verify it survives a Payload read.
   const image = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nQAAAABJRU5ErkJggg==',
+    'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGNsNNdmYGBgYmBgYGBgAAALJADnu5XVPgAAAABJRU5ErkJggg==',
     'base64',
   );
   const media = await payload.create({
