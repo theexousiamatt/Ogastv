@@ -12,8 +12,8 @@ export const Media: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: ({ req }) => editorial(req.user),
-    update: ({ req }) => editorial(req.user),
+    create: ({ req }) => editorial(req.user) || hasRole(req.user, 'advertising_manager'),
+    update: ({ req }) => editorial(req.user) || hasRole(req.user, 'advertising_manager'),
     delete: ({ req }) => hasRole(req.user, 'administrator', 'editor_in_chief', 'editor'),
   },
   fields: [
