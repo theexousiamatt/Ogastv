@@ -3,6 +3,7 @@ import Link from 'next/link';
 import sanitizeHtml from 'sanitize-html';
 import { notFound } from 'next/navigation';
 import { getArticle, prettyDate } from '@/lib/content';
+import { ArticleShare } from '@/components/ArticleShare';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,6 +33,7 @@ export default async function ArticlePage({ params }: Props) {
     <h1 className="article-title">{article.title}</h1>
     <div className="article-byline"><span>{article.author ? 'By ' + article.author : 'OgasTV Africa'}</span><time dateTime={article.date}>{prettyDate(article.date)}</time></div>
     {article.image && <img className="article-cover" src={article.image.url} alt={article.image.alt} />}
+    <ArticleShare title={article.title}/>
     <div className="article-content" dangerouslySetInnerHTML={{ __html: html }} />
   </article>;
 }
