@@ -21,10 +21,20 @@ export async function up({db}:MigrateUpArgs):Promise<void> {
     CREATE INDEX "ad_banners_banner_idx" ON "ogastv"."ad_banners" ("banner_id");
     CREATE INDEX "ad_banners_updated_at_idx" ON "ogastv"."ad_banners" ("updated_at");
     CREATE INDEX "ad_banners_created_at_idx" ON "ogastv"."ad_banners" ("created_at");
+    ALTER TABLE "ogastv"."payload_locked_documents_rels" ADD COLUMN "ad_banners_id" integer;
+    ALTER TABLE "ogastv"."payload_locked_documents_rels"
+      ADD CONSTRAINT "payload_locked_documents_rels_ad_banners_fk"
+      FOREIGN KEY ("ad_banners_id") REFERENCES "ogastv"."ad_banners"("id")
+      ON DELETE cascade ON UPDATE no action;
+    CREATE INDEX "payload_locked_documents_rels_ad_banners_id_idx"
+      ON "ogastv"."payload_locked_documents_rels" ("ad_banners_id");
   `);
 }
 export async function down({db}:MigrateDownArgs):Promise<void> {
   await db.execute(sql`
+    ALTER TABLE "ogastv"."payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_ad_banners_fk";
+    DROP INDEX "ogastv"."payload_locked_documents_rels_ad_banners_id_idx";
+    ALTER TABLE "ogastv"."payload_locked_documents_rels" DROP COLUMN "ad_banners_id";
     DROP TABLE "ogastv"."ad_banners";
     DROP TYPE "ogastv"."enum_ad_banners_placement";
     DROP TYPE "ogastv"."enum_ad_banners_status";
