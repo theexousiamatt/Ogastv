@@ -20,11 +20,11 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
-      required: true,
+      required: false,
       label: 'Image description',
       admin: {
         placeholder: 'Describe what the image shows',
-        description: 'A short description for readers who cannot see the image.',
+        description: 'Optional, but helpful for people using screen readers.',
       },
     },
     {
