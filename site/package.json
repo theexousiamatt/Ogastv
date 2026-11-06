@@ -32,7 +32,7 @@
     "@payloadcms/db-postgres": "3.93.0",
     "@payloadcms/richtext-lexical": "3.93.0",
     "@payloadcms/storage-s3": "3.93.0",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.5",
     "sanitize-html": "^2.17.0",
     "html-entities": "^2.6.0",
     "@payloadcms/email-nodemailer": "3.93.0",
