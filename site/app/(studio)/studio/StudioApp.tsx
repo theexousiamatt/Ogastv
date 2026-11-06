@@ -130,6 +130,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [editor,setEditor] = useState<Editor>(emptyEditor);
   const editorRef=useRef(editor);
   useEffect(()=>{editorRef.current=editor},[editor]);
+  // Keep consecutive image changes ordered so older saves cannot win.
+  const featuredImageSaveRef=useRef<{articleId:string;promise:Promise<void>}|null>(null);
   const [autoSaveState,setAutoSaveState]=useState<'idle'|'saving'|'saved'|'error'>('idle');
   const [picker,setPicker] = useState(false);
   const [fileDescription,setFileDescription] = useState('');
@@ -235,10 +237,31 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   });
   const toggleAllArticles=(checked:boolean)=>setSelectedArticles(checked?new Set(visibleIds):new Set());
 
-  const begin = () => {setEditor(emptyEditor());setAutoSaveState('idle');setPicker(false);navigate('write');};
+  const isUnfinishedDraft=(draft:Editor)=>Boolean(
+    draft.title.trim()||draft.bodyText.trim()||draft.summary.trim()||draft.featuredImage
+  );
+  // 'Write' resumes work in progress; 'New article' explicitly starts fresh.
+  const resumeWriting=()=>{
+    const current=editorRef.current;
+    if(current.id||isUnfinishedDraft(current)){
+      navigate('write',current.id||undefined);
+      return;
+    }
+    begin();
+  };
+  const begin = () => {
+    const current=editorRef.current;
+    if(!current.id&&isUnfinishedDraft(current)&&
+      !window.confirm('Start another article? Save your unfinished draft first if you want to keep it after refreshing.'))return;
+    editorRef.current=emptyEditor();
+    setEditor(editorRef.current);setAutoSaveState('idle');setPicker(false);navigate('write');
+  };
   const openArticle = async (id: string | number) => {
     setBusy(true);setError('');
     try {
+      // Wait for an in-flight cover save before reopening its article.
+      const pending=featuredImageSaveRef.current;
+      if(pending?.articleId===String(id))await pending.promise;
       const article=await jsonFetch('/api/articles/'+encodeURIComponent(String(id))+'?draft=true&depth=1');
       setEditor({
         id:String(article.id),title:article.title||'',summary:article.summary||'',
@@ -275,6 +298,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     if (action==='publish' && !window.confirm('Publish this article on the OgasTV website now?')) return;
     setBusy(true);
     const makeId=(value:string)=>/^\d+$/.test(value)?Number(value):value;
+    const pendingImageSave=featuredImageSaveRef.current;
+    if(pendingImageSave?.articleId===editor.id)await pendingImageSave.promise;
     const data:Record<string,unknown>={
       title:editor.title.trim(),primaryCategory:makeId(editor.primaryCategory),
       summary:editor.summary.trim() || editor.bodyText.trim().slice(0,240) || editor.title.trim(),
@@ -315,6 +340,54 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     finally {setBusy(false);}
   };
 
+  const changeFeaturedImage=(imageId:string)=>{
+    const current=editorRef.current;
+    if(current.id&&current.published&&!canPublish){
+      setError('Only an administrator or editor-in-chief can change a published article’s featured image.');
+      setPicker(false);
+      return;
+    }
+    if(current.featuredImage===imageId){setPicker(false);return;}
+    const next={...current,featuredImage:imageId};
+    editorRef.current=next;
+    setEditor(next);
+    setPicker(false);
+    if(!current.id){
+      // New stories without required fields cannot yet be saved to Payload.
+      // Keep the photo in the current writing session until Save draft.
+      return;
+    }
+    const articleId=current.id;
+    const previous=featuredImageSaveRef.current;
+    setAutoSaveState('saving');
+    const promise=(async()=>{
+      if(previous?.articleId===articleId)await previous.promise;
+      try{
+        const id=/^\d+$/.test(imageId)?Number(imageId):imageId;
+        await jsonFetch('/api/articles/'+encodeURIComponent(articleId)+(current.published?'':'?draft=true'),{
+          method:'PATCH',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({featuredImage:imageId?id:null}),
+        });
+        if(editorRef.current.id===articleId&&editorRef.current.featuredImage===imageId){
+          setAutoSaveState('saved');
+          setMessage('Featured image saved automatically.');
+        }
+      }catch(e){
+        if(editorRef.current.id===articleId&&editorRef.current.featuredImage===imageId){
+          setAutoSaveState('error');
+          setMessage('');
+          setError('Your photo is selected but could not be saved automatically. Please click Save changes. '+
+            (e instanceof Error?e.message:'Please try again.'));
+        }
+      }
+    })();
+    featuredImageSaveRef.current={articleId,promise};
+    void promise.finally(()=>{
+      if(featuredImageSaveRef.current?.promise===promise)featuredImageSaveRef.current=null;
+    });
+  };
+
   const upload = async () => {
     if (!uploadFile) {setError('Choose a photo to upload.');return;}
     if (uploadFile.size>12*1024*1024) {setError('Choose a photo smaller than 12 MB.');return;}
@@ -328,10 +401,14 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       const result=await response.json().catch(()=>({}));
       if (!response.ok) throw new Error(result.errors?.[0]?.message||result.message||'Upload failed.');
       const item=result.doc||result;
+      if(!item?.id)throw new Error('The upload completed, but no image ID was returned.');
       setUploadFile(null);setFileDescription('');
-      await loadMedia();
-      if (picker) {setEditor(s=>({...s,featuredImage:String(item.id)}));setPicker(false);}
-      setMessage('Photo uploaded successfully.');
+      // The upload already succeeded: attach it before refreshing the library.
+      // A slow or failed media-list refresh must not lose the selected image.
+      setMedia(current=>[item,...current.filter(m=>String(m.id)!==String(item.id))]);
+      if(picker)changeFeaturedImage(String(item.id));
+      setMessage(picker?'Photo uploaded. Saving it to the article…':'Photo uploaded successfully.');
+      void loadMedia().catch(()=>setError('The photo was uploaded, but the library could not refresh. Try Refresh.'));
     } catch(e) {setError(e instanceof Error?e.message:'Photo upload failed.');}
     finally {setBusy(false);}
   };
@@ -461,7 +538,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       <div className="ogas-nav-label">YOUR WORKSPACE</div>
       <nav className="ogas-nav">
         {topNav.filter(x=>(canAds || x.key!=='ads') && x.key!=='advanced').map(x=>{
-          const Icon=icons[x.key];return <button key={x.key} type="button" className={'ogas-nav-link'+(tab===x.key?' active':'')} onClick={()=>x.key==='write'?begin():navigate(x.key)} aria-current={tab===x.key?'page':undefined}><Icon {...iconSize(20)}/><span>{x.label==='Write'?'Write an article':x.label==='Articles'?'Your articles':x.label}</span>{x.key==='write'&&<Plus size={15} strokeWidth={2.2}/>}</button>;
+          const Icon=icons[x.key];return <button key={x.key} type="button" className={'ogas-nav-link'+(tab===x.key?' active':'')} onClick={()=>x.key==='write'?resumeWriting():navigate(x.key)} aria-current={tab===x.key?'page':undefined}><Icon {...iconSize(20)}/><span>{x.label==='Write'?'Write an article':x.label==='Articles'?'Your articles':x.label}</span>{x.key==='write'&&<Plus size={15} strokeWidth={2.2}/>}</button>;
         })}
         <div className="ogas-nav-label ogas-nav-label--more">MORE</div>
         <button type="button" className={'ogas-nav-link'+(tab==='advanced'?' active':'')} onClick={()=>navigate('advanced')}>
@@ -531,7 +608,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
                 />}
               <div className="ogas-editor-footnote"><CheckCircle2 size={15}/> {autoSaveState==='saving'?'Saving changes…':autoSaveState==='saved'?'All changes saved':autoSaveState==='error'?'Could not save changes':'Save your draft whenever you need a break.'}</div>
             </section>
-            <aside className="ogas-editor-side"><section className="ogas-editor-panel"><h3>Featured image <span>Optional</span></h3>{chosenImage? <button type="button" className="ogas-chosen-cover" onClick={()=>setPicker(true)}><ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||'Featured article photo'} missingText="Photo unavailable — choose another"/><span>Change image</span></button>:<button type="button" className="ogas-cover-upload" onClick={()=>setPicker(true)}><ImagePlus size={25}/><strong>Choose or upload a photo</strong><small>JPG, PNG, WebP or AVIF</small></button>}{editor.featuredImage&&<button className="ogas-remove-cover" onClick={()=>setEditor(s=>({...s,featuredImage:''}))}>Remove featured image</button>}</section>
+            <aside className="ogas-editor-side"><section className="ogas-editor-panel"><h3>Featured image <span>Optional</span></h3>{chosenImage? <button type="button" className="ogas-chosen-cover" onClick={()=>setPicker(true)}><ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||'Featured article photo'} missingText="Photo unavailable — choose another"/><span>Change image</span></button>:<button type="button" className="ogas-cover-upload" onClick={()=>setPicker(true)}><ImagePlus size={25}/><strong>Choose or upload a photo</strong><small>JPG, PNG, WebP or AVIF</small></button>}{editor.featuredImage&&<button className="ogas-remove-cover" onClick={()=>changeFeaturedImage('')}>Remove featured image</button>}</section>
               <section className="ogas-editor-panel"><h3>Article details</h3><label className="ogas-input-label">Section <span>Required</span></label><select className="ogas-field" value={editor.primaryCategory} onChange={e=>setEditor(s=>({...s,primaryCategory:e.target.value}))}><option value="">Choose a section</option>{categories.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}</select><label className="ogas-input-label">Short introduction <span>Optional</span></label><textarea className="ogas-field" rows={4} value={editor.summary} onChange={e=>setEditor(s=>({...s,summary:e.target.value}))} placeholder="A brief introduction for readers."/><p className="ogas-helper">If you leave this blank, we'll use the opening of your article.</p></section>
               <details className="ogas-editor-panel ogas-more-options ogas-story-advanced">
                 <summary><Settings2 size={17}/> More options <ChevronDown size={16}/></summary>
@@ -611,10 +688,10 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       </main>
     </div>
 
-    <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?begin():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
+    <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?resumeWriting():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
     {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button><a href="/admin/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
 
-    {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>{setEditor(s=>({...s,featuredImage:String(m.id)}));setPicker(false);}}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadPreviewUrl&&<div className="ogas-picker-selected"><img src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded"/><span>{uploadFile?.name}<small>Ready to upload</small></span></div>}<input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload and use'} <ArrowRight size={16}/></button></div></div></div>}
+    {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>changeFeaturedImage(String(m.id))}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadPreviewUrl&&<div className="ogas-picker-selected"><img src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded"/><span>{uploadFile?.name}<small>Ready to upload</small></span></div>}<input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload and use'} <ArrowRight size={16}/></button></div></div></div>}
 
     {preview&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPreview(false);}}><div className="ogas-modal ogas-preview-modal" role="dialog" aria-modal="true" aria-label="Article preview"><header><div><h2>Article preview</h2><p>This preview is only visible to you.</p></div><button onClick={()=>setPreview(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-preview-article"><span className="ogas-eyebrow">{categories.find(c=>String(c.id)===editor.primaryCategory)?.name||'NEWSROOM'}</span><h1>{editor.title||'Your headline goes here'}</h1>{chosenImage&&<ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||''} missingText="Photo unavailable"/>}<p className="ogas-preview-summary">{editor.summary||editor.bodyText.slice(0,230)}</p><div className="ogas-preview-body">{editor.bodyText||'Start writing to see your article here.'}</div></div></div></div>}
 
