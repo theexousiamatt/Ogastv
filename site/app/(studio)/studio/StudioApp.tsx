@@ -211,7 +211,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const changeSearch=(value:string)=>{setPage(1);setSearch(value);};
   const changeFilter=(value:string)=>{setPage(1);setFilter(value);};
 
-  const begin = () => {setEditor(emptyEditor());setPicker(false);navigate('write');};
+  const begin = () => {setEditor(emptyEditor());setAutoSaveState('idle');setPicker(false);navigate('write');};
   const openArticle = async (id: string | number) => {
     setBusy(true);setError('');
     try {
@@ -254,15 +254,23 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     const data:Record<string,unknown>={
       title:editor.title.trim(),primaryCategory:makeId(editor.primaryCategory),
       summary:editor.summary.trim() || editor.bodyText.trim().slice(0,240) || editor.title.trim(),
+      subtitle:editor.subtitle.trim(),publicByline:editor.publicByline.trim(),
+      editorialType:editor.editorialType,
+      secondaryCategories:editor.secondaryCategories.map(makeId),
+      locations:editor.locations.map(makeId),
+      tags:editor.tags.map(makeId),
+      metaTitle:editor.metaTitle.trim(),metaDescription:editor.metaDescription.trim(),
+      correctionNotice:editor.correctionNotice.trim(),
+      sourceLinks:editor.sourceLinks.filter(x=>x.url.trim()).map(x=>({label:x.label.trim(),url:x.url.trim()})),
       featuredImage:editor.featuredImage?makeId(editor.featuredImage):null,
       workflowStatus:action==='publish'||editor.published?'approved':action==='review'?'in_review':'draft',
       _status:action==='publish'||editor.published?'published':'draft',
     };
     if (!editor.id) {
       data.author=makeId(staffId);
-      data.body=toLexical(editor.bodyText.trim());
+      data.body=editor.body || toLexical(editor.bodyText.trim());
     } else if (!editor.lockedBody && editor.touchedBody) {
-      data.body=toLexical(editor.bodyText.trim());
+      data.body=editor.body || toLexical(editor.bodyText.trim());
     }
     try {
       const endpoint='/api/articles'+(editor.id?'/'+encodeURIComponent(editor.id):'')+
@@ -275,6 +283,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       const doc=result.doc||result;
       const savedId=String(doc.id||editor.id);
       setEditor(s=>({...s,id:savedId,published:action==='publish'||s.published,touchedBody:false}));
+      setAutoSaveState('saved');
       setMessage(action==='publish'?'Your article is now published.':action==='review'?'Sent to the editor for review.':'Draft saved.');
       await loadArticles(1,'','all');
       setPage(1);setFilter('all');setSearch('');
