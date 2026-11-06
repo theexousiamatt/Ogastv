@@ -57,3 +57,45 @@
 .ogas-advanced-actions{display:flex;align-items:center;gap:9px;justify-content:end;padding-top:9px}
 @media(max-width:900px){.ogas-rich-toolbar{top:70px}.ogas-advanced-layout{grid-template-columns:1fr}.ogas-advanced-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.ogas-advanced-nav button{padding:13px 9px;gap:7px}.ogas-advanced-nav button>svg:last-child{display:none}.ogas-advanced-nav button small{display:none}}
 @media(max-width:650px){.ogas-rich-toolbar{position:static;overflow-x:auto;flex-wrap:nowrap;gap:1px;padding:6px 3px}.ogas-rich-toolbar button{flex:none;width:31px;height:33px}.ogas-rich-divider{flex:none}.ogas-rich-content{font-size:16px;line-height:1.8}.ogas-rich-placeholder{font-size:16px}.ogas-advanced-panel{padding:16px}.ogas-advanced-nav{gap:3px}.ogas-advanced-nav button strong{font-size:10px}.ogas-advanced-nav button>svg{width:16px}.ogas-advanced-actions{flex-direction:column-reverse}.ogas-advanced-actions .ogas-button{width:100%}}
+
+
+/* Article library — readable, touch-friendly selection and quick actions. */
+.ogas-story-item{position:relative;display:flex;align-items:center;border-bottom:1px solid #eeece6;min-width:0;background:#fff;transition:background .15s}
+.ogas-story-item:last-child{border-bottom:0}
+.ogas-story-item:hover,.ogas-story-item.is-selected{background:#fcf7f6}
+.ogas-story-item .ogas-story-row{flex:1;min-width:0;width:auto;border:0!important;background:transparent}
+.ogas-story-item .ogas-story-row:hover{background:transparent}
+.ogas-story-item .ogas-story-select{padding:13px 0 13px 18px;display:flex;align-items:center;cursor:pointer}
+.ogas-story-select input,.ogas-selection-toolbar input{accent-color:#92152c;width:17px;height:17px;cursor:pointer}
+.ogas-article-menu-area{position:relative;margin-right:12px;flex:none}
+.ogas-row-menu-trigger{height:40px;width:40px;display:grid;place-items:center;border-radius:12px!important;color:#535956!important}
+.ogas-row-menu-trigger:hover,.ogas-row-menu-trigger[aria-expanded="true"]{background:#f0e9e8!important;color:#8e152b!important}
+.ogas-article-menu{position:absolute;right:0;top:calc(100% + 5px);z-index:30;width:226px;background:#fff;border:1px solid #e9e5e0;border-radius:15px;padding:6px;box-shadow:0 15px 35px #21141724}
+.ogas-article-menu button{display:flex;align-items:center;gap:11px;padding:12px 11px;border-radius:10px;width:100%;text-align:left;font-size:13px;font-weight:650!important;color:#2e3530!important}
+.ogas-article-menu button:hover{background:#f7f5f2}
+.ogas-article-menu button.ogas-danger-action{color:#a12132!important}
+.ogas-article-menu button.ogas-danger-action:hover{background:#fdf0f0}
+.ogas-story-list--large{overflow:visible}
+.ogas-selection-toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 12px;padding:2px 3px;font-size:12px;color:#4d574f}
+.ogas-selection-toolbar label{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-weight:650}
+.ogas-selection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ogas-selection-actions button{display:inline-flex;align-items:center;gap:6px;border-radius:10px;padding:9px 11px;font-weight:700!important}
+.ogas-selection-actions button:hover{background:#f5f2ef}
+.ogas-selection-actions .ogas-danger-action{background:#fff3f3;color:#a21b30!important}
+.ogas-selection-actions .ogas-danger-action:hover{background:#fbe7e8}
+.ogas-image-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:100%;height:100%;min-height:50px;background:#f3f1ec;color:#7e827e;text-align:center;padding:6px}
+.ogas-image-fallback small{font-size:10px!important;font-weight:600;line-height:1.35}
+.ogas-chosen-cover .ogas-image-fallback{aspect-ratio:16/9;padding:20px;min-height:120px}
+.ogas-chosen-cover .ogas-image-fallback small{font-size:12px!important}
+.ogas-photo-visual .ogas-image-fallback,.ogas-ad-thumb .ogas-image-fallback,.ogas-preview-article .ogas-image-fallback{height:100%}
+@media(max-width:650px){
+ .ogas-story-item .ogas-story-select{padding-left:10px;padding-right:0}
+ .ogas-story-select input{width:16px;height:16px}
+ .ogas-story-item .ogas-story-row{padding-left:8px;padding-right:4px;gap:8px}
+ .ogas-article-menu-area{margin-right:5px}
+ .ogas-row-menu-trigger{height:36px;width:35px}
+ .ogas-article-menu{right:-4px}
+ .ogas-story-row .ogas-status{max-width:68px;white-space:normal;text-align:center}
+ .ogas-selection-toolbar{align-items:flex-start}
+ .ogas-selection-actions{gap:6px}
+}
