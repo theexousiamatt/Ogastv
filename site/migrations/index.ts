@@ -6,6 +6,8 @@ import * as migration_20261105_193400_live_cloudflare_fields from './20261105_19
 
 import * as migration_20261106_032000_studio_ads_and_optional_alt from './20261106_032000_studio_ads_and_optional_alt';
 
+import * as migration_20261106_180830_media_s3_objectkey from './20261106_180830_media_s3_objectkey';
+
 export const migrations = [
   {
     up: migration_20261105_040516_ogastv_initial_schema.up,
@@ -31,5 +33,10 @@ export const migrations = [
     up: migration_20261106_032000_studio_ads_and_optional_alt.up,
     down: migration_20261106_032000_studio_ads_and_optional_alt.down,
     name: '20261106_032000_studio_ads_and_optional_alt',
+  },
+  {
+    up: migration_20261106_180830_media_s3_objectkey.up,
+    down: migration_20261106_180830_media_s3_objectkey.down,
+    name: '20261106_180830_media_s3_objectkey',
   },
 ];
