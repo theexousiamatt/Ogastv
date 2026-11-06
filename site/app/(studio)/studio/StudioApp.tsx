@@ -7,7 +7,7 @@ import {
   ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, Bell, BookOpen,
   CalendarDays, Camera, Check, CheckCircle2, ChevronDown, ChevronLeft,
   ChevronRight, CircleHelp, Clock3, ExternalLink, FilePenLine, FileText,
-  FolderOpen, Home, Image as ImageIcon, ImagePlus, LayoutGrid, Link2,
+  FolderOpen, Home, Image as ImageIcon, ImagePlus, LayoutGrid, Link2, Copy,
   LogOut, Menu, MoreHorizontal, Newspaper, PencilLine, Plus, Radio,
   Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, X,
 } from 'lucide-react';
@@ -67,6 +67,12 @@ function mediaUrl(m?: Media | string | number | null): string {
   return m.thumbnailURL || m.url || '';
 }
 function titleOf(a: Article) { return a.title?.trim() || 'Untitled article'; }
+function ArticleImage({url,alt='',missingText='Image unavailable'}:{url:string;alt?:string;missingText?:string}) {
+  const [failed,setFailed]=useState(false);
+  useEffect(()=>setFailed(false),[url]);
+  if(!url||failed)return <span className="ogas-image-fallback" role="img" aria-label={failed?missingText:'No image'}><ImageIcon size={20}/><small>{failed?missingText:'No image'}</small></span>;
+  return <img src={url} alt={alt} loading="lazy" onError={()=>setFailed(true)}/>;
+}
 function lexicalText(input: unknown): string {
   if (!input || typeof input !== 'object') return '';
   const x = input as {text?: unknown;children?: unknown[];root?: unknown;type?: string};
@@ -110,6 +116,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [page,setPage] = useState(1);
   const [search,setSearch] = useState('');
   const [filter,setFilter] = useState('all');
+  const [selectedArticles,setSelectedArticles] = useState<Set<string>>(()=>new Set());
+  const [articleMenu,setArticleMenu] = useState<string|null>(null);
   const [categories,setCategories] = useState<Category[]>([]);
   const [locations,setLocations] = useState<TaxonomyItem[]>([]);
   const [tags,setTags] = useState<TaxonomyItem[]>([]);
@@ -131,6 +139,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [adEditor,setAdEditor] = useState(false);
   const canWrite = ['administrator','editor_in_chief','editor','journalist'].includes(role);
   const canPublish = ['administrator','editor_in_chief'].includes(role);
+  const canDelete = canPublish;
   const canAds = ['administrator','advertising_manager','editor_in_chief'].includes(role);
   const canUpload = canWrite || canAds;
   const firstName = name.trim().split(/\s+/)[0] || 'there';
@@ -208,8 +217,14 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     if (category && typeof category === 'object') return category.name;
     return categories.find(c=>String(c.id)===String(category))?.name || 'Uncategorised';
   };
-  const changeSearch=(value:string)=>{setPage(1);setSearch(value);};
-  const changeFilter=(value:string)=>{setPage(1);setFilter(value);};
+  const changeSearch=(value:string)=>{setPage(1);setSearch(value);setSelectedArticles(new Set());setArticleMenu(null);};
+  const changeFilter=(value:string)=>{setPage(1);setFilter(value);setSelectedArticles(new Set());setArticleMenu(null);};
+  const visibleIds=articles.map(a=>String(a.id));
+  const selectedOnPage=visibleIds.filter(id=>selectedArticles.has(id));
+  const toggleArticle=(id:string,checked:boolean)=>setSelectedArticles(current=>{
+    const next=new Set(current);if(checked)next.add(id);else next.delete(id);return next;
+  });
+  const toggleAllArticles=(checked:boolean)=>setSelectedArticles(checked?new Set(visibleIds):new Set());
 
   const begin = () => {setEditor(emptyEditor());setAutoSaveState('idle');setPicker(false);navigate('write');};
   const openArticle = async (id: string | number) => {
@@ -312,6 +327,60 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     finally {setBusy(false);}
   };
   const chosenImage=media.find(m=>String(m.id)===editor.featuredImage);
+  const duplicateArticle=async(article:Article)=>{
+    if(!canWrite || busy)return;
+    setArticleMenu(null);setBusy(true);setError('');setMessage('');
+    try{
+      const source=await jsonFetch('/api/articles/'+encodeURIComponent(String(article.id))+'?draft=true&depth=0');
+      if(!source?.body?.root)throw new Error('This article has no content to copy.');
+      const asId=(value:unknown)=>{const id=normalizeId(value);return id?(/^\\d+$/.test(id)?Number(id):id):null;};
+      const payload={
+        title:(String(source.title||'Untitled article')+' (copy)').slice(0,250),
+        slug:(String(source.slug||'article').slice(0,155)+'-copy-'+Date.now().toString(36)).slice(0,180),
+        body:source.body,summary:source.summary||String(source.title||'Article'),
+        subtitle:source.subtitle||'',publicByline:source.publicByline||'',
+        editorialType:source.editorialType||'news',primaryCategory:asId(source.primaryCategory),
+        secondaryCategories:(source.secondaryCategories||[]).map(asId).filter(Boolean),
+        locations:(source.locations||[]).map(asId).filter(Boolean),
+        tags:(source.tags||[]).map(asId).filter(Boolean),
+        featuredImage:asId(source.featuredImage),author:asId(staffId),
+        metaTitle:source.metaTitle||'',metaDescription:source.metaDescription||'',
+        sourceLinks:(source.sourceLinks||[]).map((x:{label?:string;url?:string})=>({label:x.label||'',url:x.url||''})),
+        correctionNotice:source.correctionNotice||'',
+        legacyHtml:source.legacyHtml||'',legacyFeaturedImageUrl:source.legacyFeaturedImageUrl||'',
+        legacyFeaturedImageAlt:source.legacyFeaturedImageAlt||'',
+        workflowStatus:'draft',_status:'draft'
+      };
+      const response=await jsonFetch('/api/articles?draft=true',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const newId=response.doc?.id||response.id;
+      if(!newId)throw new Error('The article copy could not be opened.');
+      setSelectedArticles(new Set());setPage(1);setFilter('all');setSearch('');
+      await loadArticles(1,'','all');
+      await openArticle(newId);
+      setMessage('Draft copy created. Review it before publishing.');
+    }catch(e){setError(e instanceof Error?e.message:'Could not duplicate this article.');}
+    finally{setBusy(false);}
+  };
+  const deleteArticles=async(items:Article[])=>{
+    if(!canDelete||busy||!items.length)return;
+    setArticleMenu(null);
+    const label=items.length===1?'“'+titleOf(items[0])+'”':items.length+' selected articles';
+    if(!window.confirm('Permanently delete '+label+'? This cannot be undone.'))return;
+    setBusy(true);setError('');setMessage('');
+    let completed=0;
+    try{
+      for(const article of items){
+        await jsonFetch('/api/articles/'+encodeURIComponent(String(article.id)),{method:'DELETE'});
+        completed+=1;
+      }
+      setMessage(completed===1?'Article deleted.':completed+' articles deleted.');
+    }catch(e){setError((e instanceof Error?e.message:'Could not delete the article.')+(completed?' '+completed+' already deleted.':''));}
+    finally{
+      setSelectedArticles(new Set());
+      try{await loadArticles(page,search,filter);}catch{setError('Changes were made, but the article list could not refresh.');}
+      setBusy(false);
+    }
+  };
 
   const submitAd = async () => {
     setError('');setMessage('');
@@ -334,16 +403,31 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     finally {setBusy(false);}
   };
 
-  const articleCard=(a:Article)=>(
-    <button key={String(a.id)} type="button" className="ogas-story-row" onClick={()=>void openArticle(a.id)} aria-label={'Open '+titleOf(a)}>
-      <span className="ogas-story-cover">
-        {cover(a)?<img src={cover(a)} alt="" loading="lazy" onError={e=>{e.currentTarget.style.display='none';e.currentTarget.parentElement?.classList.add('missing-image');}}/>:<span className="ogas-cover-empty"><ImageIcon {...iconSize(19)}/><small>No image</small></span>}
-      </span>
-      <span className="ogas-story-copy"><strong>{titleOf(a)}</strong><small>{categoryName(a.primaryCategory)} <span aria-hidden="true">·</span> {shortDate(a.updatedAt)}</small></span>
-      <span className={'ogas-status ogas-status--'+statusOf(a)}>{statusName(a)}</span>
-      <ArrowUpRight className="ogas-row-arrow" {...iconSize(17)}/>
-    </button>
-  );
+  const articleCard=(a:Article,manageable=false)=>{
+    const id=String(a.id),selected=selectedArticles.has(id);
+    return <div key={id} className={'ogas-story-item'+(selected?' is-selected':'')}>
+      {manageable&&<label className="ogas-story-select" aria-label={'Select '+titleOf(a)}>
+        <input type="checkbox" checked={selected} disabled={busy} onChange={e=>toggleArticle(id,e.target.checked)}/>
+      </label>}
+      <button type="button" className="ogas-story-row" onClick={()=>void openArticle(a.id)} aria-label={'Open '+titleOf(a)}>
+        <span className="ogas-story-cover"><ArticleImage url={cover(a)} missingText="Photo missing"/></span>
+        <span className="ogas-story-copy"><strong>{titleOf(a)}</strong><small>{categoryName(a.primaryCategory)} <span aria-hidden="true">·</span> {shortDate(a.updatedAt)}</small></span>
+        <span className={'ogas-status ogas-status--'+statusOf(a)}>{statusName(a)}</span>
+        <ArrowUpRight className="ogas-row-arrow" {...iconSize(17)}/>
+      </button>
+      {manageable&&<div className="ogas-article-menu-area">
+        <button type="button" className="ogas-row-menu-trigger" disabled={busy} aria-label={'Actions for '+titleOf(a)}
+          aria-haspopup="menu" aria-expanded={articleMenu===id} onClick={()=>setArticleMenu(articleMenu===id?null:id)}>
+          <MoreHorizontal size={20}/>
+        </button>
+        {articleMenu===id&&<div className="ogas-article-menu" role="menu" onKeyDown={e=>{if(e.key==='Escape')setArticleMenu(null)}}>
+          <button type="button" role="menuitem" onClick={()=>{setArticleMenu(null);void openArticle(a.id)}}><FilePenLine size={17}/> Edit article</button>
+          {canWrite&&<button type="button" role="menuitem" onClick={()=>void duplicateArticle(a)}><Copy size={17}/> Duplicate as draft</button>}
+          {canDelete&&<button type="button" role="menuitem" className="ogas-danger-action" onClick={()=>void deleteArticles([a])}><Trash2 size={17}/> Delete article</button>}
+        </div>}
+      </div>}
+    </div>;
+  };
 
   return <div className="ogas-app">
     <aside className="ogas-sidebar" aria-label="Newsroom navigation">
@@ -379,14 +463,24 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
             <button type="button" className="ogas-feature-action ogas-feature-action--green" onClick={()=>navigate('live')}><span className="ogas-feature-icon"><Radio {...iconSize(22)}/></span><span className="ogas-feature-decor ogas-feature-decor--signal" aria-hidden="true"><Radio size={97} strokeWidth={0.7}/></span><span className="ogas-feature-bottom"><span><strong>Go live</strong><small>Start broadcasting in a few taps.</small></span><span className="ogas-action-arrow"><ArrowUpRight size={18}/></span></span></button>
           </div>
           <div className="ogas-mini-stats"><span><strong>{total}</strong> Articles found</span><span><strong>{articles.filter(a=>a._status==='published').length}</strong> Published in this view</span><span><strong>{articles.filter(a=>a._status!=='published').length}</strong> Unpublished in this view</span></div>
-          <div className="ogas-home-columns"><section className="ogas-recent"><div className="ogas-section-heading"><div><h2>Pick up where you left off</h2><p>Recently updated articles from the newsroom.</p></div><button type="button" className="ogas-text-link" onClick={()=>navigate('articles')}>See all articles <ArrowRight size={16}/></button></div><div className="ogas-story-list">{loading?<p className="ogas-empty-small">Loading your articles…</p>:filteredRecent.length?filteredRecent.map(articleCard):<div className="ogas-empty"><BookOpen size={26}/><h3>Your first article starts here</h3><p>Write something new, then come back to find it here.</p>{canWrite&&<button className="ogas-button ogas-button--red" onClick={begin}>Write an article</button>}</div>}</div></section>
+          <div className="ogas-home-columns"><section className="ogas-recent"><div className="ogas-section-heading"><div><h2>Pick up where you left off</h2><p>Recently updated articles from the newsroom.</p></div><button type="button" className="ogas-text-link" onClick={()=>navigate('articles')}>See all articles <ArrowRight size={16}/></button></div><div className="ogas-story-list">{loading?<p className="ogas-empty-small">Loading your articles…</p>:filteredRecent.length?filteredRecent.map(a=>articleCard(a)):<div className="ogas-empty"><BookOpen size={26}/><h3>Your first article starts here</h3><p>Write something new, then come back to find it here.</p>{canWrite&&<button className="ogas-button ogas-button--red" onClick={begin}>Write an article</button>}</div>}</div></section>
           <aside className="ogas-at-glance"><h2>At a glance</h2><p>Shortcuts to what needs attention.</p><button onClick={()=>{changeFilter('review');navigate('articles');}}><span className="ogas-glance-icon"><Clock3 {...iconSize(19)}/></span><span><strong>Waiting for review</strong><small>Find articles sent to an editor</small></span><ArrowRight size={18}/></button><button onClick={()=>navigate('media')}><span className="ogas-glance-icon ogas-glance-icon--green"><ImageIcon {...iconSize(19)}/></span><span><strong>Media library</strong><small>Browse and upload photos</small></span><ArrowRight size={18}/></button>{canAds&&<button onClick={()=>navigate('ads')}><span className="ogas-glance-icon"><LayoutGrid {...iconSize(19)}/></span><span><strong>Advertisements</strong><small>Manage website banners</small></span><ArrowRight size={18}/></button>}</aside></div>
         </>}
 
         {tab==='articles'&&<>
           <section className="ogas-heading ogas-heading--split"><div><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> CONTENT LIBRARY</span><h1>Your articles</h1><p>Find, update and publish articles, all in one place.</p></div>{canWrite&&<button className="ogas-button ogas-button--red" onClick={begin}><Plus {...iconSize(18)}/> New article</button>}</section>
           <div className="ogas-library-tools"><label className="ogas-search"><Search size={19}/><input type="search" value={search} onChange={e=>changeSearch(e.target.value)} placeholder="Search articles by headline" aria-label="Search articles by headline"/></label><div role="group" aria-label="Article status" className="ogas-segmented">{[{key:'all',label:'All'},{key:'published',label:'Published'},{key:'draft',label:'Drafts'},{key:'review',label:'In review'}].map(x=><button key={x.key} type="button" className={filter===x.key?'selected':''} onClick={()=>changeFilter(x.key)}>{x.label}</button>)}</div></div>
-          <div className="ogas-story-list ogas-story-list--large">{loading?<p className="ogas-empty-small">Finding articles…</p>:articles.length?articles.map(articleCard):<div className="ogas-empty"><Search size={28}/><h3>No articles found</h3><p>Try another headline or choose a different filter.</p><button onClick={()=>{changeSearch('');changeFilter('all');}}>Clear search</button></div>}</div>
+          {articles.length>0&&<div className="ogas-selection-toolbar">
+            <label><input type="checkbox" disabled={busy} checked={visibleIds.length>0&&selectedOnPage.length===visibleIds.length}
+              onChange={e=>toggleAllArticles(e.target.checked)}/> Select all on this page</label>
+            {selectedOnPage.length>0&&<div className="ogas-selection-actions">
+              <span>{selectedOnPage.length} selected</span>
+              <button type="button" onClick={()=>setSelectedArticles(new Set())}>Clear</button>
+              {canDelete&&<button type="button" className="ogas-danger-action" disabled={busy}
+                onClick={()=>void deleteArticles(articles.filter(a=>selectedArticles.has(String(a.id))))}><Trash2 size={16}/> Delete selected</button>}
+            </div>}
+          </div>}
+          <div className="ogas-story-list ogas-story-list--large">{loading?<p className="ogas-empty-small">Finding articles…</p>:articles.length?articles.map(a=>articleCard(a,true)):<div className="ogas-empty"><Search size={28}/><h3>No articles found</h3><p>Try another headline or choose a different filter.</p><button onClick={()=>{changeSearch('');changeFilter('all');}}>Clear search</button></div>}</div>
           <div className="ogas-pagination"><span>{total?('Showing '+Math.min((page-1)*pageSize+1,total)+'–'+Math.min(page*pageSize,total)+' of '+total+' articles'):'No articles'}</span><div><button disabled={page===1} onClick={()=>setPage(p=>Math.max(1,p-1))} aria-label="Previous page"><ChevronLeft size={18}/></button><span>Page {page}</span><button disabled={page*pageSize>=total} onClick={()=>setPage(p=>p+1)} aria-label="Next page"><ChevronRight size={18}/></button></div></div>
         </>}
 
@@ -411,7 +505,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
                 />}
               <div className="ogas-editor-footnote"><CheckCircle2 size={15}/> {autoSaveState==='saving'?'Saving changes…':autoSaveState==='saved'?'All changes saved':autoSaveState==='error'?'Could not save changes':'Save your draft whenever you need a break.'}</div>
             </section>
-            <aside className="ogas-editor-side"><section className="ogas-editor-panel"><h3>Featured image <span>Optional</span></h3>{chosenImage? <button type="button" className="ogas-chosen-cover" onClick={()=>setPicker(true)}><img src={mediaUrl(chosenImage)} alt={chosenImage.alt||'Featured article photo'}/><span>Change image</span></button>:<button type="button" className="ogas-cover-upload" onClick={()=>setPicker(true)}><ImagePlus size={25}/><strong>Choose or upload a photo</strong><small>JPG, PNG, WebP or AVIF</small></button>}{editor.featuredImage&&<button className="ogas-remove-cover" onClick={()=>setEditor(s=>({...s,featuredImage:''}))}>Remove featured image</button>}</section>
+            <aside className="ogas-editor-side"><section className="ogas-editor-panel"><h3>Featured image <span>Optional</span></h3>{chosenImage? <button type="button" className="ogas-chosen-cover" onClick={()=>setPicker(true)}><ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||'Featured article photo'} missingText="Photo unavailable — choose another"/><span>Change image</span></button>:<button type="button" className="ogas-cover-upload" onClick={()=>setPicker(true)}><ImagePlus size={25}/><strong>Choose or upload a photo</strong><small>JPG, PNG, WebP or AVIF</small></button>}{editor.featuredImage&&<button className="ogas-remove-cover" onClick={()=>setEditor(s=>({...s,featuredImage:''}))}>Remove featured image</button>}</section>
               <section className="ogas-editor-panel"><h3>Article details</h3><label className="ogas-input-label">Section <span>Required</span></label><select className="ogas-field" value={editor.primaryCategory} onChange={e=>setEditor(s=>({...s,primaryCategory:e.target.value}))}><option value="">Choose a section</option>{categories.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}</select><label className="ogas-input-label">Short introduction <span>Optional</span></label><textarea className="ogas-field" rows={4} value={editor.summary} onChange={e=>setEditor(s=>({...s,summary:e.target.value}))} placeholder="A brief introduction for readers."/><p className="ogas-helper">If you leave this blank, we'll use the opening of your article.</p></section>
               <details className="ogas-editor-panel ogas-more-options ogas-story-advanced">
                 <summary><Settings2 size={17}/> More options <ChevronDown size={16}/></summary>
@@ -474,7 +568,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
           <section className="ogas-heading ogas-heading--split"><div><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> YOUR MEDIA LIBRARY</span><h1>Media library</h1><p>Keep photos together so you can use them again.</p></div>{canUpload&&<button className="ogas-button ogas-button--red" onClick={()=>document.getElementById('ogas-media-file')?.click()}><UploadCloud size={18}/> Upload a photo</button>}</section>
           {canUpload&&<div className="ogas-upload-panel"><label htmlFor="ogas-media-file" className="ogas-upload-area"><ImagePlus size={28}/><strong>{uploadFile?uploadFile.name:'Choose a photo to upload'}</strong><span>JPG, PNG, WebP or AVIF · up to 12 MB</span></label><input id="ogas-media-file" className="ogas-visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadFile&&<div className="ogas-upload-details"><label>Image description <span>Optional</span><input value={fileDescription} onChange={e=>setFileDescription(e.target.value)} placeholder="Describe this photo for readers who can't see it"/></label><button className="ogas-button ogas-button--green" disabled={busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload photo'} <ArrowRight size={16}/></button></div>}</div>}
           <div className="ogas-section-heading ogas-section-heading--spaced"><div><h2>Your photos</h2><p>{media.length} recent uploads</p></div><button type="button" className="ogas-text-link" onClick={()=>void loadMedia()}>Refresh <ArrowRight size={16}/></button></div>
-          {media.length?<div className="ogas-photo-grid">{media.map(m=><article key={String(m.id)} className="ogas-photo-card"><div className="ogas-photo-visual">{mediaUrl(m)?<img src={mediaUrl(m)} alt={m.alt||''} loading="lazy"/>:<ImageIcon size={30}/>}</div><div className="ogas-photo-copy"><strong>{m.alt||m.filename||'Untitled photo'}</strong><small>{m.filename||'Uploaded image'}</small></div></article>)}</div>:<div className="ogas-empty"><ImageIcon size={28}/><h3>No photos yet</h3><p>Upload a photo to start your media library.</p></div>}
+          {media.length?<div className="ogas-photo-grid">{media.map(m=><article key={String(m.id)} className="ogas-photo-card"><div className="ogas-photo-visual">{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||''} missingText="Photo unavailable"/>:<ImageIcon size={30}/>}</div><div className="ogas-photo-copy"><strong>{m.alt||m.filename||'Untitled photo'}</strong><small>{m.filename||'Uploaded image'}</small></div></article>)}</div>:<div className="ogas-empty"><ImageIcon size={28}/><h3>No photos yet</h3><p>Upload a photo to start your media library.</p></div>}
         </>}
 
         {tab==='live'&&<>
@@ -485,7 +579,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
         {tab==='ads'&&(canAds?<><section className="ogas-heading ogas-heading--split"><div><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> GROW YOUR NEWSROOM</span><h1>Advertisements</h1><p>Add a banner and the website it should open when someone clicks.</p></div><button className="ogas-button ogas-button--red" onClick={()=>setAdEditor(true)}><Plus size={18}/> New banner</button></section>
           <div className="ogas-mini-stats ogas-ad-stats"><span><strong>{ads.length}</strong> Recent campaigns</span><span><strong>{ads.filter(a=>a.status==='scheduled').length}</strong> Scheduled</span><span><strong>{ads.filter(a=>a.status==='paused').length}</strong> Paused</span></div>
           <div className="ogas-section-heading"><div><h2>Your banners</h2><p>Only one homepage banner can run per day.</p></div></div>
-          {ads.length?<div className="ogas-ad-list">{ads.map(ad=><div className="ogas-ad-row" key={String(ad.id)}><div className="ogas-ad-thumb">{mediaUrl(ad.banner)?<img src={mediaUrl(ad.banner)} alt=""/>:<LayoutGrid size={23}/>}</div><div><strong>{ad.name||'Untitled banner'}</strong><small>{shortDate(ad.startsAt)} – {shortDate(ad.endsAt)} · {ad.status||'Draft'}</small></div><a href={'/admin/collections/ad-banners/'+encodeURIComponent(String(ad.id))} className="ogas-text-link">Manage <ArrowUpRight size={16}/></a></div>)}</div>:<div className="ogas-empty"><LayoutGrid size={28}/><h3>Your first banner goes here</h3><p>Upload an advertiser's image, add their link and schedule it.</p><button className="ogas-button ogas-button--red" onClick={()=>setAdEditor(true)}>Create a banner</button></div>}
+          {ads.length?<div className="ogas-ad-list">{ads.map(ad=><div className="ogas-ad-row" key={String(ad.id)}><div className="ogas-ad-thumb">{mediaUrl(ad.banner)?<ArticleImage url={mediaUrl(ad.banner)} alt="" missingText="Banner unavailable"/>:<LayoutGrid size={23}/>}</div><div><strong>{ad.name||'Untitled banner'}</strong><small>{shortDate(ad.startsAt)} – {shortDate(ad.endsAt)} · {ad.status||'Draft'}</small></div><a href={'/admin/collections/ad-banners/'+encodeURIComponent(String(ad.id))} className="ogas-text-link">Manage <ArrowUpRight size={16}/></a></div>)}</div>:<div className="ogas-empty"><LayoutGrid size={28}/><h3>Your first banner goes here</h3><p>Upload an advertiser's image, add their link and schedule it.</p><button className="ogas-button ogas-button--red" onClick={()=>setAdEditor(true)}>Create a banner</button></div>}
           <p className="ogas-ad-note"><ShieldCheck size={17}/> Advertisements are labeled on the website. Only authorised staff can schedule them.</p>
         </>:<div className="ogas-empty"><ShieldCheck size={28}/><h3>Advertising access required</h3><p>Ask an administrator if you need to manage banners.</p></div>)}
       </main>
@@ -494,9 +588,9 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?begin():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
     {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button><a href="/admin/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
 
-    {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>{setEditor(s=>({...s,featuredImage:String(m.id)}));setPicker(false);}}>{mediaUrl(m)?<img src={mediaUrl(m)} alt={m.alt||m.filename||'Photo'}/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/><input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload and use'} <ArrowRight size={16}/></button></div></div></div>}
+    {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>{setEditor(s=>({...s,featuredImage:String(m.id)}));setPicker(false);}}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/><input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload and use'} <ArrowRight size={16}/></button></div></div></div>}
 
-    {preview&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPreview(false);}}><div className="ogas-modal ogas-preview-modal" role="dialog" aria-modal="true" aria-label="Article preview"><header><div><h2>Article preview</h2><p>This preview is only visible to you.</p></div><button onClick={()=>setPreview(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-preview-article"><span className="ogas-eyebrow">{categories.find(c=>String(c.id)===editor.primaryCategory)?.name||'NEWSROOM'}</span><h1>{editor.title||'Your headline goes here'}</h1>{chosenImage&&<img src={mediaUrl(chosenImage)} alt={chosenImage.alt||''}/>}<p className="ogas-preview-summary">{editor.summary||editor.bodyText.slice(0,230)}</p><div className="ogas-preview-body">{editor.bodyText||'Start writing to see your article here.'}</div></div></div></div>}
+    {preview&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPreview(false);}}><div className="ogas-modal ogas-preview-modal" role="dialog" aria-modal="true" aria-label="Article preview"><header><div><h2>Article preview</h2><p>This preview is only visible to you.</p></div><button onClick={()=>setPreview(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-preview-article"><span className="ogas-eyebrow">{categories.find(c=>String(c.id)===editor.primaryCategory)?.name||'NEWSROOM'}</span><h1>{editor.title||'Your headline goes here'}</h1>{chosenImage&&<ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||''} missingText="Photo unavailable"/>}<p className="ogas-preview-summary">{editor.summary||editor.bodyText.slice(0,230)}</p><div className="ogas-preview-body">{editor.bodyText||'Start writing to see your article here.'}</div></div></div></div>}
 
     {adEditor&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setAdEditor(false);}}><div className="ogas-modal ogas-ad-modal" role="dialog" aria-modal="true" aria-label="Schedule a banner"><header><div><h2>Schedule a banner</h2><p>Choose a photo, destination link and running dates.</p></div><button onClick={()=>setAdEditor(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-ad-form"><label>Campaign name<input value={adForm.name} onChange={e=>setAdForm(s=>({...s,name:e.target.value}))} placeholder="e.g. December partner banner"/></label><label>Banner image<select value={adForm.banner} onChange={e=>setAdForm(s=>({...s,banner:e.target.value}))}><option value="">Choose an uploaded image</option>{media.map(m=><option key={String(m.id)} value={String(m.id)}>{m.alt||m.filename||'Photo '+m.id}</option>)}</select><button type="button" className="ogas-text-link" style={{marginTop:10}} onClick={()=>{setAdEditor(false);navigate("media");}}>Need to upload a banner? Open Media library <ArrowRight size={14}/></button></label><label>Website link<input type="url" placeholder="https://advertiser.com" value={adForm.destinationUrl} onChange={e=>setAdForm(s=>({...s,destinationUrl:e.target.value}))}/></label><div className="ogas-ad-dates"><label>Start date<input type="datetime-local" value={adForm.startsAt} onChange={e=>setAdForm(s=>({...s,startsAt:e.target.value}))}/></label><label>End date<input type="datetime-local" value={adForm.endsAt} onChange={e=>setAdForm(s=>({...s,endsAt:e.target.value}))}/></label></div><p>Times are based on your device's time zone. Your banner will appear on the homepage during these dates.</p><button className="ogas-button ogas-button--red" disabled={busy} onClick={()=>void submitAd()}>{busy?'Saving…':'Schedule banner'} <ArrowRight size={16}/></button></div></div></div>}
   </div>;
