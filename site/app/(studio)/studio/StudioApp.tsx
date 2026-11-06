@@ -350,9 +350,13 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       <a href="/studio" className="ogas-brand" aria-label="OgasTV Studio home"><span className="ogas-brand-mark"><Radio {...iconSize(20)}/></span><span>ogas<span className="ogas-brand-strong">tv</span><small>studio</small></span></a>
       <div className="ogas-nav-label">YOUR WORKSPACE</div>
       <nav className="ogas-nav">
-        {topNav.filter(x=>canAds || x.key!=='ads').map(x=>{
+        {topNav.filter(x=>(canAds || x.key!=='ads') && x.key!=='advanced').map(x=>{
           const Icon=icons[x.key];return <button key={x.key} type="button" className={'ogas-nav-link'+(tab===x.key?' active':'')} onClick={()=>x.key==='write'?begin():navigate(x.key)} aria-current={tab===x.key?'page':undefined}><Icon {...iconSize(20)}/><span>{x.label==='Write'?'Write an article':x.label==='Articles'?'Your articles':x.label}</span>{x.key==='write'&&<Plus size={15} strokeWidth={2.2}/>}</button>;
         })}
+        <div className="ogas-nav-label ogas-nav-label--more">MORE</div>
+        <button type="button" className={'ogas-nav-link'+(tab==='advanced'?' active':'')} onClick={()=>navigate('advanced')}>
+          <Settings2 size={20}/> <span>Advanced settings</span>
+        </button>
       </nav>
       <div className="ogas-side-bottom"><div className="ogas-side-note"><ShieldCheck {...iconSize(19)}/><div><strong>Your work is private</strong><p>Only the OgasTV team can use this space.</p></div></div>
       <div className="ogas-profile"><span className="ogas-avatar">{firstName.slice(0,2).toUpperCase()}</span><span><strong>{name}</strong><small>{roleText}</small></span><a href="/admin/account" aria-label="Account settings"><Settings2 size={17}/></a></div></div>
@@ -360,7 +364,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
 
     <div className="ogas-workspace">
       <header className="ogas-topbar">
-        <div className="ogas-breadcrumb"><span>Newsroom</span><ChevronRight size={15}/><strong>{tab==='home'?'Home':tab==='articles'?'Your articles':tab==='write'?'Write an article':tab==='media'?'Media library':tab==='live'?'Go live':'Advertisements'}</strong></div>
+        <div className="ogas-breadcrumb"><span>Newsroom</span><ChevronRight size={15}/><strong>{tab==='home'?'Home':tab==='articles'?'Your articles':tab==='write'?'Write an article':tab==='media'?'Media library':tab==='live'?'Go live':tab==='advanced'?'Advanced settings':'Advertisements'}</strong></div>
         <div className="ogas-top-actions"><span className="ogas-systems"><span/> Signed in securely</span><a className="ogas-top-website" href="/" target="_blank" rel="noopener noreferrer">View website <ArrowUpRight size={15}/></a><span className="ogas-avatar ogas-avatar--top">{firstName.slice(0,2).toUpperCase()}</span></div>
       </header>
 
@@ -393,16 +397,78 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
               <input aria-label="Article headline" className="ogas-headline-input" maxLength={250} placeholder="Give your article a headline…" value={editor.title} onChange={e=>setEditor(s=>({...s,title:e.target.value}))} disabled={busy||editor.published&&!canPublish}/>
               <div className="ogas-byline"><span className="ogas-avatar">{firstName.slice(0,2).toUpperCase()}</span> {name} <span>·</span> {shortDate(new Date().toISOString())}</div>
               <div className="ogas-writing-divider"/>
-              {editor.lockedBody?<div className="ogas-locked-editor"><ShieldCheck size={24}/><h3>This article has advanced formatting</h3><p>To keep its existing links, images and formatting intact, edit the article body in the full editor.</p><a className="ogas-button ogas-button--outline" href={'/admin/collections/articles/'+encodeURIComponent(editor.id)}>Open full editor <ArrowUpRight size={15}/></a><div className="ogas-body-readonly">{editor.bodyText}</div></div>:
-              <textarea aria-label="Article body" className="ogas-body-input" placeholder="Start writing your article here…" value={editor.bodyText} onChange={e=>setEditor(s=>({...s,bodyText:e.target.value,touchedBody:true}))} disabled={busy||editor.published&&!canPublish} />}
-              <div className="ogas-editor-footnote"><CheckCircle2 size={15}/> {editor.id?'Remember to save your changes.':'Save your draft when you need a break.'}</div>
+              {editor.lockedBody?
+                <div className="ogas-locked-editor"><ShieldCheck size={24}/><h3>This article includes special content</h3><p>Its original formatting has been protected. You can update the headline, image and settings here while support for this content type is added.</p><div className="ogas-body-readonly">{editor.bodyText}</div></div>:
+                <StudioRichEditor
+                  key={editor.id||'new-article'}
+                  value={editor.body as any}
+                  disabled={busy||(editor.published&&!canPublish)}
+                  onChange={(body,text)=>setEditor(current=>{
+                    if(current.lockedBody)return current;
+                    if(JSON.stringify(current.body)===JSON.stringify(body))return current;
+                    return {...current,body,bodyText:text,touchedBody:true};
+                  })}
+                />}
+              <div className="ogas-editor-footnote"><CheckCircle2 size={15}/> {autoSaveState==='saving'?'Saving changes…':autoSaveState==='saved'?'All changes saved':autoSaveState==='error'?'Could not save changes':'Save your draft whenever you need a break.'}</div>
             </section>
             <aside className="ogas-editor-side"><section className="ogas-editor-panel"><h3>Featured image <span>Optional</span></h3>{chosenImage? <button type="button" className="ogas-chosen-cover" onClick={()=>setPicker(true)}><img src={mediaUrl(chosenImage)} alt={chosenImage.alt||'Featured article photo'}/><span>Change image</span></button>:<button type="button" className="ogas-cover-upload" onClick={()=>setPicker(true)}><ImagePlus size={25}/><strong>Choose or upload a photo</strong><small>JPG, PNG, WebP or AVIF</small></button>}{editor.featuredImage&&<button className="ogas-remove-cover" onClick={()=>setEditor(s=>({...s,featuredImage:''}))}>Remove featured image</button>}</section>
               <section className="ogas-editor-panel"><h3>Article details</h3><label className="ogas-input-label">Section <span>Required</span></label><select className="ogas-field" value={editor.primaryCategory} onChange={e=>setEditor(s=>({...s,primaryCategory:e.target.value}))}><option value="">Choose a section</option>{categories.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}</select><label className="ogas-input-label">Short introduction <span>Optional</span></label><textarea className="ogas-field" rows={4} value={editor.summary} onChange={e=>setEditor(s=>({...s,summary:e.target.value}))} placeholder="A brief introduction for readers."/><p className="ogas-helper">If you leave this blank, we'll use the opening of your article.</p></section>
-              <details className="ogas-editor-panel ogas-more-options"><summary><Settings2 size={17}/> More options <ChevronDown size={16}/></summary><p>Need categories, sources, SEO or more editing tools?</p><a href={editor.id?'/admin/collections/articles/'+encodeURIComponent(editor.id):'/admin/collections/articles/create'}>Open full editor <ArrowUpRight size={15}/></a></details>
+              <details className="ogas-editor-panel ogas-more-options ogas-story-advanced">
+                <summary><Settings2 size={17}/> More options <ChevronDown size={16}/></summary>
+                <div className="ogas-story-advanced__fields">
+                  <label>Supporting headline <span>Optional</span>
+                    <input value={editor.subtitle} onChange={e=>setEditor(s=>({...s,subtitle:e.target.value}))} placeholder="A short supporting line"/>
+                  </label>
+                  <label>Public author name <span>Optional</span>
+                    <input value={editor.publicByline} onChange={e=>setEditor(s=>({...s,publicByline:e.target.value}))} placeholder="Name readers will see"/>
+                  </label>
+                  <label>Type of article
+                    <select value={editor.editorialType} onChange={e=>setEditor(s=>({...s,editorialType:e.target.value}))}>
+                      <option value="news">News</option><option value="analysis">Analysis</option>
+                      <option value="explainer">Explainer</option><option value="opinion">Opinion</option>
+                      <option value="interview">Interview</option><option value="sponsored">Sponsored</option>
+                    </select>
+                  </label>
+                  <label>Additional sections
+                    <select multiple value={editor.secondaryCategories} onChange={e=>setEditor(s=>({...s,secondaryCategories:Array.from(e.target.selectedOptions,v=>v.value)}))}>
+                      {categories.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
+                    </select>
+                    <small>Hold Ctrl or Command to choose more than one.</small>
+                  </label>
+                  <label>Locations
+                    <select multiple value={editor.locations} onChange={e=>setEditor(s=>({...s,locations:Array.from(e.target.selectedOptions,v=>v.value)}))}>
+                      {locations.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
+                    </select>
+                  </label>
+                  <label>Topics
+                    <select multiple value={editor.tags} onChange={e=>setEditor(s=>({...s,tags:Array.from(e.target.selectedOptions,v=>v.value)}))}>
+                      {tags.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
+                    </select>
+                  </label>
+                  <label>Search headline <span>Optional</span>
+                    <input maxLength={180} value={editor.metaTitle} onChange={e=>setEditor(s=>({...s,metaTitle:e.target.value}))} placeholder="Title for search results"/>
+                  </label>
+                  <label>Search description <span>Optional</span>
+                    <textarea maxLength={320} rows={3} value={editor.metaDescription} onChange={e=>setEditor(s=>({...s,metaDescription:e.target.value}))} placeholder="A brief description for search"/>
+                  </label>
+                  <label>Correction note <span>Optional</span>
+                    <textarea rows={3} value={editor.correctionNotice} onChange={e=>setEditor(s=>({...s,correctionNotice:e.target.value}))}/>
+                  </label>
+                  <div className="ogas-source-links"><strong>Sources and references</strong>
+                    {editor.sourceLinks.map((entry,i)=><div key={i} className="ogas-source-link">
+                      <input aria-label={'Source name '+(i+1)} value={entry.label} placeholder="Source name" onChange={e=>setEditor(s=>({...s,sourceLinks:s.sourceLinks.map((x,j)=>j===i?{...x,label:e.target.value}:x)}))}/>
+                      <input aria-label={'Source URL '+(i+1)} type="url" value={entry.url} placeholder="https://example.com" onChange={e=>setEditor(s=>({...s,sourceLinks:s.sourceLinks.map((x,j)=>j===i?{...x,url:e.target.value}:x)}))}/>
+                      <button type="button" aria-label={'Remove source '+(i+1)} onClick={()=>setEditor(s=>({...s,sourceLinks:s.sourceLinks.filter((_,j)=>j!==i)}))}><X size={16}/></button>
+                    </div>)}
+                    <button type="button" className="ogas-add-source" onClick={()=>setEditor(s=>({...s,sourceLinks:[...s.sourceLinks,{label:'',url:''}]}))}><Plus size={15}/> Add source</button>
+                  </div>
+                </div>
+              </details>
             </aside>
           </div>
         </>}
+
+        {tab==='advanced'&&<StudioAdvanced role={role} onTaxonomyChanged={()=>void loadTaxonomy()}/>}
 
         {tab==='media'&&<>
           <section className="ogas-heading ogas-heading--split"><div><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> YOUR MEDIA LIBRARY</span><h1>Media library</h1><p>Keep photos together so you can use them again.</p></div>{canUpload&&<button className="ogas-button ogas-button--red" onClick={()=>document.getElementById('ogas-media-file')?.click()}><UploadCloud size={18}/> Upload a photo</button>}</section>
@@ -425,8 +491,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       </main>
     </div>
 
-    <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?begin():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
-    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<a href="/admin/account"><Settings2 size={18}/> Account & settings</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
+    <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?begin():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
+    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button><a href="/admin/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
 
     {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>{setEditor(s=>({...s,featuredImage:String(m.id)}));setPicker(false);}}>{mediaUrl(m)?<img src={mediaUrl(m)} alt={m.alt||m.filename||'Photo'}/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/><input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload and use'} <ArrowRight size={16}/></button></div></div></div>}
 
