@@ -371,10 +371,12 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
         });
         if(editorRef.current.id===articleId&&editorRef.current.featuredImage===imageId){
           setAutoSaveState('saved');
+          setMessage('Featured image saved automatically.');
         }
       }catch(e){
         if(editorRef.current.id===articleId&&editorRef.current.featuredImage===imageId){
           setAutoSaveState('error');
+          setMessage('');
           setError('Your photo is selected but could not be saved automatically. Please click Save changes. '+
             (e instanceof Error?e.message:'Please try again.'));
         }
@@ -399,10 +401,14 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       const result=await response.json().catch(()=>({}));
       if (!response.ok) throw new Error(result.errors?.[0]?.message||result.message||'Upload failed.');
       const item=result.doc||result;
+      if(!item?.id)throw new Error('The upload completed, but no image ID was returned.');
       setUploadFile(null);setFileDescription('');
-      await loadMedia();
+      // The upload already succeeded: attach it before refreshing the library.
+      // A slow or failed media-list refresh must not lose the selected image.
+      setMedia(current=>[item,...current.filter(m=>String(m.id)!==String(item.id))]);
       if(picker)changeFeaturedImage(String(item.id));
-      setMessage('Photo uploaded successfully.');
+      setMessage(picker?'Photo uploaded. Saving it to the article…':'Photo uploaded successfully.');
+      void loadMedia().catch(()=>setError('The photo was uploaded, but the library could not refresh. Try Refresh.'));
     } catch(e) {setError(e instanceof Error?e.message:'Photo upload failed.');}
     finally {setBusy(false);}
   };
