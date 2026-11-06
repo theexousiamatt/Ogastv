@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
+import { s3Storage } from '@payloadcms/storage-s3';
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer';
 import { Staff } from './cms/collections/Staff';
 import { Readers } from './cms/collections/Readers';
@@ -19,6 +20,18 @@ import { WordpressMediaInventory, WordpressPagesInventory } from './cms/collecti
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const emailConfigured = Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM_ADDRESS);
 const smtpPort = Number(process.env.SMTP_PORT || '465');
+const mediaStorage = {
+  endpoint: process.env.OGASTV_MEDIA_S3_ENDPOINT || '',
+  region: process.env.OGASTV_MEDIA_S3_REGION || '',
+  keyId: process.env.OGASTV_MEDIA_S3_ACCESS_KEY_ID || '',
+  secret: process.env.OGASTV_MEDIA_S3_SECRET_ACCESS_KEY || '',
+};
+// Hostinger deployments replace the app files, so uploaded images must be stored
+// in an external bucket. Missing credentials leave the existing local adapter
+// available until the bucket connection is explicitly configured.
+const durableMediaEnabled = Object.values(mediaStorage).every(Boolean);
+const mediaPublicBase = 'https://cjyhayrxadyadaqdrlot.supabase.co/storage/v1/object/public/ogastv-public-media';
+
 
 export default buildConfig({
   email: emailConfigured ? nodemailerAdapter({
@@ -46,6 +59,27 @@ export default buildConfig({
     },
   }),
   editor: lexicalEditor(),
+  plugins: [
+    s3Storage({
+      enabled: durableMediaEnabled,
+      collections: {
+        media: {
+          disablePayloadAccessControl: true,
+          generateFileURL: ({filename, prefix}) => {
+            const filePath = prefix ? prefix + '/' + filename : filename;
+            return mediaPublicBase + '/' + filePath.split('/').map(encodeURIComponent).join('/');
+          },
+        },
+      },
+      bucket: 'ogastv-public-media',
+      config: {
+        endpoint: mediaStorage.endpoint,
+        region: mediaStorage.region || 'us-east-1',
+        credentials: {accessKeyId: mediaStorage.keyId, secretAccessKey: mediaStorage.secret},
+        forcePathStyle: true,
+      },
+    }),
+  ],
   admin: {
     user: 'staff-users',
     theme: 'light',
