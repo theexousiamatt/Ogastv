@@ -497,3 +497,36 @@ html[data-theme="light"] .ogas-review-page {min-width:0;max-width:100%;}
 @media(prefers-reduced-motion:reduce) {
   .ogas-home *,.ogas-newsroom-shortcuts * {transition:none!important;}
 }
+
+
+/* The native Payload tables remain tables on desktop. On phones, transform
+   the two custom editorial lists into labeled cards instead of side-scrolling. */
+@media(max-width:690px) {
+  .ogas-review-page {padding-top:5px; padding-bottom:34px;}
+  .ogas-review-heading {flex-direction:column;align-items:flex-start;gap:15px;margin-bottom:18px;}
+  .ogas-review-list {overflow:visible;border-radius:13px;}
+  .ogas-review-list table {display:block;width:100%;min-width:0;}
+  .ogas-review-list thead {display:none;}
+  .ogas-review-list tbody {display:block;}
+  .ogas-review-list tr {display:block;padding:16px;border-bottom:1px solid #edf0ed;}
+  .ogas-review-list tr:last-child {border-bottom:0;}
+  .ogas-review-list td {display:block;border:0;padding:0!important;min-width:0;white-space:normal;overflow-wrap:anywhere;}
+  .ogas-review-list td+td {margin-top:12px;}
+  .ogas-review-list td[data-label]:not(:first-child)::before {
+    content:attr(data-label);
+    display:block;margin-bottom:4px;font-size:10px;font-weight:800;
+    text-transform:uppercase;letter-spacing:.06em;color:#89948e;
+  }
+  .ogas-review-list td strong {font-size:14px;line-height:1.4;}
+  .ogas-review-list td:last-child a {
+    display:inline-flex;min-height:38px;align-items:center;
+    padding:8px 12px;border-radius:9px;border:1px solid #dfe6e0;
+    color:#942c32!important;font-size:12px;
+  }
+  .ogas-review-list__top {padding:14px 16px;}
+  .ogas-review-empty {padding:38px 18px;}
+  html[data-theme="light"] .doc-controls,
+  html[data-theme="light"] .document-fields,
+  html[data-theme="light"] .collection-list,
+  html[data-theme="light"] .list-controls {max-width:100%;}
+}
