@@ -1,0 +1,59 @@
+/* OgasTV Studio editorial controls and advanced management. */
+.ogas-nav-label--more{padding-top:20px}
+.ogas-rich-editor{margin:0;min-height:350px;border-radius:13px;background:#fff}
+.ogas-rich-toolbar{position:sticky;top:82px;z-index:10;display:flex;gap:3px;align-items:center;flex-wrap:wrap;border:1px solid #e9ebe7;background:#fbfbfa;padding:7px;border-radius:13px}
+.ogas-rich-toolbar button{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;color:#646d64;background:transparent}
+.ogas-rich-toolbar button:hover,.ogas-rich-toolbar button:focus-visible{background:#eee7e4;color:#861d2d}
+.ogas-rich-divider{height:20px;width:1px;margin:0 3px;background:#e2e1df}
+.ogas-rich-editable{position:relative;margin-top:16px}
+.ogas-rich-content{outline:none;min-height:320px;padding:0 0 12px;font:400 17px/1.8 Georgia,serif;white-space:pre-wrap;overflow-wrap:anywhere;color:#27302b}
+.ogas-rich-content[contenteditable="false"]{opacity:.75}
+.ogas-rich-placeholder{position:absolute;top:1px;left:0;pointer-events:none;font:400 17px/1.8 Georgia,serif;color:#b2b6b1}
+.ogas-rich-content p{margin:0 0 16px}
+.ogas-rich-content h2{font:800 27px/1.28 'Manrope','DM Sans',sans-serif;letter-spacing:-.045em;margin:23px 0 12px}
+.ogas-rich-content h3{font:800 21px/1.35 'Manrope','DM Sans',sans-serif;letter-spacing:-.045em;margin:19px 0 10px}
+.ogas-rich-content blockquote{border-left:3px solid #9e2935;padding:8px 0 8px 19px;background:#faf7f6;color:#5b6460;margin:18px 0;font-style:italic}
+.ogas-rich-content ul,.ogas-rich-content ol{padding-left:26px;margin:12px 0 19px}
+.ogas-rich-content li{margin:5px 0}
+.ogas-rich-bold{font-weight:700}.ogas-rich-italic{font-style:italic}.ogas-rich-underline{text-decoration:underline}
+.ogas-rich-link{color:#8f1828;text-decoration:underline;text-underline-offset:3px}
+.ogas-story-advanced{overflow:hidden}
+.ogas-story-advanced__fields{padding:0 17px 18px;display:flex;flex-direction:column;gap:13px}
+.ogas-story-advanced__fields>label,.ogas-source-links{font-size:11px;font-weight:800;color:#48544c;display:flex;flex-direction:column;gap:6px}
+.ogas-story-advanced__fields label span{font-size:10px;font-weight:500;color:#9fa59f}
+.ogas-story-advanced__fields :is(input,textarea,select){font:500 12px/1.5 'DM Sans',sans-serif;width:100%;min-width:0;border:1px solid #e3e5e0;border-radius:10px;padding:9px 10px;color:#28322a;background:#fff}
+.ogas-story-advanced__fields select[multiple]{height:auto;min-height:100px}
+.ogas-story-advanced__fields small{font-size:10px;font-weight:500;color:#8e968e}
+.ogas-source-links{border-top:1px solid #e9eae7;padding-top:14px}
+.ogas-source-link{display:grid;grid-template-columns:1fr;gap:7px}
+.ogas-source-link button{justify-self:end;color:#8f1828}
+.ogas-add-source{display:inline-flex;align-items:center;gap:6px;color:#8f1828!important;font-size:11px!important;font-weight:800!important;justify-content:start}
+.ogas-advanced-layout{display:grid;grid-template-columns:minmax(195px,.8fr) minmax(0,2fr);gap:23px;align-items:start}
+.ogas-advanced-nav{background:#fff;border:1px solid #ebeee9;border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:5px}
+.ogas-advanced-nav button{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 12px;border-radius:12px}
+.ogas-advanced-nav button.active{background:#f5e8eb;color:#8f1828}
+.ogas-advanced-nav button:hover{background:#f8f5f3}
+.ogas-advanced-nav button>svg:last-child{margin-left:auto;flex:none;color:#a1a9a3}
+.ogas-advanced-nav button>span{display:flex;flex-direction:column;gap:2px;flex:1}
+.ogas-advanced-nav button strong{font-size:12px;font-weight:800}
+.ogas-advanced-nav button small{font-size:10px;color:#8b958e;line-height:1.35}
+.ogas-advanced-panel{background:#fff;border:1px solid #ebeee9;border-radius:18px;padding:24px;min-width:0}
+.ogas-advanced-panel .ogas-section-heading{align-items:center}
+.ogas-advanced-panel .ogas-section-heading h2,.ogas-advanced-panel>h2{font-size:19px;letter-spacing:-.04em}
+.ogas-advanced-search{max-width:none;width:100%;margin-bottom:14px}
+.ogas-advanced-list{display:flex;flex-direction:column;border-top:1px solid #f0f1ee}
+.ogas-advanced-list button{display:flex;align-items:center;gap:12px;padding:13px 4px;text-align:left;border-bottom:1px solid #f0f1ee}
+.ogas-advanced-list button:hover{color:#8f1828}
+.ogas-advanced-list button>span{flex:1}
+.ogas-advanced-list strong,.ogas-advanced-list small{display:block}
+.ogas-advanced-list strong{font-size:13px;font-weight:800}
+.ogas-advanced-list small{font-size:11px;color:#969d96;margin-top:2px}
+.ogas-advanced-back{display:flex;align-items:center;gap:7px;font-size:11px!important;color:#8f1828!important;font-weight:800!important;margin-bottom:19px}
+.ogas-advanced-form{max-width:600px;padding-top:14px;display:flex;flex-direction:column;gap:17px}
+.ogas-advanced-form label{display:flex;flex-direction:column;gap:7px;color:#4b584e;font-size:12px;font-weight:800}
+.ogas-advanced-form label span{font-size:10px;color:#a3a8a3;font-weight:500}
+.ogas-advanced-form input,.ogas-advanced-form select,.ogas-advanced-form textarea{font:500 13px 'DM Sans',sans-serif;border:1px solid #e2e4df;border-radius:11px;padding:12px;background:#fff;width:100%}
+.ogas-advanced-form small{font-size:10px;color:#939a91;font-weight:500}
+.ogas-advanced-actions{display:flex;align-items:center;gap:9px;justify-content:end;padding-top:9px}
+@media(max-width:900px){.ogas-rich-toolbar{top:70px}.ogas-advanced-layout{grid-template-columns:1fr}.ogas-advanced-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.ogas-advanced-nav button{padding:13px 9px;gap:7px}.ogas-advanced-nav button>svg:last-child{display:none}.ogas-advanced-nav button small{display:none}}
+@media(max-width:650px){.ogas-rich-toolbar{position:static;overflow-x:auto;flex-wrap:nowrap;gap:1px;padding:6px 3px}.ogas-rich-toolbar button{flex:none;width:31px;height:33px}.ogas-rich-divider{flex:none}.ogas-rich-content{font-size:16px;line-height:1.8}.ogas-rich-placeholder{font-size:16px}.ogas-advanced-panel{padding:16px}.ogas-advanced-nav{gap:3px}.ogas-advanced-nav button strong{font-size:10px}.ogas-advanced-nav button>svg{width:16px}.ogas-advanced-actions{flex-direction:column-reverse}.ogas-advanced-actions .ogas-button{width:100%}}
