@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import {
-  ArrowRight, BookOpenText, CheckCircle2, ClipboardCheck, FilePenLine,
+  ArrowRight, BookOpenText, CheckCircle2, ClipboardCheck,
   FolderOpen, Plus, Radio, Search,
 } from 'lucide-react';
 
@@ -71,9 +71,9 @@ export function NewsroomHome(data: NewsroomSnapshot) {
         <span>Published stories</span><strong>{data.published.toLocaleString('en-NG')}</strong>
         <span className="ogas-home__stat-link">Browse stories <ArrowRight size={14} aria-hidden="true" /></span>
       </a>
-      <a href="/admin/collections/articles?where%5B_status%5D%5Bequals%5D=draft" className="ogas-home__stat">
+      <a href="/admin/collections/articles" className="ogas-home__stat">
         <span>Drafts</span><strong>{data.drafts.toLocaleString('en-NG')}</strong>
-        <span className="ogas-home__stat-link">Continue writing <ArrowRight size={14} aria-hidden="true" /></span>
+        <span className="ogas-home__stat-link">Manage drafts <ArrowRight size={14} aria-hidden="true" /></span>
       </a>
       {data.canManage && <a href="/admin/review-queue" className="ogas-home__stat">
         <span>Needs review</span><strong>{data.review.toLocaleString('en-NG')}</strong>
