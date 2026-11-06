@@ -99,3 +99,41 @@
  .ogas-selection-toolbar{align-items:flex-start}
  .ogas-selection-actions{gap:6px}
 }
+
+
+/* Studio media management: local preview and safe editor delete controls. */
+.ogas-upload-area .ogas-upload-preview {
+  display:block;width:min(100%,320px);max-height:220px;object-fit:contain;
+  border-radius:12px;background:#eff0eb;margin-bottom:11px;
+}
+.ogas-upload-panel:has(.ogas-upload-preview) .ogas-upload-area {
+  padding:17px;gap:8px;min-height:225px;
+}
+.ogas-picker-selected {
+  flex:1 0 100%;display:flex;align-items:center;gap:12px;
+  border-radius:13px;background:#f7f7f3;padding:10px;min-width:0;
+}
+.ogas-picker-selected img {
+  width:76px;height:66px;object-fit:contain;background:#e8eae5;border-radius:9px;flex-shrink:0;
+}
+.ogas-picker-selected span {
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:12px;font-weight:700;color:#353e38;
+}
+.ogas-picker-selected small {
+  display:block;margin-top:4px;color:#627268;font-size:11px;font-weight:500;
+}
+.ogas-media-delete {
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:1px solid #eed9d9;border-radius:10px;background:#fff8f7;
+  color:#98253b;font-size:11px;font-weight:700;margin-top:12px;
+  padding:9px 10px;min-height:36px;width:100%;transition:background .15s, border-color .15s;
+}
+.ogas-media-delete:hover:not(:disabled) {background:#ffeded;border-color:#deb4ba}
+.ogas-media-delete:focus-visible {outline:2px solid #972839;outline-offset:2px}
+.ogas-media-delete:disabled {opacity:.55;cursor:not-allowed}
+@media(max-width:650px){
+  .ogas-upload-area .ogas-upload-preview{width:100%;max-height:210px}
+  .ogas-picker-selected img{width:62px;height:58px}
+  .ogas-media-delete{font-size:10px;min-height:40px}
+}
