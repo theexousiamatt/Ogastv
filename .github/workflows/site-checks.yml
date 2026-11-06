@@ -71,10 +71,17 @@ jobs:
           fi
       - name: Apply existing migrations to disposable PostgreSQL
         run: npm run cms:migrate
-      - name: Generate verification-field upgrade migration
-        run: npm run cms:migrate:create -- ogastv_auth_verification --skip-empty
-      - name: Apply verification upgrade migration
-        run: npm run cms:migrate
+      # The committed Payload migrations are authoritative. Generating and
+      # replaying a new migration after applying them causes duplicate CREATE
+      # TYPE/TABLE statements when the prior snapshot predates new collections.
+      - name: Verify advertising schema and optional image descriptions
+        env:
+          PGPASSWORD: temporary-ci-db-password
+        run: |
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='ogastv' AND table_name='ad_banners'" | grep -qx 1
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT is_nullable FROM information_schema.columns WHERE table_schema='ogastv' AND table_name='media' AND column_name='alt'" | grep -qx YES
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM information_schema.columns WHERE table_schema='ogastv' AND table_name='payload_locked_documents_rels' AND column_name='ad_banners_id'" | grep -qx 1
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM pg_constraint WHERE conname='payload_locked_documents_rels_ad_banners_fk'" | grep -qx 1
       - name: Verify verification columns
         env:
           PGPASSWORD: temporary-ci-db-password
