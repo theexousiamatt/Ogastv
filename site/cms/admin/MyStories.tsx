@@ -60,14 +60,14 @@ export async function MyStories({ initPageResult, params, searchParams, user }: 
                 <thead><tr><th>Story</th><th>Status</th><th>Last updated</th><th>Action</th></tr></thead>
                 <tbody>{(result.docs as MyStory[]).map((story) => (
                   <tr key={String(story.id)}>
-                    <td><strong>{story.title || 'Untitled story'}</strong>
+                    <td data-label="Story"><strong>{story.title || 'Untitled story'}</strong>
                       <small>{story.primaryCategory && typeof story.primaryCategory === 'object' ? story.primaryCategory.name || '—' : '—'}</small>
                     </td>
-                    <td><span className={'nr-status nr-status--' + (story._status === 'published' ? 'published' : story.workflowStatus === 'in_review' ? 'review' : 'draft')}>
+                    <td data-label="Status"><span className={'nr-status nr-status--' + (story._status === 'published' ? 'published' : story.workflowStatus === 'in_review' ? 'review' : 'draft')}>
                       {story._status === 'published' ? 'Published' : story.workflowStatus === 'in_review' ? 'In review' : story.workflowStatus === 'changes_requested' ? 'Changes requested' : 'Draft'}
                     </span></td>
-                    <td>{story.updatedAt ? new Intl.DateTimeFormat('en-NG', {day:'numeric',month:'short',year:'numeric',timeZone:'Africa/Lagos'}).format(new Date(story.updatedAt)) : '—'}</td>
-                    <td><a href={'/admin/collections/articles/' + encodeURIComponent(story.id)}>Open story ↗</a></td>
+                    <td data-label="Updated">{story.updatedAt ? new Intl.DateTimeFormat('en-NG', {day:'numeric',month:'short',year:'numeric',timeZone:'Africa/Lagos'}).format(new Date(story.updatedAt)) : '—'}</td>
+                    <td data-label="Action"><a href={'/admin/collections/articles/' + encodeURIComponent(story.id)}>Open story ↗</a></td>
                   </tr>
                 ))}</tbody>
               </table>
