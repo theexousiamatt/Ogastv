@@ -100,7 +100,7 @@ function EditableState({disabled}: {disabled:boolean}){
 function Changes({onChange}:{onChange:Props['onChange']}){
   return <OnChangePlugin onChange={(state:EditorState)=>{
     state.read(()=>{
-      const serialized=state.toJSON() as BodyState;
+      const serialized=state.toJSON() as unknown as BodyState;
       const plain=$getRoot().getTextContent();
       onChange(serialized,plain);
     });
