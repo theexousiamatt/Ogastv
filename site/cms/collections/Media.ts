@@ -17,8 +17,24 @@ export const Media: CollectionConfig = {
     delete: ({ req }) => hasRole(req.user, 'administrator', 'editor_in_chief', 'editor'),
   },
   fields: [
-    { name: 'alt', type: 'text', required: true },
-    { name: 'caption', type: 'textarea' },
-    { name: 'credit', type: 'text' },
+    {
+      name: 'alt',
+      type: 'text',
+      required: true,
+      label: 'Image description',
+      admin: {
+        placeholder: 'Describe what the image shows',
+        description: 'A short description for readers who cannot see the image.',
+      },
+    },
+    {
+      type: 'collapsible',
+      label: 'Optional image details',
+      admin: { initCollapsed: true },
+      fields: [
+        { name: 'caption', type: 'textarea', admin: { placeholder: 'Optional caption shown with the article' } },
+        { name: 'credit', type: 'text', admin: { placeholder: 'Photographer or source (if applicable)' } },
+      ],
+    },
   ],
 };
