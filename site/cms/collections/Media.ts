@@ -12,19 +12,19 @@ export const Media: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: ({ req }) => editorial(req.user),
-    update: ({ req }) => editorial(req.user),
+    create: ({ req }) => editorial(req.user) || hasRole(req.user, 'advertising_manager'),
+    update: ({ req }) => editorial(req.user) || hasRole(req.user, 'advertising_manager'),
     delete: ({ req }) => hasRole(req.user, 'administrator', 'editor_in_chief', 'editor'),
   },
   fields: [
     {
       name: 'alt',
       type: 'text',
-      required: true,
+      required: false,
       label: 'Image description',
       admin: {
         placeholder: 'Describe what the image shows',
-        description: 'A short description for readers who cannot see the image.',
+        description: 'Optional, but helpful for people using screen readers.',
       },
     },
     {

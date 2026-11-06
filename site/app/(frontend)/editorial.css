@@ -247,3 +247,12 @@ body button,body input{font:inherit}
 .ogas-home-hero__illustration{position:absolute;inset:0;background:radial-gradient(circle at 75% 25%,#ebbf8a,#d4a97e 14%,transparent 37%),linear-gradient(155deg,#adbba6,#52756b 65%,#334e51);display:grid;place-items:center;overflow:hidden;}
 .ogas-home-hero__illustration::before{content:'';position:absolute;width:410px;height:410px;border:2px solid #fff5;border-radius:50%;left:38%;top:-25%;box-shadow:0 0 0 80px #ffffff13,0 0 0 160px #ffffff0e;}
 .ogas-home-hero__illustration span{position:relative;z-index:1;color:#ffffffed;font-size:clamp(27px,4vw,51px);font-weight:800;letter-spacing:-.07em;text-shadow:0 5px 24px #102c2050;}
+
+/* Sponsored placement — deliberately separate from editorial coverage. */
+.ogas-paid-banner{max-width:1360px;margin:30px auto 32px;padding:0 clamp(20px,5vw,78px)}
+.ogas-paid-banner__label{font:800 10px/1.5 'DM Sans',sans-serif;letter-spacing:.15em;color:#88877f;margin-bottom:9px}
+.ogas-paid-banner__link{position:relative;display:block;width:100%;border-radius:12px;overflow:hidden;background:#eee8e3}
+.ogas-paid-banner__link img{display:block;width:100%;height:auto;max-height:240px;object-fit:cover;object-position:center}
+.ogas-paid-banner__action{position:absolute;right:14px;bottom:14px;display:inline-flex;gap:5px;align-items:center;font-size:11px;font-weight:800;background:#fff;color:#30322e;padding:8px 12px;border-radius:99px;box-shadow:0 4px 12px #0002}
+.ogas-paid-banner__link:focus-visible{outline:3px solid #961b30;outline-offset:3px}
+@media(max-width:700px){.ogas-paid-banner{margin:23px auto}.ogas-paid-banner__link img{max-height:170px}.ogas-paid-banner__action{font-size:10px;padding:6px 10px;right:8px;bottom:8px}}

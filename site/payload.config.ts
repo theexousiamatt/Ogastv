@@ -7,6 +7,7 @@ import { nodemailerAdapter } from '@payloadcms/email-nodemailer';
 import { Staff } from './cms/collections/Staff';
 import { Readers } from './cms/collections/Readers';
 import { Media } from './cms/collections/Media';
+import { AdBanners } from './cms/collections/AdBanners';
 import { Articles } from './cms/collections/Articles';
 import { Categories, Locations, Tags } from './cms/collections/Taxonomy';
 import { Programmes, Episodes, LiveEvents } from './cms/collections/Studio';
@@ -67,7 +68,7 @@ export default buildConfig({
     meta: { titleSuffix: ' — OgasTV Africa Newsroom' },
   },
   collections: [
-    Staff, Readers, Media, Categories, Locations, Tags, Articles,
+    Staff, Readers, Media, AdBanners, Categories, Locations, Tags, Articles,
     Programmes, Episodes, LiveEvents, CommunitySubmissions,
     WordpressMediaInventory, WordpressPagesInventory,
   ],

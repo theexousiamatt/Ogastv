@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpRight, ClipboardCheck, FilePenLine, FolderOpen, Radio } from 'lucide-react';
+import { ArrowUpRight, ClipboardCheck, FilePenLine, FolderOpen, Radio, LayoutGrid } from 'lucide-react';
 import { canReview, editorial, getStaff } from '../access';
 
 /**
@@ -15,17 +15,18 @@ export function DeskNavigation({ user }: { user?: unknown }) {
 
   return (
     <div className="ogas-newsroom-shortcuts" aria-label="Newsroom shortcuts">
-      <span className="ogas-newsroom-shortcuts__label">QUICK ACTIONS</span>
-      {canWrite && <a className="ogas-newsroom-shortcuts__primary" href="/admin/collections/articles/create">
+      <span className="ogas-newsroom-shortcuts__label">YOUR WORKSPACE</span>
+      <a className="ogas-newsroom-shortcuts__primary" href="/studio"><LayoutGrid size={18} aria-hidden="true" /> Open OgasTV Studio</a>
+      {canWrite && <a href="/studio?tab=write">
         <FilePenLine size={18} aria-hidden="true" /> Write a story
       </a>}
-      <a href="/admin/my-stories">
+      <a href="/studio?tab=articles">
         <FolderOpen size={18} aria-hidden="true" /> My stories
       </a>
       {canManage && <a href="/admin/review-queue">
         <ClipboardCheck size={18} aria-hidden="true" /> Review queue
       </a>}
-      {canWrite && <a href="/broadcast-studio">
+      {canWrite && <a href="/studio?tab=live">
         <Radio size={18} aria-hidden="true" /> Go live
       </a>}
       <a href="https://ogastvafrica.ng" target="_blank" rel="noopener noreferrer">
