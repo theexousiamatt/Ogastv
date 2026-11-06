@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUpRight, BookOpenText, BriefcaseBusiness, Clock3, Land
 import { getArticles, getHomepageCuration, prettyDate } from '@/lib/content';
 import type { Article } from '@/lib/content';
 import { FeaturedHero } from '@/components/FeaturedHero';
+import { HomeBannerAd } from '@/components/HomeBannerAd';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +86,7 @@ export default async function HomePage() {
       </Link>)}
     </nav>
 
+    <HomeBannerAd />
     <div className="ogas-home-feature-grid">
       <section className="ogas-home-panel ogas-home-latest" aria-labelledby="ogas-latest">
         <div className="ogas-home-panel__title"><h2 id="ogas-latest">Latest Stories</h2><Link href="/latest">View all <ArrowRight size={14}/></Link></div>
