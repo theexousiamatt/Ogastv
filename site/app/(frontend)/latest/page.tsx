@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Search, Newspaper } from 'lucide-react';
 import { StoryCard } from '@/components/StoryCard';
-import { getArticles, getCategories } from '@/lib/content';
+import { searchPublicArticles, getCategories } from '@/lib/content';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
@@ -10,17 +10,20 @@ export const metadata: Metadata = {
   description: 'Reporting from Lagos, Nigeria and beyond. Explore OgasTV Africa news and community reporting.',
 };
 
-type Props = { searchParams: Promise<{ q?: string; category?: string }> };
+type Props = { searchParams: Promise<{ q?: string; category?: string; page?: string }> };
 
 export default async function LatestNews({searchParams}:Props) {
-  const {q = '', category = ''} = await searchParams;
+  const {q = '', category = '', page: rawPage = '1'} = await searchParams;
   const term = q.trim().slice(0,120).toLocaleLowerCase();
   const slug = category.trim().slice(0,120).toLocaleLowerCase();
-  const [stories,categories] = await Promise.all([getArticles(100),getCategories()]);
-  const filtered = stories.filter(article=>
-    (!slug || article.category?.slug === slug) &&
-    (!term || [article.title,article.excerpt,article.category?.name||''].some(s=>s.toLocaleLowerCase().includes(term)))
-  );
+  const currentPage = /^\\d{1,5}$/.test(rawPage) ? Math.max(1, Number(rawPage)) : 1;
+  const [results,categories] = await Promise.all([
+    searchPublicArticles({query: term, category: slug, page: currentPage, limit: 24}),getCategories(),
+  ]);
+  const filtered = results.stories;
+  const pageUrl = (number: number) => '/latest?' + new URLSearchParams({
+    ...(q.trim()?{q:q.trim()}:{}), ...(slug?{category:slug}:{}), page:String(number),
+  }).toString();
   return <div className="ogas-latest-v2">
     <div className="ogas-latest-v2__top">
       <div><span className="eyebrow">FROM THE NEWSROOM</span><h1>Latest Stories<span className="heading-period">.</span></h1>
@@ -39,8 +42,13 @@ export default async function LatestNews({searchParams}:Props) {
         <Link key={c.slug} href={'/latest?category='+encodeURIComponent(c.slug)+(term?'&q='+encodeURIComponent(q):'')} className={slug===c.slug?'selected':''}>{c.name}</Link>)}
     </nav>
     <div className="ogas-latest-v2__results">
-      <div className="ogas-latest-v2__result-label"><strong>{filtered.length} {filtered.length===1?'story':'stories'}</strong><span>{term?'Matching “'+q.trim()+'”':slug?'In '+(categories.find(c=>c.slug===slug)?.name||slug):'Latest newsroom coverage'}</span></div>
-      {filtered.length ? <div className="story-grid">{filtered.map(article=><StoryCard article={article} key={article.id}/>)}</div> :
+      <div className="ogas-latest-v2__result-label"><strong>{results.total} {results.total===1?'story':'stories'}</strong><span>{term?'Matching “'+q.trim()+'”':slug?'In '+(categories.find(c=>c.slug===slug)?.name||slug):'Latest newsroom coverage'}</span></div>
+      {filtered.length ? <><div className="story-grid">{filtered.map(article=><StoryCard article={article} key={article.id}/>)}</div>
+        {results.totalPages>1&&<nav aria-label="Story result pages" style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,padding:'24px 0'}}>
+          {results.page>1?<Link href={pageUrl(results.page-1)}>← Previous</Link>:<span/>}
+          <span>Page {results.page} of {results.totalPages}</span>
+          {results.page<results.totalPages?<Link href={pageUrl(results.page+1)}>Next →</Link>:<span/>}
+        </nav>}</> :
       <div className="ogas-latest-v2__empty"><span><Newspaper size={27}/></span><h2>{term||slug?'No matching reports yet.':'Stories are on their way.'}</h2>
         <p>{term||slug?'Try another search or browse all stories.':'Our editors are preparing the first reports for the new OgasTV newsroom.'}</p>
         <Link href="/latest">Browse all stories <ArrowRight size={15}/></Link></div>}
