@@ -4,6 +4,7 @@ import { buildConfig } from 'payload';
 import { postgresAdapter } from '@payloadcms/db-postgres';
 import { lexicalEditor } from '@payloadcms/richtext-lexical';
 import { s3Storage } from '@payloadcms/storage-s3';
+import sharp from 'sharp';
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer';
 import { Staff } from './cms/collections/Staff';
 import { Readers } from './cms/collections/Readers';
@@ -60,6 +61,7 @@ export default buildConfig({
     },
   }),
   editor: lexicalEditor(),
+  sharp,
   plugins: [
     s3Storage({
       enabled: mediaS3Enabled,
