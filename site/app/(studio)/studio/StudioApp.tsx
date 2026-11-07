@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { StudioAdvanced } from './StudioAdvanced';
+import { prepareEditorialImage, uploadEditorialImage } from './media-upload';
 import { StudioRichEditor, canEditRichBody } from './StudioRichEditor';
 import {
   ArrowDownToLine, ArrowLeft, ArrowRight, ArrowUpRight, Bell, BookOpen,
@@ -136,6 +137,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   const [picker,setPicker] = useState(false);
   const [fileDescription,setFileDescription] = useState('');
   const [uploadFile,setUploadFile] = useState<File|null>(null);
+  const [uploadStage,setUploadStage] = useState<'idle'|'optimizing'|'uploading'|'processing'>('idle');
+  const [uploadProgress,setUploadProgress] = useState(0);
   const [uploadPreviewUrl,setUploadPreviewUrl] = useState('');
   // Object URLs preview files locally before uploading and must be released.
   useEffect(() => {
@@ -389,28 +392,30 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   };
 
   const upload = async () => {
-    if (!uploadFile) {setError('Choose a photo to upload.');return;}
-    if (uploadFile.size>12*1024*1024) {setError('Choose a photo smaller than 12 MB.');return;}
-    if (!['image/jpeg','image/png','image/webp','image/avif'].includes(uploadFile.type)) {setError('Use JPG, PNG, WebP or AVIF photos.');return;}
-    setBusy(true);setError('');
+    if (!uploadFile || busy) { if(!uploadFile)setError('Choose a photo to upload.'); return; }
+    if (uploadFile.size > 12 * 1024 * 1024) { setError('Choose a photo smaller than 12 MB.'); return; }
+    if (!['image/jpeg','image/png','image/webp','image/avif'].includes(uploadFile.type)) {
+      setError('Use JPG, PNG, WebP or AVIF photos.'); return;
+    }
+    setBusy(true); setError(''); setUploadProgress(0); setUploadStage('optimizing');
     try {
-      const form=new FormData();
-      form.append('file',uploadFile);
-      form.append('_payload',JSON.stringify({alt:fileDescription.trim()}));
-      const response=await fetch('/api/media',{method:'POST',body:form,credentials:'include'});
-      const result=await response.json().catch(()=>({}));
-      if (!response.ok) throw new Error(result.errors?.[0]?.message||result.message||'Upload failed.');
-      const item=result.doc||result;
-      if(!item?.id)throw new Error('The upload completed, but no image ID was returned.');
-      setUploadFile(null);setFileDescription('');
-      // The upload already succeeded: attach it before refreshing the library.
-      // A slow or failed media-list refresh must not lose the selected image.
-      setMedia(current=>[item,...current.filter(m=>String(m.id)!==String(item.id))]);
-      if(picker)changeFeaturedImage(String(item.id));
+      const prepared = await prepareEditorialImage(uploadFile);
+      setUploadStage('uploading');
+      const item = await uploadEditorialImage(prepared,fileDescription,percent => {
+        setUploadProgress(percent);
+        if (percent >= 99) setUploadStage('processing');
+      }) as Media;
+      setUploadFile(null); setFileDescription(''); setUploadProgress(100);
+      // Show the newly uploaded image immediately; refresh the list in background.
+      setMedia(current => [item,...current.filter(m => String(m.id) !== String(item.id))]);
+      if (picker) changeFeaturedImage(String(item.id));
       setMessage(picker?'Photo uploaded. Saving it to the article…':'Photo uploaded successfully.');
-      void loadMedia().catch(()=>setError('The photo was uploaded, but the library could not refresh. Try Refresh.'));
-    } catch(e) {setError(e instanceof Error?e.message:'Photo upload failed.');}
-    finally {setBusy(false);}
+      void loadMedia().catch(()=>setError('Photo uploaded, but the library could not refresh. Try Refresh.'));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Photo upload failed.');
+    } finally {
+      setBusy(false); setUploadStage('idle');
+    }
   };
   const deleteMediaItem = async (item:Media) => {
     if (!canDeleteMedia || busy) return;
@@ -669,7 +674,12 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
 
         {tab==='media'&&<>
           <section className="ogas-heading ogas-heading--split"><div><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> YOUR MEDIA LIBRARY</span><h1>Media library</h1><p>Keep photos together so you can use them again.</p></div>{canUpload&&<button className="ogas-button ogas-button--red" onClick={()=>document.getElementById('ogas-media-file')?.click()}><UploadCloud size={18}/> Upload a photo</button>}</section>
-          {canUpload&&<div className="ogas-upload-panel"><label htmlFor="ogas-media-file" className="ogas-upload-area">{uploadPreviewUrl?<img className="ogas-upload-preview" src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded" />:<ImagePlus size={28}/>}<strong>{uploadFile?uploadFile.name:'Choose a photo to upload'}</strong><span>{uploadFile?'Preview · not uploaded yet':'JPG, PNG, WebP or AVIF · up to 12 MB'}</span></label><input id="ogas-media-file" className="ogas-visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadFile&&<div className="ogas-upload-details"><label>Image description <span>Optional</span><input value={fileDescription} onChange={e=>setFileDescription(e.target.value)} placeholder="Describe this photo for readers who can't see it"/></label><button className="ogas-button ogas-button--green" disabled={busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload photo'} <ArrowRight size={16}/></button></div>}</div>}
+          {canUpload&&<div className="ogas-upload-panel"><label htmlFor="ogas-media-file" className="ogas-upload-area">{uploadPreviewUrl?<img className="ogas-upload-preview" src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded" />:<ImagePlus size={28}/>}<strong>{uploadFile?uploadFile.name:'Choose a photo to upload'}</strong><span>{uploadFile?'Preview · not uploaded yet':'JPG, PNG, WebP or AVIF · up to 12 MB'}</span></label><input id="ogas-media-file" className="ogas-visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadFile&&<div className="ogas-upload-details"><label>Image description <span>Optional</span><input value={fileDescription} onChange={e=>setFileDescription(e.target.value)} placeholder="Describe this photo for readers who can't see it"/></label><button className="ogas-button ogas-button--green" disabled={busy} onClick={()=>void upload()}>{busy?(uploadStage==='optimizing'?'Optimizing…':uploadStage==='processing'?'Processing…':uploadStage==='uploading'?'Uploading '+uploadProgress+'%':'Please wait…'):'Upload photo'} <ArrowRight size={16}/></button>{busy&&uploadStage!=='idle'&&<div role="status" aria-live="polite" style={{width:'100%',marginTop:10}}>
+  <div style={{height:5,background:'#e8e8e8',borderRadius:999,overflow:'hidden'}}>
+    <div style={{height:'100%',background:'#237750',width:(uploadStage==='optimizing'?5:uploadStage==='processing'?99:uploadProgress)+'%',transition:'width .2s ease'}}/>
+  </div>
+  <small>{uploadStage==='optimizing'?'Preparing your image for faster upload…':uploadStage==='processing'?'Upload received. Saving the image…':'Uploading image · '+uploadProgress+'%'}</small>
+</div>}</div>}</div>}
           <div className="ogas-section-heading ogas-section-heading--spaced"><div><h2>Your photos</h2><p>{media.length} recent uploads</p></div><button type="button" className="ogas-text-link" onClick={()=>void loadMedia()}>Refresh <ArrowRight size={16}/></button></div>
           {media.length?<div className="ogas-photo-grid">{media.map(m=><article key={String(m.id)} className="ogas-photo-card"><div className="ogas-photo-visual">{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||''} missingText="Photo unavailable"/>:<ImageIcon size={30}/>}</div><div className="ogas-photo-copy"><strong title={m.alt||m.filename||'Untitled photo'}>{m.alt||m.filename||'Untitled photo'}</strong><small title={m.filename||''}>{m.filename||'Uploaded image'}</small>{canDeleteMedia&&<button type="button" className="ogas-media-delete" disabled={busy} onClick={()=>void deleteMediaItem(m)} aria-label={'Delete '+(m.alt||m.filename||'image')}><Trash2 size={15}/> Delete image</button>}</div></article>)}</div>:<div className="ogas-empty"><ImageIcon size={28}/><h3>No photos yet</h3><p>Upload a photo to start your media library.</p></div>}
         </>}
@@ -691,7 +701,12 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?resumeWriting():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
     {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button><a href="/admin/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
 
-    {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>changeFeaturedImage(String(m.id))}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadPreviewUrl&&<div className="ogas-picker-selected"><img src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded"/><span>{uploadFile?.name}<small>Ready to upload</small></span></div>}<input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?'Uploading…':'Upload and use'} <ArrowRight size={16}/></button></div></div></div>}
+    {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>changeFeaturedImage(String(m.id))}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadPreviewUrl&&<div className="ogas-picker-selected"><img src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded"/><span>{uploadFile?.name}<small>Ready to upload</small></span></div>}<input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?(uploadStage==='optimizing'?'Optimizing…':uploadStage==='processing'?'Processing…':uploadStage==='uploading'?'Uploading '+uploadProgress+'%':'Please wait…'):'Upload and use'} <ArrowRight size={16}/></button>{busy&&uploadStage!=='idle'&&<div role="status" aria-live="polite" style={{width:'100%',marginTop:10}}>
+  <div style={{height:5,background:'#e8e8e8',borderRadius:999,overflow:'hidden'}}>
+    <div style={{height:'100%',background:'#237750',width:(uploadStage==='optimizing'?5:uploadStage==='processing'?99:uploadProgress)+'%',transition:'width .2s ease'}}/>
+  </div>
+  <small>{uploadStage==='optimizing'?'Preparing your image for faster upload…':uploadStage==='processing'?'Upload received. Saving the image…':'Uploading image · '+uploadProgress+'%'}</small>
+</div>}</div></div></div>}
 
     {preview&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPreview(false);}}><div className="ogas-modal ogas-preview-modal" role="dialog" aria-modal="true" aria-label="Article preview"><header><div><h2>Article preview</h2><p>This preview is only visible to you.</p></div><button onClick={()=>setPreview(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-preview-article"><span className="ogas-eyebrow">{categories.find(c=>String(c.id)===editor.primaryCategory)?.name||'NEWSROOM'}</span><h1>{editor.title||'Your headline goes here'}</h1>{chosenImage&&<ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||''} missingText="Photo unavailable"/>}<p className="ogas-preview-summary">{editor.summary||editor.bodyText.slice(0,230)}</p><div className="ogas-preview-body">{editor.bodyText||'Start writing to see your article here.'}</div></div></div></div>}
 
