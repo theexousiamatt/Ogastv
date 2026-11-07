@@ -90,6 +90,10 @@ jobs:
           after=$(find migrations -maxdepth 1 -name '*.ts' | wc -l)
           if [ "$after" -ne "$before" ]; then
             echo 'The Payload collection schema is missing changes from committed migration snapshots.'
+            echo '--- Unrecorded SQL drift ---'
+            for file in migrations/*studio_schema_drift_check.ts; do
+              if [ -f "$file" ]; then sed -n '1,180p' "$file"; fi
+            done
             exit 1
           fi
           echo 'No unrecorded Payload schema changes found.'

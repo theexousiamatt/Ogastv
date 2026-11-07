@@ -65,6 +65,9 @@ export default buildConfig({
   plugins: [
     s3Storage({
       enabled: mediaS3Enabled,
+      // Keep the storage metadata column in the schema even in CI/preview
+      // where no S3 credentials are supplied.
+      alwaysInsertFields: true,
       bucket: mediaS3Bucket,
       collections: {
         media: {
