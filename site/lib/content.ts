@@ -5,6 +5,8 @@ import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical
 import * as wp from './wordpress';
 import sanitizeHtml from 'sanitize-html';
 import type { Article, Category } from './wordpress';
+import { homepageCategoryDefinitions, preferredSectionSlug } from './editorial-sections';
+import type { HomepageCategoryKey } from './editorial-sections';
 
 export type { Article, Category } from './wordpress';
 export { prettyDate } from './wordpress';
@@ -112,7 +114,10 @@ export async function getArticlesInCategory(slug: string, limit = 24): Promise<A
   if (!category) return [];
   const result = await api.find({
     collection: 'articles', overrideAccess: false, depth: 2, limit: Math.min(limit, 100),
-    where: { and: [{ primaryCategory: { equals: category.id } }, { _status: { equals: 'published' } }] },
+    where: { and: [{ _status: { equals: 'published' } }, { or: [
+      { primaryCategory: { equals: category.id } },
+      { secondaryCategories: { in: [category.id] } },
+    ] }] },
     sort: '-createdAt',
   });
   return (result.docs as CmsArticle[]).map(mapArticle);
@@ -214,6 +219,65 @@ export async function getHomepageCuration(): Promise<HomepageCuration> {
 }
 
 /**
+ * Automatically show published posts in the matching homepage category,
+ * including posts tagged with an additional (secondary) category.
+ *
+ * A story may appear in several desks, as it does in WordPress. Homepage
+ * editors do not need to assign each story to a separate placement.
+ */
+export type HomepageCategorySection = { stories: Article[]; archiveSlug: string };
+export type HomepageCategorySections = Record<HomepageCategoryKey, HomepageCategorySection>;
+
+export async function getHomepageCategorySections(limit = 4): Promise<HomepageCategorySections> {
+  const max = Math.max(1, Math.min(8, Math.floor(limit)));
+  const blank = () => Object.fromEntries(homepageCategoryDefinitions.map(def => [
+    def.key, { stories: [], archiveSlug: def.slug },
+  ])) as HomepageCategorySections;
+  if (!payloadEnabled()) {
+    const [all, categories] = await Promise.all([wp.getArticles(100), wp.getCategories()]);
+    return Object.fromEntries(homepageCategoryDefinitions.map(def => [
+      def.key, {
+        stories: all.filter(story => def.aliases.some(alias => story.category?.slug === alias)).slice(0, max),
+        archiveSlug: preferredSectionSlug(def.aliases, categories, def.slug),
+      },
+    ])) as HomepageCategorySections;
+  }
+  try {
+    const api = await cms();
+    const categories = await api.find({
+      collection: 'categories', overrideAccess: false, depth: 0, limit: 100,
+      where: { slug: { in: [...new Set(homepageCategoryDefinitions.flatMap(def => [...def.aliases]))] } },
+    });
+    const sections = await Promise.all(homepageCategoryDefinitions.map(async def => {
+      const matching = categories.docs.filter(category => def.aliases.some(slug => category.slug === slug));
+      const archiveSlug = preferredSectionSlug(def.aliases, matching, def.slug);
+      if (!matching.length) return [def.key, { stories: [], archiveSlug }] as const;
+      try {
+        const result = await api.find({
+          collection: 'articles', overrideAccess: false, depth: 2,
+          where: { and: [
+            { _status: { equals: 'published' } },
+            { or: [
+              { primaryCategory: { in: matching.map(category => category.id) } },
+              { secondaryCategories: { in: matching.map(category => category.id) } },
+            ] },
+          ] },
+          sort: '-createdAt', limit: max,
+        });
+        return [def.key, { stories: (result.docs as CmsArticle[]).map(mapArticle), archiveSlug }] as const;
+      } catch (error) {
+        console.error('[OgasTV] Could not load homepage category '+def.key, error);
+        return [def.key, { stories: [], archiveSlug }] as const;
+      }
+    }));
+    return Object.fromEntries(sections) as HomepageCategorySections;
+  } catch (error) {
+    console.error('[OgasTV] Could not load homepage categories', error);
+    return blank();
+  }
+}
+
+/**
  * Search the full published Payload archive on the server. Unlike filtering
  * getArticles(100), results are not restricted to the first 100 stories.
  */
@@ -243,7 +307,10 @@ export async function searchPublicArticles(options: {
       where: { slug: { equals: categorySlug } },
     });
     if (!result.docs[0]) return { stories: [], total: 0, page, totalPages: 1 };
-    where.and!.push({ primaryCategory: { equals: result.docs[0].id } });
+    where.and!.push({ or: [
+      { primaryCategory: { equals: result.docs[0].id } },
+      { secondaryCategories: { in: [result.docs[0].id] } },
+    ] });
   }
   if (query) {
     where.and!.push({ or: [
