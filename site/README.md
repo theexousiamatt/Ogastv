@@ -16,6 +16,10 @@ The legacy `dist/` folder is the older local writing-desk prototype; it is delib
 
 **Remaining work:** The site and newsroom are deployed, but real-device broadcast testing, reader UI, public community intake, email delivery, analytics and ongoing operational QA are still required. SMTP is currently not configured, so staff invitations and email recovery must remain disabled until outbound mail works.
 
+## Official logo
+
+The approved red OgasTV wordmark source is in `site/assets/ogastv-wordmark-source.png`, outside the public directory. The development/build script `scripts/generate-official-logo.mjs` preserves the original red lettering and creates the published transparent logo with black **NIGERIA** beneath it at `public/ogastv-official-logo.png`. Keep the old source image private to the build; do not link it from the website. The existing `ogastvafrica.ng` domain remains unchanged until a separately approved domain transition.
+
 ## Local development
 
 Requires Node.js 24.22.1 or newer, or a Payload-compatible Node 22 release.

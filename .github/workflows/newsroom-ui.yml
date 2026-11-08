@@ -70,6 +70,7 @@ jobs:
         run: npm run build
       - name: Verify admin and HeroUI assets
         run: |
+          test -f public/ogastv-official-logo.png
           test -f .next/standalone/server.js
           test -d .next/standalone/.next/static
           grep -q '"@heroui/react"' package.json
