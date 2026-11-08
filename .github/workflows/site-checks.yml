@@ -199,7 +199,14 @@ jobs:
           authenticated_login=$(curl --silent --output /dev/null --write-out '%{http_code}' -c /tmp/ogastv-staff-cookies             -H 'Content-Type: application/json' -X POST             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}'             'http://localhost:3100/api/staff-users/login')
           test "$authenticated_login" = '200' || { echo 'Staff cookie login failed'; exit 1; }
           studio_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio')
-          test "$studio_status" = '200' || { echo "Authenticated Studio access failed: HTTP $studio_status"; exit 1; }
+          if [ "$studio_status" != '200' ]; then
+            echo "Authenticated Studio access failed: HTTP $studio_status"
+            echo 'Non-secret cookie metadata:'
+            awk 'NF == 7 { print "domain=" $1 " secure=" $4 " name=" $6 }' /tmp/ogastv-staff-cookies
+            curl --silent -b /tmp/ogastv-staff-cookies 'http://localhost:3100/api/staff-users/me' |
+              node -e 'let raw="";process.stdin.on("data",c=>raw+=c);process.stdin.on("end",()=>{try{const data=JSON.parse(raw);console.log("Staff /me user present:",Boolean(data.user),"role present:",Boolean(data.user?.role))}catch{console.log("Could not read staff /me response")}})'
+            exit 1
+          fi
           account_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio/account')
           test "$account_status" = '200' || { echo "Studio account access failed: HTTP $account_status"; exit 1; }
           manage_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio/manage')
