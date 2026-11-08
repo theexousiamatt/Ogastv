@@ -16,7 +16,7 @@ const results=[];
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try{
   for(const viewport of browsers){
-    const context=await browser.newContext({...viewport,locale:'en-NG',colorScheme:'light'});
+    const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},isMobile:viewport.isMobile,hasTouch:Boolean(viewport.hasTouch),deviceScaleFactor:viewport.deviceScaleFactor,locale:'en-NG',colorScheme:'light'});
     const page=await context.newPage();
     const consoleErrors=[];
     page.on('console',msg=>{if(msg.type()==='error')consoleErrors.push(msg.text().slice(0,300));});
