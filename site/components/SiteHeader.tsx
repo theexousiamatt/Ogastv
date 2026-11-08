@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Play, Search, UserRound } from 'lucide-react';
+import { Search, UserRound } from 'lucide-react';
 import { homepageCategoryDefinitions } from '@/lib/editorial-sections';
 
 /** Category links open their canonical archives. Slugs are stable, and
@@ -21,11 +21,9 @@ export function SiteHeader() {
     <header className="ogas-public-header">
       <div className="ogas-public-header__inner">
         <Link href="/" className="ogas-public-brand" aria-label="OgasTV Africa home">
-          <span className="ogas-brand-symbol" aria-hidden="true"><Play size={18} fill="currentColor" strokeWidth={1.7}/></span>
-          <span className="ogas-brand-word">
-            <strong>OgasTV <em>Africa</em></strong>
-            <small>News · People · Culture · Africa</small>
-          </span>
+          {/* Official transparent OgasTV Africa logo; not a recreated text/icon mark. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="ogas-public-brand__logo" src="/ogastv-official-logo.png" alt="OgasTV Africa" width={405} height={125} />
         </Link>
         <div className="ogas-public-header__tools">
           <form action="/latest" method="get" role="search" className="ogas-public-search">
