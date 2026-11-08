@@ -32,3 +32,13 @@ export function archiveCategoryAliases(slug: string): string[] {
   const desk = homepageCategoryDefinitions.find(def => def.slug === slug);
   return desk ? [...desk.aliases] : [slug];
 }
+
+/** Prioritise OgasTV's key Lagos reporting communities without hiding other LGAs. */
+export function prioritiseLagosCouncils<T extends {slug:string;name:string}>(items:readonly T[]):T[]{
+  const top=['kosofe','ikorodu'];
+  return [...items].sort((a,b)=>{
+    const pa=top.indexOf(a.slug),pb=top.indexOf(b.slug);
+    const left=pa<0?top.length:pa,right=pb<0?top.length:pb;
+    return left-right||a.name.localeCompare(b.name);
+  });
+}
