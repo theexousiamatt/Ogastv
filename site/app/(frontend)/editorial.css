@@ -437,3 +437,9 @@ body button,body input{font:inherit}
 .ogas-saved-list__item button{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;border:1px solid #e0e3dc;border-radius:50%;color:#a33831;background:white;cursor:pointer}
 .ogas-saved-list__clear{margin-top:30px;color:#a23830;border:0;background:none;text-decoration:underline;text-underline-offset:3px;font-size:12px;font-weight:750;cursor:pointer}
 @media(max-width:600px){.ogas-saved-list{padding:35px 4px 60px}}
+
+.ogas-author-page{max-width:1280px;margin:0 auto;padding:34px 15px 80px}
+.ogas-author-page header{margin:20px 0 44px;max-width:850px}
+.ogas-author-page header h1{font-size:clamp(40px,5vw,66px);line-height:1.08;letter-spacing:-.065em;margin:12px 0 15px}
+.ogas-author-page header h1 span{color:#a93229}
+.ogas-author-page header p{font-size:15px;line-height:1.6;color:#707a70}
