@@ -368,7 +368,7 @@ export default function StudioManage({role,staffId,emailReady,initialTab}:Props)
     <header className="ogas-manage__top"><div className="ogas-manage__top-inner">
       <Link href="/studio" className="ogas-manage__brand">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/ogastv-nigeria-logo.png" width={103} height={32} alt="OgasTV Nigeria"/> Studio
+        <img src="/ogastv-nigeria-logo.png" width={103} height={34} alt="OgasTV Nigeria"/> Studio
       </Link>
       <Link href="/studio" className="ogas-manage__back"><ArrowLeft size={16}/> Back to dashboard</Link>
     </div></header>

@@ -27,7 +27,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
         <div className="ogas-footer-layout__brand">
           <Link href="/" aria-label="OgasTV Nigeria homepage">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="ogas-footer__logo" src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={405} height={125}/>
+            <img className="ogas-footer__logo" src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={405} height={135}/>
           </Link>
           <p>Stories from our communities, told with care.</p>
           <span>Based in Lagos, reporting on the people and developments shaping Nigeria.</span>

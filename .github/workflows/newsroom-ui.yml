@@ -68,7 +68,7 @@ jobs:
           OGASTV_MEDIA_S3_ACCESS_KEY_ID: ci-disposable-storage-key
           OGASTV_MEDIA_S3_SECRET_ACCESS_KEY: ci-disposable-storage-secret
         run: npm run build
-      - name: Upload generated OgasTV Nigeria logo for visual acceptance
+      - name: Upload approved OgasTV Nigeria logo for visual acceptance
         uses: actions/upload-artifact@v4
         with:
           name: ogastv-nigeria-logo-preview
