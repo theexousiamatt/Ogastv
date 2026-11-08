@@ -112,6 +112,10 @@ export function StudioAdvanced({role,onTaxonomyChanged}:Props){
     </header>
     {error&&<div className="ogas-alert ogas-alert--error" role="alert">{error}<button type="button" onClick={()=>setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
     {success&&<div className="ogas-alert ogas-alert--success" role="status"><Check size={18}/>{success}</div>}
+    {['administrator','editor_in_chief'].includes(role)&&<div className="ogas-advanced-homepage" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:18,flexWrap:'wrap',padding:'22px 24px',border:'1px solid #e7e7e3',borderRadius:14,marginBottom:24}}>
+      <div style={{maxWidth:590}}><h2 style={{margin:'0 0 8px'}}>Homepage story placements</h2><p style={{margin:0}}>Choose the lead story, five latest highlights, Lagos Watch, Government &amp; Policies, Grassroots Voices, Business &amp; Investment, Personalities, and featured OgasTV Studio episode. Only published stories appear on the public website.</p></div>
+      <a className="ogas-button ogas-button--red" href="/admin/globals/homepage">Manage homepage <ArrowRight size={17}/></a>
+    </div>}
     <div className="ogas-advanced-layout">
       <nav className="ogas-advanced-nav" aria-label="Advanced settings">
         {fields.map(item=>{
