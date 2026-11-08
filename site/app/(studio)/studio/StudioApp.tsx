@@ -665,6 +665,26 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
                     ))}
                   </div>
                 </fieldset>
+                <fieldset style={{border:0,margin:'16px 0',padding:0}}>
+                  <legend className="ogas-input-label">Location / Lagos council <span>Optional</span></legend>
+                  <p className="ogas-helper">Tag areas covered by this story. These selections power Lagos Watch council filters.</p>
+                  <div style={{display:'grid',gap:8,maxHeight:165,overflowY:'auto',marginTop:10}}>
+                    {locations.slice().sort((a,b)=>{
+                      const priority=(name:string)=>name==='Kosofe'?0:name==='Ikorodu'?1:2;
+                      return priority(a.name)-priority(b.name)||a.name.localeCompare(b.name);
+                    }).map(place=>(
+                      <label key={String(place.id)} style={{display:'flex',alignItems:'center',gap:9,fontSize:13,cursor:'pointer'}}>
+                        <input type="checkbox" value={String(place.id)} checked={editor.locations.includes(String(place.id))}
+                          onChange={event=>setEditor(current=>({...current,
+                            locations:event.target.checked?
+                              [...current.locations.filter(id=>id!==String(place.id)),String(place.id)]:
+                              current.locations.filter(id=>id!==String(place.id)),
+                          }))}/>
+                        <span>{place.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <label className="ogas-input-label">Short introduction <span>Optional</span></label>
                 <textarea className="ogas-field" rows={4} value={editor.summary} onChange={e=>setEditor(current=>({...current,summary:e.target.value}))} placeholder="A brief introduction for readers."/>
                 <p className="ogas-helper">If you leave this blank, we'll use the opening of your article.</p>
@@ -685,11 +705,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
                       <option value="interview">Interview</option><option value="sponsored">Sponsored</option>
                     </select>
                   </label>
-                  <label>Locations
-                    <select multiple value={editor.locations} onChange={e=>setEditor(s=>({...s,locations:Array.from(e.target.selectedOptions,v=>v.value)}))}>
-                      {locations.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
-                    </select>
-                  </label>
+                  
                   <label>Topics
                     <select multiple value={editor.tags} onChange={e=>setEditor(s=>({...s,tags:Array.from(e.target.selectedOptions,v=>v.value)}))}>
                       {tags.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
