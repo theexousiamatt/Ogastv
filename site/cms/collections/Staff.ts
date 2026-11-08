@@ -5,6 +5,12 @@ import { FIRST_ADMIN_EMAIL } from '../first-admin-invite';
 export const Staff: CollectionConfig = {
   slug: 'staff-users',
   auth: {
+    // Always use secure HTTPS cookies for the public newsroom; allow plain
+    // HTTP only for explicitly configured localhost development/CI.
+    cookies: {
+      secure: (process.env.NEXT_PUBLIC_SERVER_URL || 'https://ogastvafrica.ng').startsWith('https://'),
+      sameSite: 'Lax',
+    },
     verify: {
       generateEmailSubject: () => 'Verify your OgasTV Studio account',
       generateEmailHTML: ({ token }) => {
