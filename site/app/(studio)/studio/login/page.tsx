@@ -64,7 +64,7 @@ export default function StudioLogin() {
         </div>
         <button className="ogas-auth__submit" disabled={busy} type="submit">{busy ? 'Signing in…' : 'Sign in to Studio'} <ArrowRight size={18} /></button>
       </form>
-      <p className="ogas-auth__help">Need account access or a password reset? Contact your newsroom administrator.</p>
+      <p className="ogas-auth__help">Forgot your password? <Link href="/studio/forgot-password">Request a recovery link</Link>. For a new staff account, contact your administrator.</p>
     </div>
     <Link className="ogas-auth__back" href="/">← Back to OgasTV Africa</Link>
   </main>;
