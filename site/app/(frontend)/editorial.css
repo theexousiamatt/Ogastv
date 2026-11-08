@@ -443,3 +443,27 @@ body button,body input{font:inherit}
 .ogas-author-page header h1{font-size:clamp(40px,5vw,66px);line-height:1.08;letter-spacing:-.065em;margin:12px 0 15px}
 .ogas-author-page header h1 span{color:#a93229}
 .ogas-author-page header p{font-size:15px;line-height:1.6;color:#707a70}
+
+/* Final reader QA: designed, branded fallback rather than anonymous gradient tiles. */
+.ogas-editorial-thumb:not(:has(img)){background:linear-gradient(155deg,#eef0e9 0%,#d7dfd2 52%,#b6c7b5 100%);border:1px solid #e0e5db}
+.ogas-editorial-thumb:not(:has(img))::before{content:'';position:absolute;width:78%;aspect-ratio:1;right:-18%;top:-34%;border:1px solid #7d997f44;border-radius:50%;box-shadow:0 0 0 36px #7d997f12,0 0 0 74px #7d997f0c}
+.ogas-editorial-thumb__placeholder{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:5px;padding:clamp(8px,2.6vw,22px);color:#33533f}
+.ogas-editorial-thumb__brand{font-size:clamp(12px,1.8vw,24px);line-height:1;font-weight:950;letter-spacing:-.075em;color:#415a48}
+.ogas-editorial-thumb__brand strong{display:inline-block;background:#405e48;color:#fff;padding:1px 3px;transform:skew(-5deg);font-weight:900}
+.ogas-editorial-thumb__type{font-size:clamp(5px,.6vw,10px);letter-spacing:.14em;font-weight:850;color:#697b6d}
+.story-image--empty{background:linear-gradient(155deg,#e2e9df,#c4d2c0 65%,#96ac96);display:flex;align-items:flex-end;justify-content:flex-start;padding:clamp(12px,2vw,24px);color:#49634d;font-size:clamp(15px,2.2vw,31px);font-weight:900;letter-spacing:-.065em;position:relative;overflow:hidden}
+.story-image--empty::before{content:'';position:absolute;width:65%;aspect-ratio:1;border:1px solid #6e8f7866;right:-8%;top:-32%;border-radius:50%;box-shadow:0 0 0 36px #789b7912}
+.story-image--empty span{display:inline-block;background:#45634f;color:white;padding:1px 4px;transform:skew(-5deg)}
+@media(max-width:650px){
+  .ogas-home-hero{min-height:0}
+  .ogas-home-hero__content{padding:20px 13px 24px}
+  .ogas-home-hero__content h1{font-size:clamp(31px,8.45vw,36px);line-height:1.12;letter-spacing:-.055em;margin:16px 0 13px;text-wrap:balance}
+  .ogas-home-hero__content>p{font-size:13px;line-height:1.55;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;margin-bottom:13px}
+  .ogas-home-hero__meta{min-height:0;flex-wrap:wrap;margin-bottom:8px}
+  .ogas-home-hero__visual{min-height:250px}
+}
+@media(max-width:360px){
+  .ogas-home-hero__content h1{font-size:30px}
+  .ogas-home-hero__content>p{-webkit-line-clamp:3}
+  .ogas-home-hero__visual{min-height:210px}
+}
