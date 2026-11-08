@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ArrowRight, MapPin, Search, SlidersHorizontal } from 'lucide-react';
 import { searchPublicArticles } from '@/lib/content';
 import { getPublicDirectoryData } from '@/lib/public-cache';
-import { homepageCategoryDefinitions, archiveCategoryAliases } from '@/lib/editorial-sections';
+import { homepageCategoryDefinitions, archiveCategoryAliases, prioritiseLagosCouncils } from '@/lib/editorial-sections';
 import { StoryCard } from '@/components/StoryCard';
 
 export const dynamic='force-dynamic';
@@ -52,7 +52,7 @@ export default async function SectionPage({params,searchParams}:Props){
     </header>
     {isLocal&&<nav aria-label="Lagos council shortcuts" className="ogas-archive__shortcuts">
       <Link href={href(slug,{q,sort:sort==='oldest'?'oldest':''})} className={!location?'active':''}>All Lagos</Link>
-      {locations.filter(item=>item.kind==='lga'||item.kind==='lcda').slice(0,12).map(item=>
+      {prioritiseLagosCouncils(locations.filter(item=>item.kind==='lga'||item.kind==='lcda')).slice(0,12).map(item=>
         <Link key={item.slug} className={location===item.slug?'active':''} href={href(slug,{q,location:item.slug,sort:sort==='oldest'?'oldest':''})}>{item.name}</Link>)}
     </nav>}
     <form action={'/section/'+encodeURIComponent(slug)} method="get" role="search" className="ogas-archive__filters">
