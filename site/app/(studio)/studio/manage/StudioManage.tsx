@@ -15,10 +15,10 @@ type Field={
   key:string;label:string;type:'text'|'textarea'|'date'|'select'|'relation'|'multi'|'check';
   required?:boolean;placeholder?:string;help?:string;options?:Choice[];source?:string;
 };
-type Props={role:string;staffId:string;emailReady:boolean};
+type Props={role:string;staffId:string;emailReady:boolean;initialTab?:Tab};
 
 const roles:Choice[]=[
-  {label:'Administrator',value:'administrator'},
+  {label:'Super administrator',value:'administrator'},
   {label:'Editor-in-chief',value:'editor_in_chief'},
   {label:'Editor',value:'editor'},
   {label:'Journalist',value:'journalist'},
@@ -157,7 +157,7 @@ function asDocument(form:Record<string,any>,fieldsToUse:Field[]):Record<string,a
   return result;
 }
 
-export default function StudioManage({role,staffId,emailReady}:Props){
+export default function StudioManage({role,staffId,emailReady,initialTab}:Props){
   const tabs=useMemo(()=>{
     const available:Tab[]=[];
     if(['administrator','editor_in_chief'].includes(role))available.push('homepage');
@@ -166,13 +166,14 @@ export default function StudioManage({role,staffId,emailReady}:Props){
     if(['administrator','editor_in_chief','editor','moderator'].includes(role))available.push('community');
     return available;
   },[role]);
-  const [active,setActive]=useState<Tab>(tabs[0]||'homepage');
+  const [active,setActive]=useState<Tab>(initialTab&&tabs.includes(initialTab)?initialTab:tabs[0]||'homepage');
   const [documents,setDocuments]=useState<Record<string,Doc[]>>({});
   const [optionSets,setOptionSets]=useState<Options>({});
   const [selected,setSelected]=useState<string>('new');
   const [form,setForm]=useState<Record<string,any>>({});
   const [homepage,setHomepage]=useState<Record<string,any>>({});
   const [invite,setInvite]=useState({name:'',email:'',role:'journalist'});
+  const [credential,setCredential]=useState<{email:string;temporaryPassword:string}|null>(null);
   const [busy,setBusy]=useState(false);
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState('');
@@ -322,6 +323,19 @@ export default function StudioManage({role,staffId,emailReady}:Props){
     }catch(e){setError(e instanceof Error?e.message:'Could not invite staff.');}
     finally{setBusy(false);}
   };
+  const provisionStaff=async(event:React.FormEvent<HTMLFormElement>)=>{
+    event.preventDefault();if(busy||role!=='administrator')return;
+    setBusy(true);setError('');setSuccess('');setCredential(null);
+    try{
+      const response=await request('/api/studio/provision-staff',{method:'POST',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify(invite)});
+      setCredential({email:String(response.email),temporaryPassword:String(response.temporaryPassword)});
+      setInvite({name:'',email:'',role:'journalist'});
+      await loadTab('team');
+      setSuccess('Staff account created. Copy the temporary password below before leaving this page.');
+    }catch(e){setError(e instanceof Error?e.message:'Could not create staff account.');}
+    finally{setBusy(false);}
+  };
   const changeStaffRole=async(id:string,newRole:string)=>{
     if(role!=='administrator'||id===staffId||busy)return;
     setBusy(true);setError('');setSuccess('');
@@ -409,7 +423,7 @@ export default function StudioManage({role,staffId,emailReady}:Props){
           {active==='team'&&<>
             <div className="ogas-manage__surface">
               <h3 className="ogas-manage__subheading">Staff and permissions</h3>
-              <p className="ogas-manage__aside">Only administrators can grant or change team roles. You cannot change your own role here.</p>
+              <p className="ogas-manage__aside">Your Super administrator account can add other admins, editors and newsroom staff. Only administrators can grant or change team roles, and you cannot change your own role here.</p>
               {entries.length?<div className="ogas-manage__list">
                 {entries.map(staff=><div className="ogas-manage__row" style={{padding:'13px 0',borderBottom:'1px solid #eceee8'}} key={String(staff.id)}>
                   <div><strong>{String(staff.name||'Unnamed staff')}</strong><div className="ogas-manage__meta">{String(staff.email||'')}</div></div>
@@ -422,16 +436,24 @@ export default function StudioManage({role,staffId,emailReady}:Props){
               </div>:<p className="ogas-manage__empty">No staff records are currently visible.</p>}
             </div>
             <div className="ogas-manage__surface">
-              <h3 className="ogas-manage__subheading">Invite a team member</h3>
-              {!emailReady&&<p className="ogas-manage__notice">SMTP email delivery is not configured. Inviting staff is disabled until invitations can be delivered securely. Existing staff can continue signing in.</p>}
-              <form className="ogas-manage__form" onSubmit={event=>void inviteStaff(event)}>
+              <h3 className="ogas-manage__subheading">Add a team member</h3>
+              {!emailReady&&<p className="ogas-manage__notice">Email invitations are unavailable because SMTP is not configured. You can still provision staff securely below and share a temporary password directly.</p>}
+              <form className="ogas-manage__form" onSubmit={event=>void (emailReady?inviteStaff(event):provisionStaff(event))}>
                 <label>Full name<input required maxLength={100} value={invite.name} onChange={event=>setInvite(old=>({...old,name:event.target.value}))} placeholder="Staff member's name"/></label>
                 <label>Work email<input type="email" required value={invite.email} onChange={event=>setInvite(old=>({...old,email:event.target.value}))} placeholder="email@example.com"/></label>
                 <label>Assigned role<select value={invite.role} onChange={event=>setInvite(old=>({...old,role:event.target.value}))}>
                   {roles.map(item=><option key={item.value} value={item.value}>{item.label}</option>)}</select>
                 </label>
-                <button className="ogas-manage__btn ogas-manage__btn--primary" type="submit" disabled={!emailReady||busy}>{busy?'Creating…':'Send secure invitation'}<ArrowRight size={15}/></button>
+                <button className="ogas-manage__btn ogas-manage__btn--primary" type="submit" disabled={busy}>{busy?'Creating…':emailReady?'Send secure invitation':'Create staff account'}<ArrowRight size={15}/></button>
               </form>
+              {credential&&<div className="ogas-manage__notice" role="status" style={{marginTop:18,display:'grid',gap:10}}>
+                <strong>Temporary login details — displayed once</strong>
+                <span>Account: {credential.email}</span>
+                <code style={{overflowWrap:'anywhere',padding:'12px',background:'#f4f5f2',borderRadius:8}}>{credential.temporaryPassword}</code>
+                <button className="ogas-manage__btn" type="button" onClick={()=>void navigator.clipboard.writeText(credential.temporaryPassword)}>Copy temporary password</button>
+                <p>Share through a trusted private channel and have the staff member change it immediately in Account settings. Do not post passwords in group chats.</p>
+                <button className="ogas-manage__btn" type="button" onClick={()=>setCredential(null)}>Hide password</button>
+              </div>}
             </div>
           </>}
           {active!=='homepage'&&active!=='team'&&<div className="ogas-manage__collection">
