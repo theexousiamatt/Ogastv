@@ -196,15 +196,15 @@ jobs:
           legacy_collection_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3100/admin/collections/articles')
           case "$legacy_collection_destination" in */studio/login) ;; *) echo "Old native collection still exposed: $legacy_collection_destination"; exit 1;; esac
           echo 'Legacy admin routes resolve only to custom Studio'
-          authenticated_login=$(curl --silent --output /dev/null --write-out '%{http_code}' -c /tmp/ogastv-staff-cookies             -H 'Content-Type: application/json' -X POST             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}'             'http://127.0.0.1:3100/api/staff-users/login')
+          authenticated_login=$(curl --silent --output /dev/null --write-out '%{http_code}' -c /tmp/ogastv-staff-cookies             -H 'Content-Type: application/json' -X POST             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}'             'http://localhost:3100/api/staff-users/login')
           test "$authenticated_login" = '200' || { echo 'Staff cookie login failed'; exit 1; }
-          studio_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://127.0.0.1:3100/studio')
+          studio_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio')
           test "$studio_status" = '200' || { echo "Authenticated Studio access failed: HTTP $studio_status"; exit 1; }
-          account_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://127.0.0.1:3100/studio/account')
+          account_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio/account')
           test "$account_status" = '200' || { echo "Studio account access failed: HTTP $account_status"; exit 1; }
-          manage_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://127.0.0.1:3100/studio/manage')
+          manage_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio/manage')
           test "$manage_status" = '200' || { echo "Studio management access failed: HTTP $manage_status"; exit 1; }
-          password_recovery_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -X POST -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json'             -d '{"email":"ops@inspirarestudio.com"}' 'http://127.0.0.1:3100/api/studio/forgot-password')
+          password_recovery_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -X POST -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json'             -d '{"email":"ops@inspirarestudio.com"}' 'http://localhost:3100/api/studio/forgot-password')
           test "$password_recovery_status" = '503' || { echo "SMTP-less recovery should fail safely: HTTP $password_recovery_status"; exit 1; }
           echo 'Staff login, authenticated Studio, management, account and safe recovery smoke tests passed'
 
