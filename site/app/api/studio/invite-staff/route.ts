@@ -8,7 +8,8 @@ import type { StaffRole } from '../../../../cms/access';
 export const runtime='nodejs';
 
 export async function POST(req:NextRequest){
-  const allowedOrigin=new URL(process.env.NEXT_PUBLIC_SERVER_URL||req.url).origin;
+  const source=process.env.NEXT_PUBLIC_SERVER_URL==='https://ogastv-cms.inspirarestudio.com' ? 'https://ogastvafrica.ng' : (process.env.NEXT_PUBLIC_SERVER_URL||req.url);
+  const allowedOrigin=new URL(source).origin;
   if(req.headers.get('origin')!==allowedOrigin)return NextResponse.json({message:'Request blocked.'},{status:403});
   const payload=await getPayload({config});
   const {user}=await payload.auth({headers:req.headers});
