@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, BookOpenText, Clock3, Play, Clapperboard, MapPin } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Clock3, Play, Clapperboard, MapPin } from 'lucide-react';
 import { getPublicHomepageData, getPublicDirectoryData } from '@/lib/public-cache';
 import { prioritiseLagosCouncils } from '@/lib/editorial-sections';
 import { prettyDate } from '@/lib/content';
@@ -15,7 +15,10 @@ function Thumb({story}:{story:Article}){
     {story.image?
       // eslint-disable-next-line @next/next/no-img-element
       <img loading="lazy" decoding="async" src={story.image.url} alt={story.image.alt||''}/>:
-      <span aria-hidden="true" className="ogas-editorial-thumb__placeholder"><BookOpenText size={20}/></span>}
+      <span aria-hidden="true" className="ogas-editorial-thumb__placeholder">
+        <span className="ogas-editorial-thumb__brand">OGAS<strong>TV</strong></span>
+        <span className="ogas-editorial-thumb__type">COMMUNITY REPORT</span>
+      </span>}
   </span>;
 }
 function ArticleDate({story}:{story:Article}){
