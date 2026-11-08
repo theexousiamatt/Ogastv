@@ -1,21 +1,23 @@
 import Link from 'next/link';
 import { Play, Search, UserRound } from 'lucide-react';
+import { getCategories } from '@/lib/content';
+import { homepageCategoryDefinitions, preferredSectionSlug } from '@/lib/editorial-sections';
 
-// Homepage editorial sections are the source of truth for the primary menu.
-// Link to anchored sections, including from article pages, until standalone
-// category archives are available for every editorial desk.
-export const editorialNav = [
-  { title: 'Home', href: '/' },
-  { title: 'Latest Highlights', href: '/#ogas-highlights' },
-  { title: 'Lagos Watch', href: '/#ogas-lagos' },
-  { title: 'Government & Policies', href: '/#ogas-government' },
-  { title: 'Grassroots Voices', href: '/#ogas-voices' },
-  { title: 'Business & Investment', href: '/#ogas-business' },
-  { title: 'Personalities', href: '/#ogas-personalities' },
-  { title: 'OgasTV Studio', href: '/#ogas-studio' },
-];
-
-export function SiteHeader() {
+/** A category in the nav opens its archive, not a homepage anchor.
+ * Slugs are resolved against existing categories, so legacy WordPress desk
+ * names continue working until editors create the redesigned ones.
+ */
+export async function SiteHeader() {
+  const categories = await getCategories();
+  const editorialNav = [
+    { title: 'Home', href: '/' },
+    { title: 'Latest Highlights', href: '/latest' },
+    ...homepageCategoryDefinitions.map(def => ({
+      title: def.title,
+      href: '/latest?category=' + encodeURIComponent(preferredSectionSlug(def.aliases, categories, def.slug)),
+    })),
+    { title: 'OgasTV Studio', href: '/live' },
+  ];
   return (
     <header className="ogas-public-header">
       <div className="ogas-public-header__inner">
@@ -35,11 +37,10 @@ export function SiteHeader() {
         </div>
       </div>
       <nav className="ogas-public-nav ogas-public-nav--sections" aria-label="Editorial categories">
-        {editorialNav.map((item) => (
+        {editorialNav.map(item => (
           <Link href={item.href} key={item.title} className={item.href === '/' ? 'ogas-public-nav__active' : ''}>{item.title}</Link>
         ))}
         <Link href="/latest">All Stories</Link>
-        <Link href="/live" className="ogas-live-nav">Live <span className="ogas-live-dot" aria-hidden="true" /></Link>
       </nav>
     </header>
   );
