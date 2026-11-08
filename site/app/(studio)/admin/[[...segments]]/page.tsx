@@ -7,15 +7,19 @@ export const metadata = { title: 'OgasTV Studio', robots: { index: false, follow
  * Compatibility redirects only. No native Payload admin components or pages
  * are shipped; Payload remains headless behind /api for all collections/auth.
  */
-export default async function RetiredAdminRedirect({params}:{
-  params:Promise<{segments?:string[]}>
+export default async function RetiredAdminRedirect({params,searchParams}:{
+  params:Promise<{segments?:string[]}>;
+  searchParams:Promise<{token?:string}>;
 }){
   const {segments=[]}=await params;
+  const query=await searchParams;
+  const token=typeof query.token==='string' && query.token.length<500 ? query.token : '';
   const first=segments[0]||'';
   if(first==='login'||first==='create-first-user')redirect('/studio/login');
   if(first==='account')redirect('/studio/account');
   if(first==='forgot')redirect('/studio/forgot-password');
-  if(first==='reset')redirect('/studio/forgot-password');
+  if(first==='reset')redirect(token?'/studio/reset-password?token='+encodeURIComponent(token):'/studio/forgot-password');
+  if(first==='verify'&&segments[1])redirect('/studio/verify?token='+encodeURIComponent(segments[1]));
   if(first==='collections'){
     const collection=segments[1]||'';
     if(collection==='articles')redirect('/studio?tab=articles');
