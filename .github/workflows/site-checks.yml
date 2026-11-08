@@ -125,6 +125,7 @@ jobs:
           READER_SIGNUP_ENABLED: 'false'
           PORT: '3000'
           HOSTNAME: '127.0.0.1'
+          CMS_CONTENT_SOURCE: payload
         run: |
           node .next/standalone/server.js > /tmp/ogastv-smoke.log 2>&1 &
           server_pid=$!
@@ -223,6 +224,7 @@ jobs:
           case "$reader_status" in 401|403) ;; *) echo 'Public reader creation unexpectedly allowed'; exit 1;; esac
           case "$staff_status" in 401|403) ;; *) echo 'Public staff creation unexpectedly allowed'; exit 1;; esac
           node scripts/smoke-editorial.mjs
+          node scripts/smoke-public.mjs
       - name: Archive generated migrations for review
         uses: actions/upload-artifact@v4
         with:
