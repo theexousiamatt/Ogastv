@@ -123,7 +123,7 @@ jobs:
       - name: Smoke-test admin and anonymous authorization
         env:
           READER_SIGNUP_ENABLED: 'false'
-          PORT: '3100'
+          PORT: '3000'
           HOSTNAME: '127.0.0.1'
         run: |
           node .next/standalone/server.js > /tmp/ogastv-smoke.log 2>&1 &
@@ -131,7 +131,7 @@ jobs:
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           ready=0
           for attempt in $(seq 1 45); do
-            if curl --silent --fail 'http://127.0.0.1:3100/api/categories?limit=1' > /dev/null; then
+            if curl --silent --fail 'http://127.0.0.1:3000/api/categories?limit=1' > /dev/null; then
               ready=1
               break
             fi
@@ -144,24 +144,24 @@ jobs:
           fi
           css_file=$(find .next/standalone/.next/static -type f -name '*.css' -print -quit)
           css_path="/_next/static/${css_file#*.next/standalone/.next/static/}"
-          css_response=$(curl --silent --output /tmp/ogastv-style.css --write-out '%{http_code}' "http://127.0.0.1:3100$css_path")
+          css_response=$(curl --silent --output /tmp/ogastv-style.css --write-out '%{http_code}' "http://127.0.0.1:3000$css_path")
           if [ "$css_response" != '200' ] || [ ! -s /tmp/ogastv-style.css ]; then
             echo "CSS asset is not served from standalone runtime: HTTP $css_response ($css_path)"
             exit 1
           fi
           echo 'Stylesheet available over HTTP from standalone server'
-          reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3100/api/readers')
-          staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3100/api/staff-users')
+          reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3000/api/readers')
+          staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3000/api/staff-users')
           activation_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
             -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
             -d '{"token":"invalid-token","password":"incorrect-but-long-test-password"}' \
-            'http://127.0.0.1:3100/api/activate-newsroom')
+            'http://127.0.0.1:3000/api/activate-newsroom')
           case "$activation_status" in 403) ;; *) echo "Invalid admin invite accepted or unexpected HTTP $activation_status"; exit 1;; esac
           echo "Invalid administrator invitation correctly rejected"
           activated=$(curl --silent --output /tmp/activate-response.json --write-out '%{http_code}' -X POST \
             -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
             -d '{"token":"ci-disposable-invite-only-never-deployed-2026-nov","password":"local-test-password-very-long-2026"}' \
-            'http://127.0.0.1:3100/api/activate-newsroom')
+            'http://127.0.0.1:3000/api/activate-newsroom')
           if [ "$activated" != '201' ]; then
             echo "Invited first-admin activation failed with HTTP $activated"
             cat /tmp/activate-response.json
@@ -170,7 +170,7 @@ jobs:
           login_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
             -H 'Content-Type: application/json' \
             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}' \
-            'http://127.0.0.1:3100/api/staff-users/login')
+            'http://127.0.0.1:3000/api/staff-users/login')
           if [ "$login_status" != '200' ]; then
             echo "Activated administrator cannot log in, HTTP $login_status"
             exit 1
@@ -178,7 +178,7 @@ jobs:
           replay_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
             -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
             -d '{"token":"ci-disposable-invite-only-never-deployed-2026-nov","password":"local-test-password-very-long-2026"}' \
-            'http://127.0.0.1:3100/api/activate-newsroom')
+            'http://127.0.0.1:3000/api/activate-newsroom')
           if [ "$replay_status" != '410' ]; then
             echo "Invitation replay not blocked, HTTP $replay_status"
             exit 1
@@ -186,32 +186,32 @@ jobs:
           echo "First-admin activation, login and replay protection all passed"
           # The public and legacy admin entry points must never expose the
           # deprecated Payload dashboard to regular newsroom staff.
-          studio_login_status=$(curl --silent --output /tmp/ogastv-studio-login.html --write-out '%{http_code}'             'http://127.0.0.1:3100/studio/login')
+          studio_login_status=$(curl --silent --output /tmp/ogastv-studio-login.html --write-out '%{http_code}'             'http://127.0.0.1:3000/studio/login')
           test "$studio_login_status" = '200' || { echo "Studio login is unavailable: HTTP $studio_login_status"; exit 1; }
           grep -q 'Sign in to Studio' /tmp/ogastv-studio-login.html || { echo 'Custom sign-in form was not rendered'; exit 1; }
-          legacy_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3100/admin')
+          legacy_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3000/admin')
           case "$legacy_destination" in */studio/login) ;; *) echo "Old admin root did not end in the custom Studio login: $legacy_destination"; exit 1;; esac
-          legacy_login_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3100/admin/login')
+          legacy_login_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3000/admin/login')
           case "$legacy_login_destination" in */studio/login) ;; *) echo "Old login still exposed: $legacy_login_destination"; exit 1;; esac
-          legacy_collection_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3100/admin/collections/articles')
+          legacy_collection_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3000/admin/collections/articles')
           case "$legacy_collection_destination" in */studio/login) ;; *) echo "Old native collection still exposed: $legacy_collection_destination"; exit 1;; esac
           echo 'Legacy admin routes resolve only to custom Studio'
-          authenticated_login=$(curl --silent --output /dev/null --write-out '%{http_code}' -c /tmp/ogastv-staff-cookies             -H 'Content-Type: application/json' -X POST             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}'             'http://localhost:3100/api/staff-users/login')
+          authenticated_login=$(curl --silent --output /dev/null --write-out '%{http_code}' -c /tmp/ogastv-staff-cookies             -H 'Content-Type: application/json' -X POST             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}'             'http://localhost:3000/api/staff-users/login')
           test "$authenticated_login" = '200' || { echo 'Staff cookie login failed'; exit 1; }
-          studio_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio')
+          studio_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3000/studio')
           if [ "$studio_status" != '200' ]; then
             echo "Authenticated Studio access failed: HTTP $studio_status"
             echo 'Non-secret cookie metadata:'
             awk 'NF == 7 { print "domain=" $1 " secure=" $4 " name=" $6 }' /tmp/ogastv-staff-cookies
-            curl --silent -b /tmp/ogastv-staff-cookies 'http://localhost:3100/api/staff-users/me' |
+            curl --silent -b /tmp/ogastv-staff-cookies 'http://localhost:3000/api/staff-users/me' |
               node -e 'let raw="";process.stdin.on("data",c=>raw+=c);process.stdin.on("end",()=>{try{const data=JSON.parse(raw);console.log("Staff /me user present:",Boolean(data.user),"role present:",Boolean(data.user?.role))}catch{console.log("Could not read staff /me response")}})'
             exit 1
           fi
-          account_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio/account')
+          account_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3000/studio/account')
           test "$account_status" = '200' || { echo "Studio account access failed: HTTP $account_status"; exit 1; }
-          manage_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3100/studio/manage')
+          manage_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://localhost:3000/studio/manage')
           test "$manage_status" = '200' || { echo "Studio management access failed: HTTP $manage_status"; exit 1; }
-          password_recovery_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -X POST -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json'             -d '{"email":"ops@inspirarestudio.com"}' 'http://localhost:3100/api/studio/forgot-password')
+          password_recovery_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -X POST -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json'             -d '{"email":"ops@inspirarestudio.com"}' 'http://localhost:3000/api/studio/forgot-password')
           test "$password_recovery_status" = '503' || { echo "SMTP-less recovery should fail safely: HTTP $password_recovery_status"; exit 1; }
           echo 'Staff login, authenticated Studio, management, account and safe recovery smoke tests passed'
 
