@@ -1,23 +1,22 @@
 import Link from 'next/link';
 import { Play, Search, UserRound } from 'lucide-react';
-import { getCategories } from '@/lib/content';
-import { homepageCategoryDefinitions, preferredSectionSlug } from '@/lib/editorial-sections';
+import { homepageCategoryDefinitions } from '@/lib/editorial-sections';
 
-/** A category in the nav opens its archive, not a homepage anchor.
- * Slugs are resolved against existing categories, so legacy WordPress desk
- * names continue working until editors create the redesigned ones.
+/** Category links open their canonical archives. Slugs are stable, and
+ * the canonical categories are already configured in the newsroom CMS.
+ * Avoid querying the database in the global header on every page request.
  */
-export async function SiteHeader() {
-  const categories = await getCategories();
-  const editorialNav = [
-    { title: 'Home', href: '/' },
-    { title: 'Latest Highlights', href: '/latest' },
-    ...homepageCategoryDefinitions.map(def => ({
-      title: def.title,
-      href: '/latest?category=' + encodeURIComponent(preferredSectionSlug(def.aliases, categories, def.slug)),
-    })),
-    { title: 'OgasTV Studio', href: '/live' },
-  ];
+export const editorialNav = [
+  { title: 'Home', href: '/' },
+  { title: 'Latest Highlights', href: '/latest' },
+  ...homepageCategoryDefinitions.map(def => ({
+    title: def.title,
+    href: '/latest?category=' + encodeURIComponent(def.slug),
+  })),
+  { title: 'OgasTV Studio', href: '/live' },
+];
+
+export function SiteHeader() {
   return (
     <header className="ogas-public-header">
       <div className="ogas-public-header__inner">
