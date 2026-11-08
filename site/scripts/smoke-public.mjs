@@ -44,6 +44,11 @@ const searched=await visit('/latest?q=Internal');
 assert.equal(searched.status,200,'Latest search page renders');
 assert.ok(searched.text.includes('Internal CI'),'Published article can be found in search');
 
+// Guard against the bug where an escaped word class rejects valid YouTube IDs.
+const {readFileSync}=await import('node:fs');
+const contentSource=readFileSync(new URL('../lib/content.ts',import.meta.url),'utf8');
+assert.ok(contentSource.includes('[A-Za-z0-9_-]{11}'),
+  'Published video archive must accept all valid YouTube ID characters');
 const admin=await visit('/admin');
 assert.ok([307,308].includes(admin.status),'Retired native admin root redirects');
 console.log('PASS: public homepage, article layout, category archives, search, video, policy pages, saved reading, sitemap, robots and WordPress redirects');
