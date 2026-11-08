@@ -18,7 +18,7 @@ The legacy `dist/` folder is the older local writing-desk prototype; it is delib
 
 ## Official logo
 
-The approved red OgasTV wordmark source is in `site/assets/ogastv-wordmark-source.png`, outside the public directory. The development/build script `scripts/generate-official-logo.mjs` preserves the original red lettering and creates the published transparent logo with black **NIGERIA** beneath it at `public/ogastv-official-logo.png`. Keep the old source image private to the build; do not link it from the website. The existing `ogastvafrica.ng` domain remains unchanged until a separately approved domain transition.
+The approved red OgasTV wordmark source is in `site/assets/ogastv-wordmark-source.png`, outside the public directory. The development/build script `scripts/generate-official-logo.mjs` preserves the original red lettering and creates the published transparent logo with black **NIGERIA** beneath it at `public/ogastv-nigeria-logo.png`. Keep the old source image private to the build; do not link it from the website. The existing `ogastvafrica.ng` domain remains unchanged until a separately approved domain transition.
 
 ## Local development
 

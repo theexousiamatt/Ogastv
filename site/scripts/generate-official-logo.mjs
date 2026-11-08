@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 // Keep the approved OGAS TV red wordmark pixel-perfect. The archive source
 // contains an obsolete subtitle, but it is never exposed in public/.
 const source = join(process.cwd(), 'assets', 'ogastv-wordmark-source.png');
-const destination = join(process.cwd(), 'public', 'ogastv-official-logo.png');
+const destination = join(process.cwd(), 'public', 'ogastv-nigeria-logo.png');
 const { data, info } = await sharp(source).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 const { width, height, channels } = info;
 

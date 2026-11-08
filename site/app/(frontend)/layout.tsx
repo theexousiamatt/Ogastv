@@ -12,7 +12,7 @@ export const metadata:Metadata={
   openGraph:{type:'website',siteName:'OgasTV Nigeria',locale:'en_NG',
     title:'OgasTV Nigeria — Stories that matter',
     description:'Grounded reporting on communities, government, business and the voices shaping Lagos and Nigeria.',
-    url:'https://ogastvafrica.ng',images:[{url:'/ogastv-official-logo.png',alt:'OgasTV Nigeria'}]},
+    url:'https://ogastvafrica.ng',images:[{url:'/ogastv-nigeria-logo.png',alt:'OgasTV Nigeria'}]},
   twitter:{card:'summary_large_image'},
   robots:{index:true,follow:true},
 };
@@ -27,7 +27,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
         <div className="ogas-footer-layout__brand">
           <Link href="/" aria-label="OgasTV Nigeria homepage">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="ogas-footer__logo" src="/ogastv-official-logo.png" alt="OgasTV Nigeria" width={405} height={125}/>
+            <img className="ogas-footer__logo" src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={405} height={125}/>
           </Link>
           <p>Stories from our communities, told with care.</p>
           <span>Based in Lagos, reporting on the people and developments shaping Nigeria.</span>

@@ -27,6 +27,7 @@ if (legacy.test(config)) violations.push('payload.config.ts');
 const layout = readFileSync('app/(frontend)/layout.tsx', 'utf8');
 if (!layout.includes('OgasTV Nigeria')) violations.push('app/(frontend)/layout.tsx: official name missing');
 if (!layout.includes('https://ogastvafrica.ng')) violations.push('app/(frontend)/layout.tsx: existing canonical URL missing');
+if (!layout.includes('/ogastv-nigeria-logo.png')) violations.push('app/(frontend)/layout.tsx: Nigeria logo URL missing');
 
 if (violations.length) {
   console.error('OgasTV Nigeria brand check failed:\n' + violations.join('\n'));
