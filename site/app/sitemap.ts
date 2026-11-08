@@ -14,7 +14,7 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
   }));
   try{
     const [categories]=await getPublicDirectoryData();
-    const canonical=new Set(homepageCategoryDefinitions.map(def=>def.slug));
+    const canonical=new Set<string>(homepageCategoryDefinitions.map(def=>def.slug));
     for(const category of categories)canonical.add(category.slug);
     for(const slug of canonical){
       result.push({url:ORIGIN+'/section/'+encodeURIComponent(slug),
@@ -29,9 +29,11 @@ export default async function sitemap():Promise<MetadataRoute.Sitemap>{
         sort:'-firstPublishedAt',select:{slug:true,updatedAt:true},
       });
       for(const article of response.docs){
-        if(!article.slug)continue;
-        const modified=article.updatedAt?new Date(article.updatedAt):undefined;
-        result.push({url:ORIGIN+'/stories/'+encodeURIComponent(article.slug),
+        const slug=typeof article.slug==='string'?article.slug:'';
+        if(!slug)continue;
+        const changed=typeof article.updatedAt==='string'?article.updatedAt:'';
+        const modified=changed?new Date(changed):undefined;
+        result.push({url:ORIGIN+'/stories/'+encodeURIComponent(slug),
           lastModified:modified&&Number.isFinite(modified.getTime())?modified:undefined,
           changeFrequency:'weekly',priority:.8});
       }
