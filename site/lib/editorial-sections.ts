@@ -24,3 +24,11 @@ export function preferredSectionSlug(
 ): string {
   return aliases.find(slug => available.some(category => category.slug === slug)) || canonical;
 }
+
+/** Canonical editorial archive pages also contain legacy categories grouped
+ * into the same desk. Individual legacy category URLs stay narrowly scoped.
+ */
+export function archiveCategoryAliases(slug: string): string[] {
+  const desk = homepageCategoryDefinitions.find(def => def.slug === slug);
+  return desk ? [...desk.aliases] : [slug];
+}
