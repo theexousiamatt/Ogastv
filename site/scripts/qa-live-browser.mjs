@@ -28,7 +28,16 @@ try {
       try {
         const response = await page.goto(ORIGIN+route,{waitUntil:'domcontentloaded',timeout:45000});
         status = response?.status() || 0;
-        await page.waitForTimeout(900);
+        // Trigger lazy images as a real reader scrolls the article/archive.
+        await page.evaluate(async () => {
+          const step = Math.max(480, Math.round(innerHeight * .85));
+          for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+            window.scrollTo(0, y);
+            await new Promise(resolve => setTimeout(resolve, 45));
+          }
+          window.scrollTo(0, 0);
+        });
+        await page.waitForTimeout(800);
         const state = await page.evaluate(() => ({
           title:document.title,
           width:innerWidth,
