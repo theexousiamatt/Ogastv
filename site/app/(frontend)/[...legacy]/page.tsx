@@ -31,7 +31,7 @@ export default async function LegacyWordpressRedirect({params}:Props){
     /^(0?[1-9]|1[0-2])$/.test(parts[1])&&(parts.length===3||/^([1-9]|[12]\d|3[01])$/.test(parts[2]));
   if(parts.length!==1&&!dated)notFound();
   const slug=parts[parts.length-1];
-  if(!slug||slug.length>210||!/^[-a-z0-9_%]+$/i.test(slug))notFound();
+  if(!slug||slug.length>210||!/^[\p{L}\p{N}_%.~-]+$/u.test(slug))notFound();
   const article=await getArticle(slug);
   if(!article)notFound();
   permanentRedirect('/stories/'+encodeURIComponent(article.slug));
