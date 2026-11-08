@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { Clock3, CalendarDays, MapPin, ArrowUpRight } from 'lucide-react';
 import { getArticle, getRelatedArticles, prettyDate } from '@/lib/content';
 import { ArticleShare } from '@/components/ArticleShare';
+import { SaveStory } from '@/components/SaveStory';
 import { StoryCard } from '@/components/StoryCard';
 import './reading.css';
 
@@ -101,6 +102,8 @@ export default async function ArticlePage({ params }: Props) {
           </div>
         </div>
         {hasUpdate&&<p className="ogas-reading__updated">Updated <time dateTime={article.updatedAt}>{prettyDate(article.updatedAt!)}</time></p>}
+        <SaveStory story={{slug:article.slug,title:article.title,date:article.date,
+          category:article.category?.name||''}}/>
         {article.locations?.length?<div className="ogas-reading__locations"><MapPin size={14} aria-hidden="true"/>
           {article.locations.map((place,i)=><span key={place.slug}>{i>0?' · ':''}<Link href={'/latest?location='+encodeURIComponent(place.slug)}>{place.name}</Link></span>)}
         </div>:null}
