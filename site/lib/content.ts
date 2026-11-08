@@ -255,6 +255,13 @@ export async function getHomepageCategorySections(limit = 4): Promise<HomepageCa
       try {
         const result = await api.find({
           collection: 'articles', overrideAccess: false, depth: 2,
+          // Homepage cards need only editorial metadata, never full rich-text bodies.
+          select: {
+            title: true, slug: true, summary: true, firstPublishedAt: true,
+            createdAt: true, primaryCategory: true, featuredImage: true,
+            publicByline: true, legacyFeaturedImageUrl: true,
+            legacyFeaturedImageAlt: true, originalWordpressUrl: true,
+          },
           where: { and: [
             { _status: { equals: 'published' } },
             { or: [
