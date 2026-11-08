@@ -10,7 +10,7 @@ import {
   ChevronRight, CircleHelp, Clock3, ExternalLink, FilePenLine, FileText,
   FolderOpen, Home, Image as ImageIcon, ImagePlus, LayoutGrid, Link2, Copy,
   LogOut, Menu, MoreHorizontal, Newspaper, PencilLine, Plus, Radio,
-  Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, X,
+  Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, UsersRound, X,
 } from 'lucide-react';
 
 type Tab = 'home' | 'articles' | 'write' | 'media' | 'live' | 'ads' | 'advanced';
