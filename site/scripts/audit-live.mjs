@@ -60,6 +60,34 @@ try{
         broken:badImages.length,jsErrors:consoleErrors.length}));
       consoleErrors.length=0;
     }
+    // Include an actual published story, not just static/archival routes.
+    await page.goto(origin+'/',{waitUntil:'domcontentloaded',timeout:45000});
+    const firstStory=await page.locator('main a[href^="/stories/"]').first().getAttribute('href');
+    if(!firstStory){
+      errors.push(viewport.name+' public homepage has no linked published article');
+    }else{
+      consoleErrors.length=0;
+      const response=await page.goto(new URL(firstStory,origin).toString(),{waitUntil:'domcontentloaded',timeout:45000});
+      await page.waitForTimeout(650);
+      const inspection=await page.evaluate(()=>({
+        h1:document.querySelector('main h1')?.textContent?.trim()||'',
+        width:document.documentElement.scrollWidth,
+        viewport:window.innerWidth,
+        readingTime:!!document.querySelector('.ogas-reading__meta'),
+        saveAction:!!document.querySelector('.ogas-reading__save-button'),
+        related:!!document.querySelector('.ogas-reading__related'),
+        mainImage:!document.querySelector('.ogas-reading__cover')||
+          (document.querySelector('.ogas-reading__cover').complete&&document.querySelector('.ogas-reading__cover').naturalWidth>0),
+      }));
+      results.push({viewport:viewport.name,path:firstStory,status:response?.status()||0,article:inspection,consoleErrors:[...consoleErrors]});
+      if(response?.status()!==200)errors.push(viewport.name+' article HTTP '+response?.status());
+      if(inspection.width-inspection.viewport>5)errors.push(viewport.name+' article horizontal overflow');
+      if(!inspection.readingTime||!inspection.saveAction||!inspection.related)errors.push(viewport.name+' article reading features missing');
+      if(!inspection.mainImage)errors.push(viewport.name+' article cover image broken');
+      if(consoleErrors.length)errors.push(viewport.name+' article browser errors: '+consoleErrors.join(' | ').slice(0,400));
+      await page.screenshot({path:path.join(out,viewport.name+'-story.png'),fullPage:true,animations:'disabled'});
+      consoleErrors.length=0;
+    }
     if(viewport.name==='mobile'){
       await page.goto(origin+'/');
       const menu=page.locator('.ogas-public-mobile-menu > summary');
