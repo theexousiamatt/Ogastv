@@ -40,7 +40,7 @@ export default function StudioLogin() {
   return <main className="ogas-auth">
     <div className="ogas-auth__brand">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/ogastv-official-logo.png" alt="OgasTV Africa" width={224} height={70} />
+      <img src="/ogastv-official-logo.png" alt="OgasTV Nigeria" width={224} height={70} />
       <p>THE NEWSROOM</p>
     </div>
     <div className="ogas-auth__panel">
@@ -66,6 +66,6 @@ export default function StudioLogin() {
       </form>
       <p className="ogas-auth__help">Forgot your password? <Link href="/studio/forgot-password">Request a recovery link</Link>. For a new staff account, contact your administrator.</p>
     </div>
-    <Link className="ogas-auth__back" href="/">← Back to OgasTV Africa</Link>
+    <Link className="ogas-auth__back" href="/">← Back to OgasTV Nigeria</Link>
   </main>;
 }

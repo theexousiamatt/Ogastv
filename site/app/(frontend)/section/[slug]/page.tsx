@@ -24,7 +24,7 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
   const [categories]=await getPublicDirectoryData();
   const title=titleFromSlug(slug,categories);
   if(!title)return {title:'Section unavailable',robots:{index:false,follow:false}};
-  return {title:title+' News',description:'Latest '+title.toLowerCase()+' reporting and perspectives from OgasTV Africa.',
+  return {title:title+' News',description:'Latest '+title.toLowerCase()+' reporting and perspectives from OgasTV Nigeria.',
     alternates:{canonical:'/section/'+encodeURIComponent(slug)}};
 }
 export default async function SectionPage({params,searchParams}:Props){
@@ -46,7 +46,7 @@ export default async function SectionPage({params,searchParams}:Props){
       <Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/latest">News</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span>
     </nav>
     <header className="ogas-archive__heading">
-      <span className="ogas-archive__eyebrow">OGASTV AFRICA / EDITORIAL DESK</span>
+      <span className="ogas-archive__eyebrow">OGASTV NIGERIA / EDITORIAL DESK</span>
       <h1>{title}<span>.</span></h1>
       <p>{isLocal?'Stories and decisions shaping everyday life across Lagos councils.':'Reporting, context and perspectives from our '+title+' desk.'}</p>
     </header>

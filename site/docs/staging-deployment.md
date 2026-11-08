@@ -1,4 +1,4 @@
-# OgasTV Africa — private CMS staging rollout
+# OgasTV Nigeria — private CMS staging rollout
 
 ## Current environment
 - Production WordPress: `ogastvafrica.ng` — do not modify or point DNS here yet.

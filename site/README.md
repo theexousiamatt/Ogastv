@@ -1,4 +1,4 @@
-# OgasTV Africa — Custom Publishing Platform
+# OgasTV Nigeria — Custom Publishing Platform
 
 This `site/` folder contains the custom Next.js publication and the Payload CMS backend.
 The legacy `dist/` folder is the older local writing-desk prototype; it is deliberately preserved.
