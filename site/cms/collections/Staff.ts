@@ -16,7 +16,8 @@ export const Staff: CollectionConfig = {
     forgotPassword: {
       minRequestInterval: 60_000,
       generateEmailSubject: () => 'Reset your OgasTV Studio password',
-      generateEmailHTML: ({ token }) => {
+      generateEmailHTML: ({ token } = {}) => {
+        if (!token) throw new Error('Missing password-reset token');
         const url = ((process.env.NEXT_PUBLIC_SERVER_URL === 'https://ogastv-cms.inspirarestudio.com') ? 'https://ogastvafrica.ng' : (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000')).replace(/\/$/, '')
           + '/studio/reset-password?token=' + encodeURIComponent(token);
         return '<p>A password reset was requested for your OgasTV Studio account.</p><p><a href="' + url + '">Reset your password</a></p><p>If you did not request this, you can ignore this email.</p>';
