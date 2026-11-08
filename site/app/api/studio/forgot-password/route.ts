@@ -6,7 +6,8 @@ export const runtime='nodejs';
 export async function POST(req:NextRequest){
   const smtpReady=Boolean(process.env.SMTP_HOST&&process.env.SMTP_USER&&process.env.SMTP_PASS&&process.env.SMTP_FROM_ADDRESS);
   if(!smtpReady)return NextResponse.json({message:'Email recovery is not yet configured. Contact your newsroom administrator.'},{status:503});
-  const allowedOrigin=new URL(process.env.NEXT_PUBLIC_SERVER_URL||req.url).origin;
+  const source=process.env.NEXT_PUBLIC_SERVER_URL==='https://ogastv-cms.inspirarestudio.com' ? 'https://ogastvafrica.ng' : (process.env.NEXT_PUBLIC_SERVER_URL||req.url);
+  const allowedOrigin=new URL(source).origin;
   if(req.headers.get('origin')!==allowedOrigin)return NextResponse.json({message:'Request blocked.'},{status:403});
   let data:{email?:string};
   try{data=await req.json()}catch{return NextResponse.json({message:'Invalid request.'},{status:400});}
