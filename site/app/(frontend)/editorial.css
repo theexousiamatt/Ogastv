@@ -387,3 +387,35 @@ body button,body input{font:inherit}
 .ogas-watch__empty a{display:flex;align-items:center;gap:6px;font-weight:800;color:#a32c26}
 @media(max-width:940px){.ogas-watch__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.ogas-watch{padding:10px 0 45px}.ogas-watch__hero{margin:8px 0 30px;border-radius:9px}.ogas-watch__grid{grid-template-columns:1fr}.ogas-watch__heading{align-items:start;flex-direction:column;gap:7px}}
+
+/* Reader trust, newsroom contact and permanent editorial information pages. */
+.ogas-footer-layout{display:grid;grid-template-columns:minmax(260px,2fr) 1fr 1fr;gap:clamp(26px,6vw,100px);padding:38px 0 37px;border-top:1px solid #dde0d8}
+.ogas-footer-layout__brand{max-width:360px}
+.ogas-footer-layout__brand p{font-size:16px;color:#333d32;font-weight:750;line-height:1.4;margin:16px 0 10px}
+.ogas-footer-layout__brand>span{display:block;font-size:12px;line-height:1.6;color:#7d857a}
+.ogas-footer-layout nav{display:flex;flex-direction:column;align-items:start;gap:11px}
+.ogas-footer-layout nav strong{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#30372d;margin-bottom:7px}
+.ogas-footer-layout nav a{font-size:13px;text-decoration:none;color:#6a7268}
+.ogas-footer-layout nav a:hover{text-decoration:underline;text-underline-offset:3px}
+.ogas-footer-bottom{border-top:1px solid #dde0d8;display:flex;justify-content:space-between;gap:20px;padding:20px 0;font-size:11px;color:#81877e}
+.ogas-info{max-width:1130px;margin:0 auto;padding:28px 24px 90px}
+.ogas-info__breadcrumb{display:flex;gap:10px;align-items:center;color:#7a8477;font-size:12px;margin-bottom:55px}
+.ogas-info__breadcrumb a{text-decoration:none}
+.ogas-info__header{padding-bottom:43px;border-bottom:1px solid #e2e5df;max-width:850px}
+.ogas-info__eyebrow{font-size:11px;color:#9c2c26;letter-spacing:.14em;font-weight:850}
+.ogas-info__header h1{font-size:clamp(45px,7vw,87px);line-height:1.02;letter-spacing:-.065em;margin:14px 0 23px}
+.ogas-info__header h1 span{color:#a52e29}
+.ogas-info__header>p{font-size:clamp(18px,2vw,25px);line-height:1.5;color:#59645a;margin:0}
+.ogas-info__body{max-width:730px;padding:25px 0 40px}
+.ogas-info__body section{margin:35px 0}
+.ogas-info__body h2{font-size:clamp(23px,2.8vw,32px);letter-spacing:-.04em;margin:0 0 11px}
+.ogas-info__body p{font-size:16px;line-height:1.85;color:#555e54;margin:0 0 17px}
+.ogas-info__body a{color:#a3302a;text-decoration:underline;text-underline-offset:4px}
+.ogas-info__email{display:inline-block;font-size:clamp(18px,2.2vw,25px);font-weight:800;letter-spacing:-.035em;overflow-wrap:anywhere}
+.ogas-info__contact{background:#edf1e9;padding:clamp(25px,5vw,55px);border-radius:10px;max-width:970px}
+.ogas-info__contact>span{font-size:11px;font-weight:850;color:#a22e26;letter-spacing:.13em}
+.ogas-info__contact h2{font-size:clamp(26px,3.7vw,43px);letter-spacing:-.05em;margin:12px 0}
+.ogas-info__contact p{color:#6d796c;line-height:1.6;margin:0 0 20px;max-width:550px}
+.ogas-info__contact a{display:inline-flex;align-items:center;gap:9px;padding:12px 16px;background:#a72e28;color:white!important;text-decoration:none;border-radius:7px;font-size:13px;font-weight:800}
+@media(max-width:800px){.ogas-footer-layout{grid-template-columns:1fr 1fr}.ogas-footer-layout__brand{grid-column:1/-1;max-width:460px}}
+@media(max-width:540px){.ogas-footer-layout{grid-template-columns:1fr 1fr;gap:27px 18px;padding:25px 0}.ogas-footer-layout__brand{grid-column:1/-1}.ogas-footer-bottom{flex-direction:column;gap:7px}.ogas-info{padding:20px 6px 50px}.ogas-info__breadcrumb{margin-bottom:35px}.ogas-info__header{padding-bottom:29px}.ogas-info__body{padding-bottom:18px}}
