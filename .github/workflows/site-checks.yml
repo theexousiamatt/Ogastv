@@ -184,6 +184,24 @@ jobs:
             exit 1
           fi
           echo "First-admin activation, login and replay protection all passed"
+          # The public and legacy admin entry points must never expose the
+          # deprecated Payload dashboard to regular newsroom staff.
+          studio_login_status=$(curl --silent --output /tmp/ogastv-studio-login.html --write-out '%{http_code}'             'http://127.0.0.1:3100/studio/login')
+          test "$studio_login_status" = '200' || { echo "Studio login is unavailable: HTTP $studio_login_status"; exit 1; }
+          grep -q 'Sign in to Studio' /tmp/ogastv-studio-login.html || { echo 'Custom sign-in form was not rendered'; exit 1; }
+          legacy_location=$(curl --silent --output /dev/null --write-out '%{redirect_url}' 'http://127.0.0.1:3100/admin')
+          case "$legacy_location" in */studio) ;; *) echo "Old admin root did not redirect to Studio: $legacy_location"; exit 1;; esac
+          legacy_login_location=$(curl --silent --output /dev/null --write-out '%{redirect_url}' 'http://127.0.0.1:3100/admin/login')
+          case "$legacy_login_location" in */studio/login) ;; *) echo "Old login did not redirect to custom sign-in: $legacy_login_location"; exit 1;; esac
+          echo 'Native admin dashboard and login have Studio-first redirects'
+          authenticated_login=$(curl --silent --output /dev/null --write-out '%{http_code}' -c /tmp/ogastv-staff-cookies             -H 'Content-Type: application/json' -X POST             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}'             'http://127.0.0.1:3100/api/staff-users/login')
+          test "$authenticated_login" = '200' || { echo 'Staff cookie login failed'; exit 1; }
+          studio_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://127.0.0.1:3100/studio')
+          test "$studio_status" = '200' || { echo "Authenticated Studio access failed: HTTP $studio_status"; exit 1; }
+          account_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -b /tmp/ogastv-staff-cookies 'http://127.0.0.1:3100/studio/account')
+          test "$account_status" = '200' || { echo "Studio account access failed: HTTP $account_status"; exit 1; }
+          echo 'Staff login, authenticated Studio and account smoke tests passed'
+
           echo "Unauthenticated reader creation HTTP $reader_status; staff creation HTTP $staff_status"
           case "$reader_status" in 401|403) ;; *) echo 'Public reader creation unexpectedly allowed'; exit 1;; esac
           case "$staff_status" in 401|403) ;; *) echo 'Public staff creation unexpectedly allowed'; exit 1;; esac
