@@ -29,7 +29,7 @@ export function FeaturedHero({ stories }: { stories: Article[] }) {
         <div className="ogas-home-hero__meta">
           {story ? <>
             <Clock3 size={13}/><time dateTime={story.date}>{prettyDate(story.date)}</time>
-            {story.category && <span className="ogas-category-label">{story.category.name}</span>}
+            {story.category && story.category.slug!=='uncategorized' && <span className="ogas-category-label">{story.category.name}</span>}
           </> : <><span className="ogas-hero-intro-dot"/> People first. Stories that matter.</>}
         </div>
         <Link className="ogas-red-button" href={story ? '/stories/' + encodeURIComponent(story.slug) : '/latest'}>
