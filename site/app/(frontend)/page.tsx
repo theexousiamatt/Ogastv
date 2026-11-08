@@ -79,7 +79,7 @@ function StudioCard({ episode }: { episode: StudioEpisode }) {
 }
 
 export default async function HomePage() {
-  const [latest, curated] = await Promise.all([getArticles(100), getHomepageCuration()]);
+  const [latest, curated] = await Promise.all([getArticles(40), getHomepageCuration()]);
   const published = [...latest];
   const lead = curated.lead || published.find(story => Boolean(story.image)) || published[0] || null;
   const used = new Set<string>(lead ? [String(lead.id)] : []);
