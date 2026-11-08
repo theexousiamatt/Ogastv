@@ -4,8 +4,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const roots = ['app', 'components', 'cms', 'lib'];
-const allowed = /\\.(?:ts|tsx|css)$/;
-const legacy = /OgasTV(?:\\s|%20)+Africa/gi;
+const allowed = /\.(?:ts|tsx|css)$/;
+const legacy = /OgasTV(?:\s|%20)+Africa/gi;
 const violations = [];
 
 function inspect(path) {
@@ -13,7 +13,7 @@ function inspect(path) {
     const file = join(path, entry.name);
     if (entry.isDirectory()) inspect(file);
     else if (entry.isFile() && allowed.test(file)) {
-      readFileSync(file, 'utf8').split('\\n').forEach((line, index) => {
+      readFileSync(file, 'utf8').split('\n').forEach((line, index) => {
         if (legacy.test(line)) violations.push(file + ':' + (index + 1));
         legacy.lastIndex = 0;
       });
@@ -29,7 +29,7 @@ if (!layout.includes('OgasTV Nigeria')) violations.push('app/(frontend)/layout.t
 if (!layout.includes('https://ogastvafrica.ng')) violations.push('app/(frontend)/layout.tsx: existing canonical URL missing');
 
 if (violations.length) {
-  console.error('OgasTV Nigeria brand check failed:\\n' + violations.join('\\n'));
+  console.error('OgasTV Nigeria brand check failed:\n' + violations.join('\n'));
   process.exit(1);
 }
 console.log('OgasTV Nigeria branding verified; existing domain preserved.');
