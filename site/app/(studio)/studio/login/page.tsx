@@ -40,7 +40,7 @@ export default function StudioLogin() {
   return <main className="ogas-auth">
     <div className="ogas-auth__brand">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={224} height={70} />
+      <img src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={224} height={75} />
       <p>THE NEWSROOM</p>
     </div>
     <div className="ogas-auth__panel">

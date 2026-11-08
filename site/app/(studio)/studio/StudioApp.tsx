@@ -10,7 +10,7 @@ import {
   ChevronRight, CircleHelp, Clock3, ExternalLink, FilePenLine, FileText,
   FolderOpen, Home, Image as ImageIcon, ImagePlus, LayoutGrid, Link2, Copy,
   LogOut, Menu, MoreHorizontal, Newspaper, PencilLine, Plus, Radio,
-  Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, X,
+  Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, UsersRound, X,
 } from 'lucide-react';
 
 type Tab = 'home' | 'articles' | 'write' | 'media' | 'live' | 'ads' | 'advanced';
@@ -573,6 +573,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
         <button type="button" className={'ogas-nav-link'+(tab==='advanced'?' active':'')} onClick={()=>navigate('advanced')}>
           <Settings2 size={20}/> <span>Advanced settings</span>
         </button>
+        {role==='administrator'&&<a className="ogas-nav-link" href="/studio/manage?tab=team"><UsersRound size={20}/><span>Team &amp; access</span></a>}
       </nav>
       <div className="ogas-side-bottom"><div className="ogas-side-note"><ShieldCheck {...iconSize(19)}/><div><strong>Your work is private</strong><p>Only the OgasTV team can use this space.</p></div></div>
       <div className="ogas-profile"><span className="ogas-avatar">{firstName.slice(0,2).toUpperCase()}</span><span><strong>{name}</strong><small>{roleText}</small></span><a href="/studio/account" aria-label="Account settings"><Settings2 size={17}/></a></div></div>
@@ -763,7 +764,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     </div>
 
     <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?resumeWriting():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
-    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button><a href="/studio/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
+    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button>{role==='administrator'&&<a href="/studio/manage?tab=team"><UsersRound size={18}/> Team &amp; access</a>}<a href="/studio/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
 
     {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>changeFeaturedImage(String(m.id))}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadPreviewUrl&&<div className="ogas-picker-selected"><img src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded"/><span>{uploadFile?.name}<small>Ready to upload</small></span></div>}<input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?(uploadStage==='optimizing'?'Optimizing…':uploadStage==='processing'?'Processing…':uploadStage==='uploading'?'Uploading '+uploadProgress+'%':'Please wait…'):'Upload and use'} <ArrowRight size={16}/></button>{busy&&uploadStage!=='idle'&&<div role="status" aria-live="polite" style={{width:'100%',marginTop:10}}>
   <div style={{height:5,background:'#e8e8e8',borderRadius:999,overflow:'hidden'}}>

@@ -18,7 +18,7 @@ The legacy `dist/` folder is the older local writing-desk prototype; it is delib
 
 ## Official logo
 
-The approved red OgasTV wordmark source is in `site/assets/ogastv-wordmark-source.png`, outside the public directory. The development/build script `scripts/generate-official-logo.mjs` preserves the original red lettering and creates the published transparent logo with black **NIGERIA** beneath it at `public/ogastv-nigeria-logo.png`. Keep the old source image private to the build; do not link it from the website. The existing `ogastvafrica.ng` domain remains unchanged until a separately approved domain transition.
+The approved OgasTV Nigeria logo was supplied by the client. A web-sized transparent PNG derived from that upload is committed at `site/public/ogastv-nigeria-logo.png`. Builds must use that committed asset directly; do not regenerate the red OGAS TV lettering or black NIGERIA subtitle. The existing `ogastvafrica.ng` domain remains unchanged.
 
 ## Local development
 
@@ -38,7 +38,7 @@ Never add `.env.local`, real passwords, stream keys or service tokens to GitHub.
 
 Staff signup must NOT be publicly open. During private local/staging initialization only, set `ALLOW_FIRST_ADMIN_SETUP=true`, use the protected one-time staff activation flow, verify administrator permissions, then immediately unset `ALLOW_FIRST_ADMIN_SETUP` and restart. Do not expose a newly deployed empty database to public traffic while bootstrap mode is on. Subsequent staff accounts must be created by the administrator.
 
-Staff email verification is enforced; configure and test a transactional email provider before inviting additional staff. The native Payload admin screen is intentionally not deployed. Development authentication without verified outbound mail is **not** acceptable for production.
+Staff accounts are private. Administrators can provision another staff account, including another administrator, in Studio > Team & access; a single-use display of a generated temporary password is returned only to the signed-in administrator, and the account is verified through Payload's authenticated server-side flow. Configure and test a transactional email provider to enable automatic invitations and password recovery. The native Payload admin screen is intentionally not deployed. Development authentication without verified outbound mail is **not** acceptable for production.
 
 ## Connected Supabase project (verified November 5, 2026)
 

@@ -15,7 +15,7 @@ export function SiteHeader(){
     <div className="ogas-public-header__inner">
       <Link href="/" className="ogas-public-brand" aria-label="OgasTV Nigeria home">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="ogas-public-brand__logo" src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={405} height={125}/>
+        <img className="ogas-public-brand__logo" src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={405} height={135}/>
       </Link>
       <div className="ogas-public-header__tools">
         <form action="/latest" method="get" role="search" className="ogas-public-search">

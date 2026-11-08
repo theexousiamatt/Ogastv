@@ -7,8 +7,8 @@
     "node": ">=24.22.1"
   },
   "scripts": {
-    "dev": "node scripts/generate-official-logo.mjs && next dev",
-    "build": "node scripts/generate-official-logo.mjs && payload generate:types && node scripts/clean-next-output.mjs && next build --webpack && node scripts/prepare-standalone-assets.mjs",
+    "dev": "next dev",
+    "build": "payload generate:types && node scripts/clean-next-output.mjs && next build --webpack && node scripts/prepare-standalone-assets.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "check:branding": "node scripts/check-branding.mjs",
