@@ -1,0 +1,55 @@
+/* Studio management — editorial-first, compact and responsive. */
+.ogas-manage{min-height:100svh;background:#f8f8f5;color:#272824;font-size:14px}
+.ogas-manage__top{background:#fff;border-bottom:1px solid #e7e7e3}
+.ogas-manage__top-inner{max-width:1420px;margin:auto;padding:17px 28px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.ogas-manage__brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:-.035em;color:#292b26;text-decoration:none}
+.ogas-manage__brand img{width:103px;height:auto}
+.ogas-manage__back{color:#555c50;text-decoration:none;display:flex;gap:8px;align-items:center;font-size:12px;font-weight:700}
+.ogas-manage__shell{max-width:1420px;margin:auto;padding:40px 28px 85px}
+.ogas-manage__intro{display:flex;justify-content:space-between;gap:22px;margin-bottom:30px}
+.ogas-manage__eyebrow{color:#ab2925;font-size:10px;font-weight:800;letter-spacing:.15em;margin-bottom:11px;display:block}
+.ogas-manage__intro h1{font-size:clamp(30px,3.5vw,48px);letter-spacing:-.055em;line-height:1;margin:0 0 10px}
+.ogas-manage__intro p{font-size:14px;color:#757b72;line-height:1.6;margin:0}
+.ogas-manage__grid{display:grid;grid-template-columns:215px minmax(0,1fr);gap:32px;align-items:start}
+.ogas-manage__nav{display:grid;gap:5px;position:sticky;top:22px}
+.ogas-manage__nav button{display:flex;align-items:center;gap:11px;text-align:left;border:0;background:transparent;color:#666d62;border-radius:9px;font:inherit;font-size:13px;padding:12px;cursor:pointer}
+.ogas-manage__nav button:hover{background:#f0f1eb}
+.ogas-manage__nav button.active{background:#fff;box-shadow:0 1px 5px #2029200e;color:#ad2925;font-weight:750}
+.ogas-manage__main{min-width:0}
+.ogas-manage__heading{display:flex;align-items:start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.ogas-manage__heading h2{font-size:24px;letter-spacing:-.035em;margin:0 0 7px}
+.ogas-manage__heading p{color:#747970;line-height:1.5;font-size:13px;margin:0;max-width:620px}
+.ogas-manage__surface{background:#fff;border:1px solid #e3e5de;border-radius:14px;padding:24px;margin-bottom:19px}
+.ogas-manage__btn{font:inherit;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 15px;border-radius:8px;border:1px solid #ddddda;cursor:pointer;font-size:12px;font-weight:750;background:white;color:#383d35}
+.ogas-manage__btn--primary{color:white;background:#b32c26;border-color:#b32c26}
+.ogas-manage__btn--primary:hover{background:#92221c}
+.ogas-manage__btn:disabled{opacity:.55;cursor:not-allowed}
+.ogas-manage__collection{display:grid;grid-template-columns:minmax(200px,.75fr) minmax(260px,1fr);gap:22px;align-items:start}
+.ogas-manage__list{display:grid;gap:6px;max-height:590px;overflow-y:auto}
+.ogas-manage__item{background:#fff;border:1px solid #e4e5df;border-radius:9px;text-align:left;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:#32352d;min-width:0}
+.ogas-manage__item strong{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+.ogas-manage__item small{font-size:11px;color:#7f837c}
+.ogas-manage__item.active{border-color:#c8998a;background:#fffbf9}
+.ogas-manage__editor{background:white;border:1px solid #e3e5de;border-radius:12px;padding:22px;min-width:0}
+.ogas-manage__editor h3{font-size:20px;letter-spacing:-.035em;margin:0 0 18px}
+.ogas-manage__form{display:grid;gap:17px}
+.ogas-manage__form label{display:grid;gap:8px;font-size:12px;font-weight:750;color:#4a5046}
+.ogas-manage__form input:not([type=checkbox]),.ogas-manage__form select,.ogas-manage__form textarea{width:100%;font:inherit;font-size:14px;min-height:44px;color:#2c3128;padding:10px 12px;background:#fbfbfa;border:1px solid #dfe2dc;border-radius:7px;outline-offset:2px}
+.ogas-manage__form textarea{resize:vertical;min-height:105px}
+.ogas-manage__form input[type=checkbox]{width:17px;height:17px;accent-color:#b22c25}
+.ogas-manage__check{display:flex!important;flex-direction:row;align-items:center;gap:9px!important}
+.ogas-manage__form select[multiple]{min-height:140px}
+.ogas-manage__form small{font-weight:400;color:#7c8077;font-size:11px;line-height:1.5}
+.ogas-manage__form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:7px}
+.ogas-manage__empty{padding:28px;text-align:center;color:#747870;font-size:13px;border:1px dashed #d9ddd5;border-radius:9px}
+.ogas-manage__notice{padding:13px 16px;border:1px solid #e6d8a4;background:#fffcf1;color:#66562e;border-radius:8px;font-size:12px;line-height:1.5;margin:0 0 17px}
+.ogas-manage__error{background:#fff1f0;border-color:#ebcac5;color:#983229}
+.ogas-manage__success{background:#f4faee;border-color:#d0e5c4;color:#39732c}
+.ogas-manage__subheading{font-size:17px;margin:0 0 15px}
+.ogas-manage__badge{font-size:10px;font-weight:850;letter-spacing:.04em;color:#756f65;background:#f1f1ed;border-radius:5px;padding:5px 8px;align-self:flex-start}
+.ogas-manage__aside{font-size:13px;line-height:1.6;color:#787d72}
+.ogas-manage__row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.ogas-manage__divider{height:1px;background:#e8eae5;margin:24px 0}
+.ogas-manage__meta{font-size:12px;color:#70776c}
+@media(max-width:970px){.ogas-manage__grid{grid-template-columns:165px minmax(0,1fr);gap:18px}.ogas-manage__collection{grid-template-columns:1fr}.ogas-manage__list{display:flex;overflow-x:auto;max-height:160px}.ogas-manage__item{min-width:180px;max-width:290px}}
+@media(max-width:630px){.ogas-manage__top-inner,.ogas-manage__shell{padding-left:18px;padding-right:18px}.ogas-manage__shell{padding-top:26px}.ogas-manage__grid{grid-template-columns:1fr;gap:19px}.ogas-manage__nav{position:static;display:flex;overflow-x:auto;padding-bottom:4px;gap:4px}.ogas-manage__nav button{white-space:nowrap;padding:11px}.ogas-manage__intro{margin-bottom:23px}.ogas-manage__surface,.ogas-manage__editor{padding:17px}.ogas-manage__heading{flex-direction:column}}

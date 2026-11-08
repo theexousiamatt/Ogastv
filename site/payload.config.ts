@@ -85,27 +85,9 @@ export default buildConfig({
       },
     }),
   ],
-  admin: {
-    user: 'staff-users',
-    theme: 'light',
-    timezones: { defaultTimezone: 'Africa/Lagos' },
-    components: {
-      beforeNavLinks: ['/cms/admin/DeskNavigation#DeskNavigation'],
-      graphics: {
-        Logo: '/cms/admin/NewsroomBrand#NewsroomLogo',
-        Icon: '/cms/admin/NewsroomBrand#NewsroomIcon',
-      },
-      views: {
-        dashboard: { Component: '/cms/admin/NewsroomDashboard#NewsroomDashboard' },
-        reviewQueue: { Component: '/cms/admin/ReviewQueue#ReviewQueue', path: '/review-queue' },
-        myStories: { Component: '/cms/admin/MyStories#MyStories', path: '/my-stories' },
-      },
-    },
-    importMap: {
-      baseDir: dirname,
-    },
-    meta: { titleSuffix: ' — OgasTV Africa Newsroom' },
-  },
+  // Payload remains the secure CMS/auth/API engine. The native admin UI
+  // is retired; all staff-facing screens now live under /studio.
+  admin: { user: 'staff-users' },
   collections: [
     Staff, Readers, Media, AdBanners, Categories, Locations, Tags, Articles,
     Programmes, Episodes, LiveEvents, CommunitySubmissions,

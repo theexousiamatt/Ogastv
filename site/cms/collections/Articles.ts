@@ -137,7 +137,6 @@ export const Articles: CollectionConfig = {
       fields: [
         { name: 'slug', type: 'text', unique: true, required: true, index: true,
           admin: {
-            components: { Field: '/cms/admin/AutoSlugField#AutoSlugField' },
             description: 'Generated from your headline. Edit only when necessary; changing a published URL can break links.',
           },
           hooks: {

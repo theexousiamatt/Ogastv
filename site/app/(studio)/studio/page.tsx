@@ -13,7 +13,7 @@ export default async function StudioPage() {
   const payload = await getPayload({ config });
   const { user } = await payload.auth({ headers: await getHeaders() });
   const actor = getStaff(user);
-  if (!actor) redirect('/admin/login?redirect=%2Fstudio');
+  if (!actor) redirect('/studio/login');
   return <StudioApp
     staffId={String(actor.id)}
     name={typeof user === 'object' && user && 'name' in user && typeof user.name === 'string' ? user.name : 'Newsroom team'}

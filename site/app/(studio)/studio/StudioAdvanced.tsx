@@ -112,6 +112,15 @@ export function StudioAdvanced({role,onTaxonomyChanged}:Props){
     </header>
     {error&&<div className="ogas-alert ogas-alert--error" role="alert">{error}<button type="button" onClick={()=>setError('')} aria-label="Dismiss error"><X size={16}/></button></div>}
     {success&&<div className="ogas-alert ogas-alert--success" role="status"><Check size={18}/>{success}</div>}
+    {['administrator','editor_in_chief','editor','moderator'].includes(role)&&
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,padding:'21px 23px',marginBottom:22,border:'1px solid #e3e5de',background:'#fff',borderRadius:13,flexWrap:'wrap'}}>
+        <div style={{maxWidth:560}}><strong style={{fontSize:16}}>Editorial management</strong>
+          <p style={{margin:'6px 0 0',fontSize:13,color:'#777e74',lineHeight:1.5}}>
+            Manage homepage placements, video programmes, episodes, live events, staff permissions and community submissions directly in OgasTV Studio.
+          </p>
+        </div>
+        <a href="/studio/manage" className="ogas-button ogas-button--red">Open management <ArrowRight size={17}/></a>
+      </div>}
     <div className="ogas-advanced-layout">
       <nav className="ogas-advanced-nav" aria-label="Advanced settings">
         {fields.map(item=>{

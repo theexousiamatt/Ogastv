@@ -8,11 +8,10 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "payload generate:types && payload generate:importmap && node scripts/check-admin-importmap.mjs && node scripts/clean-next-output.mjs && next build --webpack && node scripts/prepare-standalone-assets.mjs",
+    "build": "payload generate:types && node scripts/clean-next-output.mjs && next build --webpack && node scripts/prepare-standalone-assets.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "cms:types": "payload generate:types",
-    "cms:importmap": "payload generate:importmap",
     "cms:migrate": "payload migrate",
     "cms:migrate:create": "payload migrate:create",
     "audit:wordpress": "node scripts/audit-wordpress.mjs",
