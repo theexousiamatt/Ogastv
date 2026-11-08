@@ -12,7 +12,7 @@ export function EditorialInfoPage({eyebrow,title,description,children}:{eyebrow:
     </header>
     <div className="ogas-info__body">{children}</div>
     <aside className="ogas-info__contact"><span>GET IN TOUCH</span><h2>Have a question for our newsroom?</h2>
-      <p>Contact OgasTV Africa about our reporting, corrections or collaborations.</p>
+      <p>Contact OgasTV Nigeria about our reporting, corrections or collaborations.</p>
       <Link href="/contact">Contact the newsroom <ArrowUpRight size={16}/></Link>
     </aside>
   </article>;

@@ -13,7 +13,7 @@ export async function generateMetadata({searchParams}:Props):Promise<Metadata>{
   const filtered=Boolean(query.q||query.category||query.location||query.page||query.sort);
   return {
     title:'Latest Stories',
-    description:'Reporting from Lagos, Nigeria and beyond. Discover people-first OgasTV Africa journalism.',
+    description:'Reporting from Lagos, Nigeria and beyond. Discover people-first OgasTV Nigeria journalism.',
     alternates:{canonical:'/latest'},
     ...(filtered?{robots:{index:false,follow:true}}:{}),
   };
@@ -46,7 +46,7 @@ export default async function LatestNews({searchParams}:Props){
     <div className="ogas-latest-v2__top">
       <div><span className="eyebrow">FROM THE NEWSROOM</span>
         <h1>Latest Stories<span className="heading-period">.</span></h1>
-        <p>People, places and perspectives from Lagos and across Africa.</p>
+        <p>People, places and perspectives from Lagos and across Nigeria.</p>
       </div>
       <form action="/latest" method="get" role="search" className="ogas-latest-v2__search">
         <Search size={18} aria-hidden="true"/>

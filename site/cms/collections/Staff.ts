@@ -16,7 +16,7 @@ export const Staff: CollectionConfig = {
       generateEmailHTML: ({ token }) => {
         const url = ((process.env.NEXT_PUBLIC_SERVER_URL === 'https://ogastv-cms.inspirarestudio.com') ? 'https://ogastvafrica.ng' : (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000')).replace(/\/$/, '')
           + '/studio/verify?token=' + encodeURIComponent(token);
-        return '<p>Welcome to the OgasTV Africa newsroom.</p><p>Verify your account to get started:</p><p><a href="' + url + '">Verify your OgasTV Studio account</a></p>';
+        return '<p>Welcome to the OgasTV Nigeria newsroom.</p><p>Verify your account to get started:</p><p><a href="' + url + '">Verify your OgasTV Studio account</a></p>';
       },
     },
     forgotPassword: {

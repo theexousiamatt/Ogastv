@@ -13,9 +13,9 @@ const navigation=[
 export function SiteHeader(){
   return <header className="ogas-public-header">
     <div className="ogas-public-header__inner">
-      <Link href="/" className="ogas-public-brand" aria-label="OgasTV Africa home">
+      <Link href="/" className="ogas-public-brand" aria-label="OgasTV Nigeria home">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="ogas-public-brand__logo" src="/ogastv-official-logo.png" alt="OgasTV Africa" width={405} height={125}/>
+        <img className="ogas-public-brand__logo" src="/ogastv-nigeria-logo.png" alt="OgasTV Nigeria" width={405} height={125}/>
       </Link>
       <div className="ogas-public-header__tools">
         <form action="/latest" method="get" role="search" className="ogas-public-search">
@@ -39,7 +39,7 @@ export function SiteHeader(){
       <details className="ogas-public-mobile-menu">
         <summary><Menu size={17} aria-hidden="true"/> Categories</summary>
         <div className="ogas-public-mobile-menu__panel">
-          <span>EXPLORE OGASTV AFRICA</span>
+          <span>EXPLORE OGASTV NIGERIA</span>
           {navigation.map(item=><Link key={item.href} href={item.href}>{item.title}</Link>)}
         </div>
       </details>

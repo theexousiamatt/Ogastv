@@ -14,7 +14,7 @@ export async function generateMetadata({params}:Props):Promise<Metadata>{
   if(!byline||byline.length>100)return {title:'Author unavailable',robots:{index:false}};
   const result=await storiesByAuthor(byline,1);
   if(!result.total)return {title:'Author unavailable',robots:{index:false}};
-  return {title:'Stories by '+byline,description:'Published reporting by '+byline+' for OgasTV Africa.',
+  return {title:'Stories by '+byline,description:'Published reporting by '+byline+' for OgasTV Nigeria.',
     alternates:{canonical:'/authors/'+encodeURIComponent(byline)}};
 }
 
@@ -29,7 +29,7 @@ export default async function AuthorPage({params,searchParams}:Props){
   return <div className="ogas-author-page">
     <nav aria-label="Breadcrumb" className="ogas-archive__breadcrumb"><Link href="/">Home</Link><span>/</span>
       <Link href="/latest">Stories</Link><span>/</span><span aria-current="page">{byline}</span></nav>
-    <header><span className="ogas-archive__eyebrow">OGASTV AFRICA / BYLINE ARCHIVE</span>
+    <header><span className="ogas-archive__eyebrow">OGASTV NIGERIA / BYLINE ARCHIVE</span>
       <h1>Stories by {byline}<span>.</span></h1>
       <p>{result.total} published {result.total===1?'story':'stories'} from this byline.</p>
     </header>

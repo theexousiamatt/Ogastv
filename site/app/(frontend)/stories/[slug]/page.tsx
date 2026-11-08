@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type:'article',url:new URL(canonical,SITE_URL).toString(),
       title:article.metaTitle||article.title,description,
       publishedTime:article.date,modifiedTime:article.updatedAt||article.date,
-      authors:article.author?[article.author]:['OgasTV Africa'],
+      authors:article.author?[article.author]:['OgasTV Nigeria'],
       images:[{url:image,alt:article.image?.alt||article.title}],
     },
     twitter:{card:'summary_large_image',title:article.title,description,images:[image]},
@@ -69,8 +69,8 @@ export default async function ArticlePage({ params }: Props) {
     description:article.metaDescription||article.excerpt,
     image:article.image?[article.image.url]:undefined,
     datePublished:article.date,dateModified:article.updatedAt||article.date,
-    author:{'@type':'Person',name:article.author||'OgasTV Africa'},
-    publisher:{'@type':'Organization',name:'OgasTV Africa',
+    author:{'@type':'Person',name:article.author||'OgasTV Nigeria'},
+    publisher:{'@type':'Organization',name:'OgasTV Nigeria',
       url:SITE_URL,logo:{'@type':'ImageObject',url:SITE_URL+'/ogastv-official-logo.png'}},
     articleSection:article.category?.name||'News',
     wordCount:plainWords(html),
@@ -98,7 +98,7 @@ export default async function ArticlePage({ params }: Props) {
         <div className="ogas-reading__byline">
           <span><strong>{article.author?
             <Link href={'/authors/'+encodeURIComponent(article.author)}>{article.author}</Link>:
-            'OgasTV Africa Newsroom'}</strong><small>Reporting for OgasTV Africa</small></span>
+            'OgasTV Nigeria Newsroom'}</strong><small>Reporting for OgasTV Nigeria</small></span>
           <div className="ogas-reading__meta">
             <span><CalendarDays size={14} aria-hidden="true"/><time dateTime={article.date}>{prettyDate(article.date)}</time></span>
             <span><Clock3 size={14} aria-hidden="true"/>{minutes(html)} min read</span>

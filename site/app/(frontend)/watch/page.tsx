@@ -6,14 +6,14 @@ import { getWatchEpisodes, prettyDate } from '@/lib/content';
 export const dynamic='force-dynamic';
 export const metadata:Metadata={
   title:'OgasTV Studio — Video and programmes',
-  description:'Watch OgasTV Africa video podcasts, documentaries, interviews and presenter-led coverage.',
+  description:'Watch OgasTV Nigeria video podcasts, documentaries, interviews and presenter-led coverage.',
   alternates:{canonical:'/watch'},
 };
 export default async function WatchPage(){
   const episodes=await getWatchEpisodes(36);
   return <div className="ogas-watch">
     <div className="ogas-watch__hero">
-      <span className="ogas-watch__eyebrow"><Clapperboard size={17}/> WATCH / OGASTV AFRICA</span>
+      <span className="ogas-watch__eyebrow"><Clapperboard size={17}/> WATCH / OGASTV NIGERIA</span>
       <h1>OgasTV Studio<span>.</span></h1>
       <p>Conversations, community stories and reporting you can see and hear.</p>
       <Link href="/live">Watch live coverage <Radio size={16}/></Link>

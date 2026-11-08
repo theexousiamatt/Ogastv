@@ -16,7 +16,7 @@ export default function SavedStories(){
   },[]);
   const remove=(slug:string)=>{const next=stories.filter(s=>s.slug!==slug);if(writeSavedStories(next))setStories(next);};
   return <div className="ogas-saved-list">
-    <span className="ogas-reading__eyebrow">YOUR OGASTV AFRICA READING</span>
+    <span className="ogas-reading__eyebrow">YOUR OGASTV NIGERIA READING</span>
     <h1>Saved stories<span>.</span></h1>
     <p>Keep articles for later. Your list is stored in this browser on this device—not in an online account.</p>
     {!ready?<div role="status">Loading your stories…</div>:stories.length===0?
@@ -27,7 +27,7 @@ export default function SavedStories(){
       <div className="ogas-saved-list__items">
         <div className="ogas-saved-list__count">{stories.length} saved {stories.length===1?'article':'articles'}</div>
         {stories.map(item=><div className="ogas-saved-list__item" key={item.slug}>
-          <div><span>{item.category||'OGASTV AFRICA'}</span>
+          <div><span>{item.category||'OGASTV NIGERIA'}</span>
             <h2><Link href={'/stories/'+encodeURIComponent(item.slug)}>{item.title}</Link></h2>
             {item.date&&<small>{new Date(item.date).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'})}</small>}
           </div>

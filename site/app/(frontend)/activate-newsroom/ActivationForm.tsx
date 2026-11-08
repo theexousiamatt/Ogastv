@@ -49,7 +49,7 @@ export function ActivationForm() {
 
   return (
     <section className="wrap" style={{ maxWidth: 620, paddingTop: 72, paddingBottom: 112 }}>
-      <span className="eyebrow">OgasTV Africa · Private Newsroom</span>
+      <span className="eyebrow">OgasTV Nigeria · Private Newsroom</span>
       <h1 style={{ marginTop: 22, marginBottom: 12, fontSize: 'clamp(2.4rem, 6vw, 4rem)' }}>Activate your account.</h1>
       <p style={{ maxWidth: 520, lineHeight: 1.7, marginBottom: 34 }}>
         This invitation is for <strong>ops@inspirarestudio.com</strong>. Choose a strong password to activate the first newsroom administrator.

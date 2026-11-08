@@ -7,10 +7,11 @@
     "node": ">=24.22.1"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "payload generate:types && node scripts/clean-next-output.mjs && next build --webpack && node scripts/prepare-standalone-assets.mjs",
+    "dev": "node scripts/generate-official-logo.mjs && next dev",
+    "build": "node scripts/generate-official-logo.mjs && payload generate:types && node scripts/clean-next-output.mjs && next build --webpack && node scripts/prepare-standalone-assets.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "check:branding": "node scripts/check-branding.mjs",
     "cms:types": "payload generate:types",
     "cms:migrate": "payload migrate",
     "cms:migrate:create": "payload migrate:create",

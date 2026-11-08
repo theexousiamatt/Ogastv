@@ -1,4 +1,4 @@
-# OgasTV Africa — Custom Publishing Platform
+# OgasTV Nigeria — Custom Publishing Platform
 
 This `site/` folder contains the custom Next.js publication and the Payload CMS backend.
 The legacy `dist/` folder is the older local writing-desk prototype; it is deliberately preserved.
@@ -15,6 +15,10 @@ The legacy `dist/` folder is the older local writing-desk prototype; it is delib
 - Automated TypeScript checks in GitHub Actions.
 
 **Remaining work:** The site and newsroom are deployed, but real-device broadcast testing, reader UI, public community intake, email delivery, analytics and ongoing operational QA are still required. SMTP is currently not configured, so staff invitations and email recovery must remain disabled until outbound mail works.
+
+## Official logo
+
+The approved red OgasTV wordmark source is in `site/assets/ogastv-wordmark-source.png`, outside the public directory. The development/build script `scripts/generate-official-logo.mjs` preserves the original red lettering and creates the published transparent logo with black **NIGERIA** beneath it at `public/ogastv-nigeria-logo.png`. Keep the old source image private to the build; do not link it from the website. The existing `ogastvafrica.ng` domain remains unchanged until a separately approved domain transition.
 
 ## Local development
 

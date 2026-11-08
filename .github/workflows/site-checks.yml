@@ -47,6 +47,8 @@ jobs:
           node-version: '24'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Verify official OgasTV Nigeria branding
+        run: npm run check:branding
       - name: Prepare isolated OgasTV schema
         env:
           PGPASSWORD: temporary-ci-db-password

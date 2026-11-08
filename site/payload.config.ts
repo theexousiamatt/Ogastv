@@ -38,7 +38,7 @@ const mediaS3Region = process.env.OGASTV_MEDIA_S3_REGION || 'eu-west-1';
 export default buildConfig({
   email: emailConfigured ? nodemailerAdapter({
     defaultFromAddress: process.env.SMTP_FROM_ADDRESS!,
-    defaultFromName: 'OgasTV Africa',
+    defaultFromName: 'OgasTV Nigeria',
     transportOptions: {
       host: process.env.SMTP_HOST!,
       port: smtpPort,
