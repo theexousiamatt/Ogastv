@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, BookOpenText, BriefcaseBusiness, Clock3, Landmark, MapPin, Radio, UsersRound, Newspaper, Play, Clapperboard } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BookOpenText, Clock3, Radio, Play, Clapperboard } from 'lucide-react';
 import { getArticles, getHomepageCuration, prettyDate } from '@/lib/content';
 import type { Article, StudioEpisode } from '@/lib/content';
 import { FeaturedHero } from '@/components/FeaturedHero';
@@ -7,17 +7,6 @@ import { HomeBannerAd } from '@/components/HomeBannerAd';
 import './home-sections.css';
 
 export const dynamic = 'force-dynamic';
-
-const sections = [
-  { name: 'All Stories', href: '/latest', Icon: Newspaper },
-  { name: 'News', href: '/latest?category=news', Icon: BookOpenText },
-  { name: 'Lagos', href: '/latest?category=lagos-watch', Icon: MapPin },
-  { name: 'Politics', href: '/latest?category=politics', Icon: Landmark },
-  { name: 'Culture', href: '/latest?category=culture', Icon: Clapperboard },
-  { name: 'Business', href: '/latest?category=business', Icon: BriefcaseBusiness },
-  { name: 'Community', href: '/latest?category=community', Icon: UsersRound },
-  { name: 'Live', href: '/live', Icon: Radio },
-];
 
 function ArticleThumb({ story }: { story?: Article }) {
   return <div className="ogas-editorial-thumb">
@@ -115,11 +104,6 @@ export default async function HomePage() {
 
   return <div className="ogas-public-home">
     <FeaturedHero stories={lead ? [lead] : []}/>
-    <nav className="ogas-category-tabs" aria-label="Explore news categories">
-      {sections.map(({name,href,Icon},index)=><Link key={name} href={href} className={'ogas-category-tab'+(index===0?' ogas-category-tab--selected':'')}>
-        <Icon size={14} aria-hidden="true"/>{name}{name==='Live'&&<span className="ogas-live-dot" aria-hidden="true"/>}
-      </Link>)}
-    </nav>
 
     <section className="ogas-home-section ogas-home-highlights" aria-labelledby="ogas-highlights">
       <div className="ogas-home-section__heading">
