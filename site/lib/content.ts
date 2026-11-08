@@ -210,7 +210,7 @@ export async function getHomepageCuration(): Promise<HomepageCuration> {
     const episode = (value: unknown): StudioEpisode | null => {
       if (!value || typeof value !== 'object') return null;
       const item = value as CmsEpisode;
-      if (item._status !== 'published' || !item.title || !/^[\\w-]{11}$/.test(item.youtubeVideoId || '')) return null;
+      if (item._status !== 'published' || !item.title || !/^[A-Za-z0-9_-]{11}$/.test(item.youtubeVideoId || '')) return null;
       const thumbnail = item.thumbnail && typeof item.thumbnail === 'object' ? item.thumbnail : null;
       return {
         id: String(item.id), title: item.title, description: item.description || '',
