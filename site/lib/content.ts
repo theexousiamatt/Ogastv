@@ -87,7 +87,7 @@ export async function getArticles(limit = 24): Promise<Article[]> {
   const api = await cms();
   const result = await api.find({
     collection: 'articles', overrideAccess: false, depth: 2,
-    where: { _status: { equals: 'published' } }, sort: '-createdAt',
+    where: { _status: { equals: 'published' } }, sort: '-firstPublishedAt',
     limit: Math.min(limit, 100),
   });
   return (result.docs as CmsArticle[]).map(mapArticle);
@@ -118,7 +118,7 @@ export async function getArticlesInCategory(slug: string, limit = 24): Promise<A
       { primaryCategory: { in: ids } },
       { secondaryCategories: { in: ids } },
     ] }] },
-    sort: '-createdAt',
+    sort: '-firstPublishedAt',
   });
   return (result.docs as CmsArticle[]).map(mapArticle);
 }
@@ -262,7 +262,7 @@ export async function getHomepageCategorySections(limit = 4): Promise<HomepageCa
               { secondaryCategories: { in: matching.map(category => category.id) } },
             ] },
           ] },
-          sort: '-createdAt', limit: max,
+          sort: '-firstPublishedAt', limit: max,
         });
         return [def.key, { stories: (result.docs as CmsArticle[]).map(mapArticle), archiveSlug }] as const;
       } catch (error) {
@@ -321,7 +321,7 @@ export async function searchPublicArticles(options: {
   }
   const results = await api.find({
     collection: 'articles', overrideAccess: false, depth: 2,
-    where, page, limit, sort: '-createdAt',
+    where, page, limit, sort: '-firstPublishedAt',
   });
   return { stories: (results.docs as CmsArticle[]).map(mapArticle),
     total: results.totalDocs, page: results.page || page, totalPages: results.totalPages };
