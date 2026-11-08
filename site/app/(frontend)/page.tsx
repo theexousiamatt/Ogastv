@@ -98,8 +98,8 @@ export default async function HomePage() {
     return selected;
   };
   const highlights = select(curated.highlights,5);
-  // When no highlights have been curated, surface the latest published developments.
-  if(!highlights.length){
+  // Complete an editor-curated selection with fresh published stories.
+  if(highlights.length < 5){
     for(const item of published){
       if(highlights.length >= 5)break;
       const id=String(item.id);
