@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, BookOpenText, Clock3, Radio, Play, Clapperboard } from 'lucide-react';
-import { getArticles, getHomepageCuration, prettyDate } from '@/lib/content';
+import { getArticles, getHomepageCuration, getHomepageCategorySections, prettyDate } from '@/lib/content';
 import type { Article, StudioEpisode } from '@/lib/content';
 import { FeaturedHero } from '@/components/FeaturedHero';
 import { HomeBannerAd } from '@/components/HomeBannerAd';
@@ -68,39 +68,15 @@ function StudioCard({ episode }: { episode: StudioEpisode }) {
 }
 
 export default async function HomePage() {
-  const [latest, curated] = await Promise.all([getArticles(40), getHomepageCuration()]);
-  const published = [...latest];
-  const lead = curated.lead || published.find(story => Boolean(story.image)) || published[0] || null;
-  const used = new Set<string>(lead ? [String(lead.id)] : []);
-  const select = (curatedStories: Article[], count:number, categorySlugs:string[] = []) => {
-    const candidates = [
-      ...curatedStories,
-      ...published.filter(story => categorySlugs.includes((story.category?.slug || '').toLowerCase())),
-    ];
-    const selected: Article[] = [];
-    for (const item of candidates) {
-      if (selected.length >= count) break;
-      const id=String(item.id);
-      if (used.has(id)) continue;
-      used.add(id);selected.push(item);
-    }
-    return selected;
-  };
-  const highlights = select(curated.highlights,5);
-  // Complete an editor-curated selection with fresh published stories.
-  if(highlights.length < 5){
-    for(const item of published){
-      if(highlights.length >= 5)break;
-      const id=String(item.id);
-      if(used.has(id))continue;
-      used.add(id);highlights.push(item);
-    }
-  }
-  const lagos = select(curated.lagosWatch,4,['lagos-watch','lagos','local-government']);
-  const government = select(curated.government,4,['government-policies','government','politics','policy']);
-  const grassroots = select(curated.grassrootsVoices,4,['grassroots-voices','community','grassroots']);
-  const business = select(curated.business,4,['business-investment','business','investment']);
-  const personalities = select(curated.personalities,4,['personalities','profiles','interviews']);
+  // Publishing to an article category automatically populates its homepage desk.
+  // The lead story alone may be pinned manually by an editor.
+  const [latest, curated, automatic] = await Promise.all([
+    getArticles(8), getHomepageCuration(), getHomepageCategorySections(4),
+  ]);
+  const lead = curated.lead ||
+    automatic.grassrootsVoices.stories.find(story => Boolean(story.image)) ||
+    latest.find(story => Boolean(story.image)) || latest[0] || null;
+  const highlights = latest.filter(story => String(story.id) !== String(lead?.id)).slice(0, 5);
 
   return <div className="ogas-public-home">
     <FeaturedHero stories={lead ? [lead] : []}/>
@@ -115,15 +91,15 @@ export default async function HomePage() {
     </section>
 
     <EditorialSection id="ogas-lagos" title="Lagos Watch" description="From Kosofe to Ikorodu: decisions and developments across Lagos councils."
-      stories={lagos} href="/latest?category=lagos-watch" emptyText="Council updates will appear here as our editors publish them." accent/>
+      stories={automatic.lagosWatch.stories} href={'/latest?category='+encodeURIComponent(automatic.lagosWatch.archiveSlug)} emptyText="Council updates will appear here as our editors publish them." accent/>
     <EditorialSection id="ogas-government" title="Government & Policies" description="What public decisions mean for the people living with them."
-      stories={government} href="/latest?category=politics" emptyText="Clear, people-first policy reporting is on its way."/>
+      stories={automatic.government.stories} href={'/latest?category='+encodeURIComponent(automatic.government.archiveSlug)} emptyText="Clear, people-first policy reporting is on its way."/>
     <EditorialSection id="ogas-voices" title="Grassroots Voices" description="Real experiences, community concerns and perspectives from residents."
-      stories={grassroots} href="/latest?category=community" emptyText="The next voices from our communities will appear here." accent/>
+      stories={automatic.grassrootsVoices.stories} href={'/latest?category='+encodeURIComponent(automatic.grassrootsVoices.archiveSlug)} emptyText="The next voices from our communities will appear here." accent/>
     <EditorialSection id="ogas-business" title="Business & Investment" description="Entrepreneurs, local opportunities and the investments changing communities."
-      stories={business} href="/latest?category=business" emptyText="New business and investment stories are coming."/>
+      stories={automatic.business.stories} href={'/latest?category='+encodeURIComponent(automatic.business.archiveSlug)} emptyText="New business and investment stories are coming."/>
     <EditorialSection id="ogas-personalities" title="Personalities" description="Profiles and conversations with people making a difference."
-      stories={personalities} href="/latest" emptyText="Interviews and profiles will be featured here." accent/>
+      stories={automatic.personalities.stories} href={'/latest?category='+encodeURIComponent(automatic.personalities.archiveSlug)} emptyText="Interviews and profiles will be featured here." accent/>
 
     <section className="ogas-home-section ogas-home-studio" aria-labelledby="ogas-studio">
       <div className="ogas-home-section__heading">
