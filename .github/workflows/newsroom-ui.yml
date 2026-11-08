@@ -74,7 +74,7 @@ jobs:
           echo "HeroUI newsroom build validated."
 
       - name: Inspect published OgasTV on desktop and mobile
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/ogastv-reference-ui-2026-11-05'
+        if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/feat/ogastv-reference-ui-2026-11-05')
         working-directory: .
         env:
           PLAYWRIGHT_MODULE: /tmp/ogastv-live/node_modules/playwright/index.mjs
@@ -84,7 +84,7 @@ jobs:
           /tmp/ogastv-live/node_modules/.bin/playwright install --with-deps chromium
           node site/scripts/audit-live.mjs
       - name: Save browser acceptance screenshots
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/feat/ogastv-reference-ui-2026-11-05'
+        if: always() && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/feat/ogastv-reference-ui-2026-11-05'))
         uses: actions/upload-artifact@v4
         with:
           name: ogastv-live-desktop-mobile
