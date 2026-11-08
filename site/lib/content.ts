@@ -124,8 +124,36 @@ export async function getArticlesInCategory(slug: string, limit = 24): Promise<A
  * published stories are returned; draft relationships are never exposed.
  * When no stories are selected, the public layout falls back to recent posts.
  */
-export async function getHomepageCuration(): Promise<{ lead: Article | null; highlights: Article[] }> {
-  if (!payloadEnabled()) return { lead: null, highlights: [] };
+export type HomepageCuration = {
+  lead: Article | null;
+  highlights: Article[];
+  lagosWatch: Article[];
+  government: Article[];
+  grassrootsVoices: Article[];
+  business: Article[];
+  personalities: Article[];
+  studioEpisodes: StudioEpisode[];
+};
+
+export type StudioEpisode = {
+  id: string;
+  title: string;
+  description: string;
+  youtubeVideoId: string;
+  thumbnail: { url: string; alt: string } | null;
+};
+
+const emptyHomepageCuration = (): HomepageCuration => ({
+  lead: null, highlights: [], lagosWatch: [], government: [],
+  grassrootsVoices: [], business: [], personalities: [], studioEpisodes: [],
+});
+
+/**
+ * Editors curate the homepage from the existing Payload Homepage global.
+ * Exclude drafts, unpopulated relationships and invalid YouTube IDs.
+ */
+export async function getHomepageCuration(): Promise<HomepageCuration> {
+  if (!payloadEnabled()) return emptyHomepageCuration();
   try {
     const api = await cms();
     const homepage = await api.findGlobal({ slug: 'homepage', depth: 2, overrideAccess: false, draft: false });
@@ -135,14 +163,53 @@ export async function getHomepageCuration(): Promise<{ lead: Article | null; hig
       if (article._status !== 'published' || !article.slug || !article.title) return null;
       return mapArticle(article);
     };
-    const lead = published(homepage.leadStory);
-    const highlights = (Array.isArray(homepage.latestHighlights) ? homepage.latestHighlights : [])
-      .map(published).filter((item): item is Article => item !== null).slice(0, 5);
-    return { lead, highlights };
+    const publishedList = (value: unknown, limit = 6): Article[] =>
+      (Array.isArray(value) ? value : []).map(published)
+        .filter((item): item is Article => item !== null).slice(0, limit);
+
+    type CmsEpisode = {
+      id: string | number; title?: string; description?: string;
+      youtubeVideoId?: string; thumbnail?: Relation; _status?: string;
+    };
+    const episode = (value: unknown): StudioEpisode | null => {
+      if (!value || typeof value !== 'object') return null;
+      const item = value as CmsEpisode;
+      if (item._status !== 'published' || !item.title || !/^[\\w-]{11}$/.test(item.youtubeVideoId || '')) return null;
+      const thumbnail = item.thumbnail && typeof item.thumbnail === 'object' ? item.thumbnail : null;
+      return {
+        id: String(item.id), title: item.title, description: item.description || '',
+        youtubeVideoId: item.youtubeVideoId!,
+        thumbnail: thumbnail?.url ? { url: thumbnail.url, alt: thumbnail.alt || item.title } : null,
+      };
+    };
+    const featuredEpisode = episode(homepage.featuredEpisode);
+    let studioEpisodes: StudioEpisode[] = featuredEpisode ? [featuredEpisode] : [];
+    try {
+      const recent = await api.find({
+        collection: 'episodes', overrideAccess: false, depth: 2, limit: 8,
+        where: { _status: { equals: 'published' } }, sort: '-releasedAt',
+      });
+      for (const item of recent.docs) {
+        const valid = episode(item);
+        if (valid && !studioEpisodes.some(existing => existing.id === valid.id)) studioEpisodes.push(valid);
+        if (studioEpisodes.length >= 3) break;
+      }
+    } catch (error) {
+      console.error('[OgasTV] Could not load studio episodes', error);
+    }
+    return {
+      lead: published(homepage.leadStory),
+      highlights: publishedList(homepage.latestHighlights, 5),
+      lagosWatch: publishedList(homepage.lagosWatchStories),
+      government: publishedList(homepage.governmentStories),
+      grassrootsVoices: publishedList(homepage.grassrootsVoices),
+      business: publishedList(homepage.businessStories),
+      personalities: publishedList(homepage.personalities),
+      studioEpisodes,
+    };
   } catch (error) {
-    // The public site must remain readable if homepage curation is unset.
     console.error('[OgasTV] Could not load curated homepage selections', error);
-    return { lead: null, highlights: [] };
+    return emptyHomepageCuration();
   }
 }
 
