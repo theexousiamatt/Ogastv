@@ -357,3 +357,33 @@ body button,body input{font:inherit}
   .ogas-public-mobile-navigation>a:nth-child(2){display:none}
   .ogas-public-brand__logo{width:144px}
 }
+
+/* Watch / programmes archive */
+.ogas-watch{padding:15px 7px 75px;max-width:1300px;margin:0 auto}
+.ogas-watch__hero{background:#242d28;color:#fff;border-radius:14px;padding:clamp(26px,5vw,65px);margin:16px 0 45px;min-height:275px;display:flex;flex-direction:column;align-items:start;justify-content:center}
+.ogas-watch__eyebrow{display:flex;gap:9px;align-items:center;font-size:11px;color:#e8c3b8;font-weight:800;letter-spacing:.12em}
+.ogas-watch__hero h1{font-size:clamp(45px,6vw,75px);line-height:1.02;letter-spacing:-.07em;margin:18px 0 14px}
+.ogas-watch__hero h1 span{color:#d54840}
+.ogas-watch__hero p{font-size:clamp(15px,1.8vw,20px);line-height:1.55;color:#d2d9d2;max-width:590px;margin:0 0 22px}
+.ogas-watch__hero>a{font-size:13px;color:white!important;text-decoration:none;font-weight:750;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:8px;background:#a22d27}
+.ogas-watch__heading{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:25px}
+.ogas-watch__heading>div>span{color:#a62f27;font-size:10px;letter-spacing:.13em;font-weight:850}
+.ogas-watch__heading h2{font-size:clamp(28px,3.4vw,43px);line-height:1.12;letter-spacing:-.055em;margin:7px 0 0}
+.ogas-watch__heading>span{font-size:12px;color:#80887d}
+.ogas-watch__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:29px 19px}
+.ogas-watch__episode{min-width:0;text-decoration:none;color:inherit}
+.ogas-watch__image{aspect-ratio:16/9;display:block;position:relative;overflow:hidden;background:#394339;border-radius:8px}
+.ogas-watch__image img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .28s ease}
+.ogas-watch__episode:hover .ogas-watch__image img{transform:scale(1.04)}
+.ogas-watch__image>span{position:absolute;left:16px;bottom:15px;display:grid;place-items:center;background:#fff;color:#232823;border-radius:50%;width:44px;height:44px}
+.ogas-watch__episode-copy{padding:14px 2px}
+.ogas-watch__programme{font-size:10px;letter-spacing:.1em;font-weight:850;text-transform:uppercase;color:#a92e27}
+.ogas-watch__episode-copy h3{font-size:clamp(17px,1.85vw,24px);line-height:1.24;letter-spacing:-.045em;margin:8px 0 11px}
+.ogas-watch__episode-copy p{font-size:13px;color:#757d73;line-height:1.6;margin:0 0 10px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.ogas-watch__date{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#889084}
+.ogas-watch__empty{padding:65px 22px;text-align:center;border-radius:11px;background:#f6f8f3;border:1px solid #e1e5dd;color:#4a5648;display:flex;align-items:center;flex-direction:column}
+.ogas-watch__empty h3{font-size:24px;margin:16px 0 5px}
+.ogas-watch__empty p{margin:0 0 15px;color:#767f71}
+.ogas-watch__empty a{display:flex;align-items:center;gap:6px;font-weight:800;color:#a32c26}
+@media(max-width:940px){.ogas-watch__grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ogas-watch{padding:10px 0 45px}.ogas-watch__hero{margin:8px 0 30px;border-radius:9px}.ogas-watch__grid{grid-template-columns:1fr}.ogas-watch__heading{align-items:start;flex-direction:column;gap:7px}}
