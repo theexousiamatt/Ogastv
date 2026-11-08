@@ -60,3 +60,11 @@
 .ogas-reading__save-button:hover,.ogas-reading__save-button.is-saved{background:#edf2e9;border-color:#aebb9f;color:#566b45}
 .ogas-reading__save>a{font-size:12px;color:#737d70;text-decoration:underline;text-underline-offset:3px}
 .ogas-reading__save-message{font-size:12px;color:#638059}
+
+.ogas-reading__byline strong a{color:#30392c;text-decoration:underline;text-decoration-color:#ced8c6;text-underline-offset:3px}
+.ogas-reading-progress{display:none}
+@supports (animation-timeline:scroll()){
+  .ogas-reading-progress{display:block;position:fixed;top:0;left:0;right:0;height:3px;z-index:100;background:#a8322c;transform-origin:left;animation:ogas-progress linear both;animation-timeline:scroll(root)}
+  @keyframes ogas-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+}
+@media(prefers-reduced-motion:reduce){.ogas-reading-progress{display:none!important}}
