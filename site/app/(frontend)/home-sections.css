@@ -92,3 +92,9 @@
   .ogas-home-councils a{white-space:nowrap;flex:none}
   .ogas-home-news-card--feature h3{font-size:27px}
 }
+
+.ogas-home-newsletter__links{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto;position:relative;z-index:1}
+.ogas-home-newsletter__links .ogas-home-newsletter__button{margin:0;padding:12px 17px}
+.ogas-home-newsletter__button--secondary{border:1px solid #ffffff7a;background:transparent;color:white}
+.ogas-home-newsletter__button--secondary:hover{background:#ffffff1b}
+@media(max-width:520px){.ogas-home-newsletter__links{flex-direction:column}.ogas-home-newsletter__links .ogas-home-newsletter__button{width:100%}}
