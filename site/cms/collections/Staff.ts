@@ -8,7 +8,7 @@ export const Staff: CollectionConfig = {
     verify: {
       generateEmailSubject: () => 'Verify your OgasTV Studio account',
       generateEmailHTML: ({ token }) => {
-        const url = (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+        const url = ((process.env.NEXT_PUBLIC_SERVER_URL === 'https://ogastv-cms.inspirarestudio.com') ? 'https://ogastvafrica.ng' : (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000')).replace(/\/$/, '')
           + '/studio/verify?token=' + encodeURIComponent(token);
         return '<p>Welcome to the OgasTV Africa newsroom.</p><p>Verify your account to get started:</p><p><a href="' + url + '">Verify your OgasTV Studio account</a></p>';
       },
@@ -17,7 +17,7 @@ export const Staff: CollectionConfig = {
       minRequestInterval: 60_000,
       generateEmailSubject: () => 'Reset your OgasTV Studio password',
       generateEmailHTML: ({ token }) => {
-        const url = (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+        const url = ((process.env.NEXT_PUBLIC_SERVER_URL === 'https://ogastv-cms.inspirarestudio.com') ? 'https://ogastvafrica.ng' : (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000')).replace(/\/$/, '')
           + '/studio/reset-password?token=' + encodeURIComponent(token);
         return '<p>A password reset was requested for your OgasTV Studio account.</p><p><a href="' + url + '">Reset your password</a></p><p>If you did not request this, you can ignore this email.</p>';
       },
