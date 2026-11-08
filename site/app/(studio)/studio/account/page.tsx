@@ -15,7 +15,7 @@ export default async function StudioAccountPage() {
   if (!staff) redirect('/studio/login');
   return <StudioAccount
     staffId={String(staff.id)}
-    name={typeof user?.name === 'string' ? user.name : ''}
+    name={user && 'name' in user && typeof user.name === 'string' ? user.name : ''}
     email={typeof user?.email === 'string' ? user.email : ''}
   />;
 }
