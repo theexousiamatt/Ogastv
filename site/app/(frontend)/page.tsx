@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight, BookOpenText, Clock3, Play, Clapperboard, MapPin } from 'lucide-react';
 import { getPublicHomepageData, getPublicDirectoryData } from '@/lib/public-cache';
+import { prioritiseLagosCouncils } from '@/lib/editorial-sections';
 import { prettyDate } from '@/lib/content';
 import type { Article, StudioEpisode } from '@/lib/content';
 import { FeaturedHero } from '@/components/FeaturedHero';
@@ -81,7 +82,7 @@ export default async function HomePage(){
   const lead=curated.lead||automatic.grassrootsVoices.stories.find(story=>Boolean(story.image))||
     latest.find(story=>Boolean(story.image))||latest[0]||null;
   const highlights=latest.filter(story=>String(story.id)!==String(lead?.id)).slice(0,5);
-  const lagosAreas=locations.filter(item=>['lga','lcda'].includes(item.kind)).slice(0,8);
+  const lagosAreas=prioritiseLagosCouncils(locations.filter(item=>['lga','lcda'].includes(item.kind))).slice(0,8);
   return <div className="ogas-public-home">
     <FeaturedHero stories={lead?[lead]:[]}/>
     <section className="ogas-home-section ogas-home-highlights" aria-labelledby="ogas-highlights">
