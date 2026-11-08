@@ -38,6 +38,7 @@ export default function RootLayout({children}:Readonly<{children:React.ReactNode
           <Link href="/section/grassroots-voices">Grassroots Voices</Link>
           <Link href="/watch">OgasTV Studio</Link>
           <Link href="/live">Live coverage</Link>
+          <Link href="/reading-list">Saved stories</Link>
         </nav>
         <nav aria-label="About this publication"><strong>OgasTV Africa</strong>
           <Link href="/about">About us</Link>
