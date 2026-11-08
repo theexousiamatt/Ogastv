@@ -174,6 +174,8 @@ export type StudioEpisode = {
   description: string;
   youtubeVideoId: string;
   thumbnail: { url: string; alt: string } | null;
+  releasedAt?: string;
+  programmeTitle?: string;
 };
 
 const emptyHomepageCuration = (): HomepageCuration => ({
@@ -202,7 +204,8 @@ export async function getHomepageCuration(): Promise<HomepageCuration> {
 
     type CmsEpisode = {
       id: string | number; title?: string; description?: string;
-      youtubeVideoId?: string; thumbnail?: Relation; _status?: string;
+      youtubeVideoId?: string; thumbnail?: Relation; programme?: Relation & {title?:string};
+      releasedAt?: string; _status?: string;
     };
     const episode = (value: unknown): StudioEpisode | null => {
       if (!value || typeof value !== 'object') return null;
@@ -213,6 +216,7 @@ export async function getHomepageCuration(): Promise<HomepageCuration> {
         id: String(item.id), title: item.title, description: item.description || '',
         youtubeVideoId: item.youtubeVideoId!,
         thumbnail: thumbnail?.url ? { url: thumbnail.url, alt: thumbnail.alt || item.title } : null,
+        releasedAt: item.releasedAt, programmeTitle: item.programme && typeof item.programme==='object' ? item.programme.title : undefined,
       };
     };
     const featuredEpisode = episode(homepage.featuredEpisode);
@@ -393,4 +397,29 @@ export async function getRelatedArticles(article:Article,limit=4):Promise<Articl
   if(other.length>=count)return other.slice(0,count);
   const latest=await getArticles(14);
   return [...other,...latest.filter(item=>item.id!==article.id&&!other.some(existing=>existing.id===item.id))].slice(0,count);
+}
+
+/** Published-only archive for OgasTV Studio videos; never expose draft episodes. */
+export async function getWatchEpisodes(limit=24):Promise<StudioEpisode[]>{
+  if(!payloadEnabled())return [];
+  try{
+    const api=await cms();
+    const result=await api.find({collection:'episodes',overrideAccess:false,depth:2,
+      where:{_status:{equals:'published'}},sort:'-releasedAt',limit:Math.max(1,Math.min(48,Math.floor(limit)))});
+    return result.docs.flatMap(doc=>{
+      const episode=doc as typeof doc & {youtubeVideoId?:string;thumbnail?:Relation;programme?:Relation & {title?:string};releasedAt?:string};
+      if(!episode.title||!/^[\\w-]{11}$/.test(episode.youtubeVideoId||''))return [];
+      const media=episode.thumbnail&&typeof episode.thumbnail==='object'?episode.thumbnail:null;
+      return [{
+        id:String(episode.id),title:episode.title,description:episode.description||'',
+        youtubeVideoId:episode.youtubeVideoId!,
+        thumbnail:media?.url?{url:media.url,alt:media.alt||episode.title}:null,
+        releasedAt:episode.releasedAt,
+        programmeTitle:episode.programme&&typeof episode.programme==='object'?episode.programme.title:undefined,
+      }];
+    });
+  }catch(error){
+    console.error('[OgasTV] Could not load public programme archive',error);
+    return [];
+  }
 }
