@@ -230,9 +230,9 @@ export type HomepageCategorySections = Record<HomepageCategoryKey, HomepageCateg
 
 export async function getHomepageCategorySections(limit = 4): Promise<HomepageCategorySections> {
   const max = Math.max(1, Math.min(8, Math.floor(limit)));
-  const blank = () => Object.fromEntries(homepageCategoryDefinitions.map(def => [
-    def.key, { stories: [], archiveSlug: def.slug },
-  ])) as HomepageCategorySections;
+  const blank = (): HomepageCategorySections => Object.fromEntries(homepageCategoryDefinitions.map(def => [
+    def.key, { stories: [] as Article[], archiveSlug: def.slug },
+  ])) as unknown as HomepageCategorySections;
   if (!payloadEnabled()) {
     const [all, categories] = await Promise.all([wp.getArticles(100), wp.getCategories()]);
     return Object.fromEntries(homepageCategoryDefinitions.map(def => [
@@ -250,7 +250,7 @@ export async function getHomepageCategorySections(limit = 4): Promise<HomepageCa
     });
     const sections = await Promise.all(homepageCategoryDefinitions.map(async def => {
       const matching = categories.docs.filter(category => def.aliases.some(slug => category.slug === slug));
-      const archiveSlug = preferredSectionSlug(def.aliases, matching, def.slug);
+      const archiveSlug = preferredSectionSlug(def.aliases, matching.map(category => ({ slug: String(category.slug || '') })), def.slug);
       if (!matching.length) return [def.key, { stories: [], archiveSlug }] as const;
       try {
         const result = await api.find({
