@@ -149,6 +149,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
   }, [uploadFile]);
   const [preview,setPreview] = useState(false);
   const [adForm,setAdForm] = useState({name:'',destinationUrl:'',startsAt:'',endsAt:'',banner:''});
+  const [adEditingId,setAdEditingId] = useState<string|null>(null);
+  const [adStatus,setAdStatus] = useState<'scheduled'|'paused'>('scheduled');
   const [adEditor,setAdEditor] = useState(false);
   const canWrite = ['administrator','editor_in_chief','editor','journalist'].includes(role);
   const canPublish = ['administrator','editor_in_chief'].includes(role);
@@ -490,6 +492,28 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     }
   };
 
+  const newAd = () => {
+    setAdEditingId(null);
+    setAdStatus('scheduled');
+    setAdForm({name:'',destinationUrl:'',startsAt:'',endsAt:'',banner:''});
+    setError(''); setAdEditor(true);
+  };
+  const toLocalInput = (input?:string) => {
+    if(!input)return '';
+    const date = new Date(input);
+    if(Number.isNaN(date.getTime()))return '';
+    return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  };
+  const editAd = (ad:Ad) => {
+    setAdEditingId(String(ad.id));
+    setAdStatus(ad.status==='paused'?'paused':'scheduled');
+    setAdForm({
+      name:ad.name||'', destinationUrl:ad.destinationUrl||'',
+      startsAt:toLocalInput(ad.startsAt), endsAt:toLocalInput(ad.endsAt),
+      banner:normalizeId(ad.banner),
+    });
+    setError(''); setAdEditor(true);
+  };
   const submitAd = async () => {
     setError('');setMessage('');
     if (!canAds) {setError('Only advertising staff can manage banners.');return;}
@@ -500,13 +524,13 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
     if (!adForm.startsAt || !adForm.endsAt || new Date(adForm.endsAt)<=new Date(adForm.startsAt)) {setError('Choose a valid start and end date.');return;}
     setBusy(true);
     try {
-      await jsonFetch('/api/ad-banners',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      await jsonFetch(adEditingId?'/api/ad-banners/'+encodeURIComponent(adEditingId):'/api/ad-banners',{method:adEditingId?'PATCH':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         name:adForm.name.trim(),banner:/^\d+$/.test(adForm.banner)?Number(adForm.banner):adForm.banner,
         destinationUrl:destination.toString(),startsAt:new Date(adForm.startsAt).toISOString(),endsAt:new Date(adForm.endsAt).toISOString(),
-        status:'scheduled',placement:'homepage'
+        status:adStatus,placement:'homepage'
       })});
-      await loadAds();setAdEditor(false);setAdForm({name:'',destinationUrl:'',startsAt:'',endsAt:'',banner:''});
-      setMessage('Banner scheduled. It will appear automatically during the selected dates.');
+      await loadAds();setAdEditor(false);setAdEditingId(null);setAdForm({name:'',destinationUrl:'',startsAt:'',endsAt:'',banner:''});
+      setMessage('Banner saved. Your schedule and status changes are now active.');
     } catch(e) {setError(e instanceof Error?e.message:'Could not save the banner.');}
     finally {setBusy(false);}
   };
@@ -551,7 +575,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
         </button>
       </nav>
       <div className="ogas-side-bottom"><div className="ogas-side-note"><ShieldCheck {...iconSize(19)}/><div><strong>Your work is private</strong><p>Only the OgasTV team can use this space.</p></div></div>
-      <div className="ogas-profile"><span className="ogas-avatar">{firstName.slice(0,2).toUpperCase()}</span><span><strong>{name}</strong><small>{roleText}</small></span><a href="/admin/account" aria-label="Account settings"><Settings2 size={17}/></a></div></div>
+      <div className="ogas-profile"><span className="ogas-avatar">{firstName.slice(0,2).toUpperCase()}</span><span><strong>{name}</strong><small>{roleText}</small></span><a href="/studio/account" aria-label="Account settings"><Settings2 size={17}/></a></div></div>
     </aside>
 
     <div className="ogas-workspace">
@@ -713,17 +737,17 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
           <div className="ogas-broadcast-grid"><div className="ogas-live-stage"><div className="ogas-live-icon"><Radio size={58} strokeWidth={1.4}/></div><span className="ogas-live-label">OGASTV AFRICA · LIVE STUDIO</span><div className="ogas-live-rings" aria-hidden="true"/></div><div className="ogas-live-control"><span className="ogas-eyebrow">BROADCAST SETUP</span><h2>You're almost there.</h2><p>The camera, microphone and Go Live controls are waiting in the broadcast studio.</p><div className="ogas-live-check"><CheckCircle2 size={19}/><span>Your existing broadcast workflow is unchanged.</span></div><a className="ogas-button ogas-button--red" href="/broadcast-studio">Open broadcast studio <ArrowUpRight size={17}/></a></div></div>
         </>}
 
-        {tab==='ads'&&(canAds?<><section className="ogas-heading ogas-heading--split"><div><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> GROW YOUR NEWSROOM</span><h1>Advertisements</h1><p>Add a banner and the website it should open when someone clicks.</p></div><button className="ogas-button ogas-button--red" onClick={()=>setAdEditor(true)}><Plus size={18}/> New banner</button></section>
+        {tab==='ads'&&(canAds?<><section className="ogas-heading ogas-heading--split"><div><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> GROW YOUR NEWSROOM</span><h1>Advertisements</h1><p>Add a banner and the website it should open when someone clicks.</p></div><button className="ogas-button ogas-button--red" onClick={newAd}><Plus size={18}/> New banner</button></section>
           <div className="ogas-mini-stats ogas-ad-stats"><span><strong>{ads.length}</strong> Recent campaigns</span><span><strong>{ads.filter(a=>a.status==='scheduled').length}</strong> Scheduled</span><span><strong>{ads.filter(a=>a.status==='paused').length}</strong> Paused</span></div>
           <div className="ogas-section-heading"><div><h2>Your banners</h2><p>Only one homepage banner can run per day.</p></div></div>
-          {ads.length?<div className="ogas-ad-list">{ads.map(ad=><div className="ogas-ad-row" key={String(ad.id)}><div className="ogas-ad-thumb">{mediaUrl(ad.banner)?<ArticleImage url={mediaUrl(ad.banner)} alt="" missingText="Banner unavailable"/>:<LayoutGrid size={23}/>}</div><div><strong>{ad.name||'Untitled banner'}</strong><small>{shortDate(ad.startsAt)} – {shortDate(ad.endsAt)} · {ad.status||'Draft'}</small></div><a href={'/admin/collections/ad-banners/'+encodeURIComponent(String(ad.id))} className="ogas-text-link">Manage <ArrowUpRight size={16}/></a></div>)}</div>:<div className="ogas-empty"><LayoutGrid size={28}/><h3>Your first banner goes here</h3><p>Upload an advertiser's image, add their link and schedule it.</p><button className="ogas-button ogas-button--red" onClick={()=>setAdEditor(true)}>Create a banner</button></div>}
+          {ads.length?<div className="ogas-ad-list">{ads.map(ad=><div className="ogas-ad-row" key={String(ad.id)}><div className="ogas-ad-thumb">{mediaUrl(ad.banner)?<ArticleImage url={mediaUrl(ad.banner)} alt="" missingText="Banner unavailable"/>:<LayoutGrid size={23}/>}</div><div><strong>{ad.name||'Untitled banner'}</strong><small>{shortDate(ad.startsAt)} – {shortDate(ad.endsAt)} · {ad.status||'Draft'}</small></div><button type="button" onClick={()=>editAd(ad)} className="ogas-text-link">Manage <ArrowUpRight size={16}/></button></div>)}</div>:<div className="ogas-empty"><LayoutGrid size={28}/><h3>Your first banner goes here</h3><p>Upload an advertiser's image, add their link and schedule it.</p><button className="ogas-button ogas-button--red" onClick={newAd}>Create a banner</button></div>}
           <p className="ogas-ad-note"><ShieldCheck size={17}/> Advertisements are labeled on the website. Only authorised staff can schedule them.</p>
         </>:<div className="ogas-empty"><ShieldCheck size={28}/><h3>Advertising access required</h3><p>Ask an administrator if you need to manage banners.</p></div>)}
       </main>
     </div>
 
     <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?resumeWriting():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
-    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button><a href="/admin/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
+    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button><a href="/studio/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
 
     {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>changeFeaturedImage(String(m.id))}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadPreviewUrl&&<div className="ogas-picker-selected"><img src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded"/><span>{uploadFile?.name}<small>Ready to upload</small></span></div>}<input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?(uploadStage==='optimizing'?'Optimizing…':uploadStage==='processing'?'Processing…':uploadStage==='uploading'?'Uploading '+uploadProgress+'%':'Please wait…'):'Upload and use'} <ArrowRight size={16}/></button>{busy&&uploadStage!=='idle'&&<div role="status" aria-live="polite" style={{width:'100%',marginTop:10}}>
   <div style={{height:5,background:'#e8e8e8',borderRadius:999,overflow:'hidden'}}>
@@ -734,6 +758,11 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
 
     {preview&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPreview(false);}}><div className="ogas-modal ogas-preview-modal" role="dialog" aria-modal="true" aria-label="Article preview"><header><div><h2>Article preview</h2><p>This preview is only visible to you.</p></div><button onClick={()=>setPreview(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-preview-article"><span className="ogas-eyebrow">{categories.find(c=>String(c.id)===editor.primaryCategory)?.name||'NEWSROOM'}</span><h1>{editor.title||'Your headline goes here'}</h1>{chosenImage&&<ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||''} missingText="Photo unavailable"/>}<p className="ogas-preview-summary">{editor.summary||editor.bodyText.slice(0,230)}</p><div className="ogas-preview-body">{editor.bodyText||'Start writing to see your article here.'}</div></div></div></div>}
 
-    {adEditor&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setAdEditor(false);}}><div className="ogas-modal ogas-ad-modal" role="dialog" aria-modal="true" aria-label="Schedule a banner"><header><div><h2>Schedule a banner</h2><p>Choose a photo, destination link and running dates.</p></div><button onClick={()=>setAdEditor(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-ad-form"><label>Campaign name<input value={adForm.name} onChange={e=>setAdForm(s=>({...s,name:e.target.value}))} placeholder="e.g. December partner banner"/></label><label>Banner image<select value={adForm.banner} onChange={e=>setAdForm(s=>({...s,banner:e.target.value}))}><option value="">Choose an uploaded image</option>{media.map(m=><option key={String(m.id)} value={String(m.id)}>{m.alt||m.filename||'Photo '+m.id}</option>)}</select><button type="button" className="ogas-text-link" style={{marginTop:10}} onClick={()=>{setAdEditor(false);navigate("media");}}>Need to upload a banner? Open Media library <ArrowRight size={14}/></button></label><label>Website link<input type="url" placeholder="https://advertiser.com" value={adForm.destinationUrl} onChange={e=>setAdForm(s=>({...s,destinationUrl:e.target.value}))}/></label><div className="ogas-ad-dates"><label>Start date<input type="datetime-local" value={adForm.startsAt} onChange={e=>setAdForm(s=>({...s,startsAt:e.target.value}))}/></label><label>End date<input type="datetime-local" value={adForm.endsAt} onChange={e=>setAdForm(s=>({...s,endsAt:e.target.value}))}/></label></div><p>Times are based on your device's time zone. Your banner will appear on the homepage during these dates.</p><button className="ogas-button ogas-button--red" disabled={busy} onClick={()=>void submitAd()}>{busy?'Saving…':'Schedule banner'} <ArrowRight size={16}/></button></div></div></div>}
+    {adEditor&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setAdEditor(false);}}><div className="ogas-modal ogas-ad-modal" role="dialog" aria-modal="true" aria-label={adEditingId?'Edit banner':'Schedule a banner'}><header><div><h2>{adEditingId?'Edit banner':'Schedule a banner'}</h2><p>Choose a photo, destination link and running dates.</p></div><button onClick={()=>setAdEditor(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-ad-form"><label>Campaign name<input value={adForm.name} onChange={e=>setAdForm(s=>({...s,name:e.target.value}))} placeholder="e.g. December partner banner"/></label><label>Banner image<select value={adForm.banner} onChange={e=>setAdForm(s=>({...s,banner:e.target.value}))}><option value="">Choose an uploaded image</option>{adForm.banner&&!media.some(m=>String(m.id)===adForm.banner)&&<option value={adForm.banner}>Current banner image</option>}{media.map(m=><option key={String(m.id)} value={String(m.id)}>{m.alt||m.filename||'Photo '+m.id}</option>)}</select><button type="button" className="ogas-text-link" style={{marginTop:10}} onClick={()=>{setAdEditor(false);navigate("media");}}>Need to upload a banner? Open Media library <ArrowRight size={14}/></button></label><label>Website link<input type="url" placeholder="https://advertiser.com" value={adForm.destinationUrl} onChange={e=>setAdForm(s=>({...s,destinationUrl:e.target.value}))}/></label><div className="ogas-ad-dates"><label>Start date<input type="datetime-local" value={adForm.startsAt} onChange={e=>setAdForm(s=>({...s,startsAt:e.target.value}))}/></label><label>End date<input type="datetime-local" value={adForm.endsAt} onChange={e=>setAdForm(s=>({...s,endsAt:e.target.value}))}/></label></div><p>Times are based on your device's time zone. Your banner will appear on the homepage during these dates.</p><label>Campaign status
+                  <select value={adStatus} onChange={e=>setAdStatus(e.target.value==='paused'?'paused':'scheduled')}>
+                    <option value="scheduled">Scheduled</option><option value="paused">Paused</option>
+                  </select>
+                </label>
+                <button className="ogas-button ogas-button--red" disabled={busy} onClick={()=>void submitAd()}>{busy?'Saving…':adEditingId?'Save banner changes':'Schedule banner'} <ArrowRight size={16}/></button></div></div></div>}
   </div>;
 }
