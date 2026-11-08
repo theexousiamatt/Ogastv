@@ -118,7 +118,7 @@ export async function getArticles(limit = 24): Promise<Article[]> {
     where: { _status: { equals: 'published' } }, sort: '-firstPublishedAt',
     limit: Math.min(limit, 100),
   });
-  return (result.docs as CmsArticle[]).map(mapArticle);
+  return (result.docs as CmsArticle[]).map((doc)=>mapArticle(doc));
 }
 
 export async function getArticle(slug: string): Promise<Article | null> {
@@ -148,7 +148,7 @@ export async function getArticlesInCategory(slug: string, limit = 24): Promise<A
     ] }] },
     sort: '-firstPublishedAt',
   });
-  return (result.docs as CmsArticle[]).map(mapArticle);
+  return (result.docs as CmsArticle[]).map((doc)=>mapArticle(doc));
 }
 
 
@@ -303,7 +303,7 @@ export async function getHomepageCategorySections(limit = 4): Promise<HomepageCa
           ] },
           sort: '-firstPublishedAt', limit: max,
         });
-        return [def.key, { stories: (result.docs as CmsArticle[]).map(mapArticle), archiveSlug }] as const;
+        return [def.key, { stories: (result.docs as CmsArticle[]).map((doc)=>mapArticle(doc)), archiveSlug }] as const;
       } catch (error) {
         console.error('[OgasTV] Could not load homepage category '+def.key, error);
         return [def.key, { stories: [], archiveSlug }] as const;
@@ -370,7 +370,7 @@ export async function searchPublicArticles(options: {
     collection: 'articles', overrideAccess: false, depth: 2, select: CARD_FIELDS,
     where, page, limit, sort,
   });
-  return { stories: (results.docs as CmsArticle[]).map(mapArticle),
+  return { stories: (results.docs as CmsArticle[]).map((doc)=>mapArticle(doc)),
     total: results.totalDocs, page: results.page || page, totalPages: results.totalPages };
 }
 
