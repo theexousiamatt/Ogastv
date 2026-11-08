@@ -423,3 +423,26 @@ export async function getWatchEpisodes(limit=24):Promise<StudioEpisode[]>{
     return [];
   }
 }
+
+/** Public author archives use only the explicitly published byline, never
+ * protected staff account data, email addresses or internal biographies.
+ */
+export async function getPublishedBylineArticles(byline:string,page=1,limit=24):Promise<{
+  stories:Article[];total:number;page:number;totalPages:number;
+}>{
+  const author=byline.trim().slice(0,100);
+  const safePage=Math.max(1,Math.min(1000,Math.floor(page)));
+  const size=Math.max(1,Math.min(48,Math.floor(limit)));
+  if(!author)return {stories:[],total:0,page:safePage,totalPages:1};
+  if(!payloadEnabled()){
+    const stories=(await wp.getArticles(100)).filter(story=>story.author===author);
+    return {stories:stories.slice((safePage-1)*size,safePage*size),total:stories.length,
+      page:safePage,totalPages:Math.max(1,Math.ceil(stories.length/size))};
+  }
+  const api=await cms();
+  const result=await api.find({collection:'articles',overrideAccess:false,depth:2,
+    select:CARD_FIELDS,where:{and:[{_status:{equals:'published'}},{publicByline:{equals:author}}]},
+    sort:'-firstPublishedAt',page:safePage,limit:size});
+  return {stories:(result.docs as CmsArticle[]).map(doc=>mapArticle(doc)),total:result.totalDocs,
+    page:result.page||safePage,totalPages:result.totalPages};
+}
