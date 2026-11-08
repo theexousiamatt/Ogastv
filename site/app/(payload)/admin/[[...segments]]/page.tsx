@@ -17,5 +17,10 @@ export default async function Page({ params, searchParams }: Props) {
   // The newsroom's entry point is the custom OgasTV Studio.
   // Keep /admin/login, /admin/account and advanced CMS subroutes intact.
   if (!segments?.length) redirect('/studio');
+  // Staff use the custom Studio authentication and account UI.
+  // Native verification/reset and advanced CMS tools stay temporarily until
+  // their full migration is tested, to avoid locking staff out.
+  if (segments[0] === 'login') redirect('/studio/login');
+  if (segments[0] === 'account') redirect('/studio/account');
   return RootPage({ config, params, searchParams, importMap });
 }
