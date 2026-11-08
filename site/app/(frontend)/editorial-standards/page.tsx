@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { EditorialInfoPage } from '@/components/EditorialInfoPage';
-export const metadata:Metadata={title:'Editorial standards',description:'The reporting principles and editorial commitments of OgasTV Africa.',alternates:{canonical:'/editorial-standards'}};
+export const metadata:Metadata={title:'Editorial standards',description:'The reporting principles and editorial commitments of OgasTV Nigeria.',alternates:{canonical:'/editorial-standards'}};
 export default function StandardsPage(){return <EditorialInfoPage eyebrow="OUR JOURNALISM" title="Editorial standards"
   description="Our aim is reporting that is useful, accurate and fair to the people whose stories we tell.">
     <section><h2>Accuracy before speed</h2><p>We aim to distinguish verified facts from developing reports, clearly attribute information and correct material errors when they are identified.</p></section>

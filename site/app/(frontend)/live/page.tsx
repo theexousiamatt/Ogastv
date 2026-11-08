@@ -4,7 +4,7 @@ import config from '../../../payload.config';
 import { LiveViewer } from '../../../components/LiveViewer';
 import './live.css';
 
-export const metadata:Metadata={title:'Live Broadcasts',description:'Watch OgasTV Africa live coverage and events.'};
+export const metadata:Metadata={title:'Live Broadcasts',description:'Watch OgasTV Nigeria live coverage and events.'};
 export const dynamic='force-dynamic';
 
 export default async function LivePage() {
@@ -27,7 +27,7 @@ export default async function LivePage() {
           OgasTV / On Air
         </span>
         <h1 id="ogas-live-title">Live from the story.</h1>
-        <p>Follow live events, important conversations and breaking developments with OgasTV Africa.</p>
+        <p>Follow live events, important conversations and breaking developments with OgasTV Nigeria.</p>
       </section>
       <section className="ogas-live-page__stage wrap" aria-label={isOnAir?'Live broadcast player':'Broadcast status'}>
         <div className="live-player ogas-live-page__player">

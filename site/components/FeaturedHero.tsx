@@ -25,7 +25,7 @@ export function FeaturedHero({ stories }: { stories: Article[] }) {
       <div className="ogas-home-hero__content">
         <span className="ogas-feature-chip"><Star size={13} fill="currentColor"/> Featured</span>
         <h1>{story ? story.title : <>The stories that <span>bring us closer.</span></>}</h1>
-        <p>{story ? story.excerpt : 'Grassroots journalism, community perspectives, and the ideas shaping Lagos, Nigeria and the wider African continent.'}</p>
+        <p>{story ? story.excerpt : 'Grassroots journalism, community perspectives, and the ideas shaping Lagos, Nigeria and beyond.'}</p>
         <div className="ogas-home-hero__meta">
           {story ? <>
             <Clock3 size={13}/><time dateTime={story.date}>{prettyDate(story.date)}</time>
@@ -40,7 +40,7 @@ export function FeaturedHero({ stories }: { stories: Article[] }) {
         {/* Photo is editorial atmosphere only until the client publishes real reports. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {story && !story.image ? (
-          <div className="ogas-home-hero__illustration" aria-label="Editorial illustration"><span aria-hidden="true">OgasTV Africa</span></div>
+          <div className="ogas-home-hero__illustration" aria-label="Editorial illustration"><span aria-hidden="true">OgasTV Nigeria</span></div>
         ) : (
           <img src={story?.image?.url || lagosImage}
             alt={story ? story.image?.alt || story.title : 'An aerial view of Lagos waterways and the city'}
