@@ -18,7 +18,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main id="main">{children}</main>
         <footer className="site-footer">
           <div className="wrap footer-content">
-            <div><strong>OGASTV <span>AFRICA</span></strong><p>Stories from our communities, told with care.</p></div>
+            <div>
+              <a href="/" aria-label="OgasTV Africa home">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="ogas-footer__logo" src="/ogastv-official-logo.png" alt="OgasTV Africa" width={405} height={125} />
+              </a>
+              <p>Stories from our communities, told with care.</p>
+            </div>
             <p>© {new Date().getFullYear()} OgasTV Africa. All rights reserved.</p>
           </div>
         </footer>
