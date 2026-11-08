@@ -65,6 +65,11 @@ export const Articles: CollectionConfig = {
         if (data._status === 'published') {
           const state = data.workflowStatus || originalDoc?.workflowStatus;
           if (state !== 'approved') throw new Error('Approve the article before publication.');
+          // Publishing an older draft should make it newly visible in its category.
+          // Never overwrite the first publication date on later revisions.
+          if (!data.firstPublishedAt && !originalDoc?.firstPublishedAt) {
+            data.firstPublishedAt = new Date().toISOString();
+          }
         }
         return data;
       },
