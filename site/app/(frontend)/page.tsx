@@ -139,10 +139,12 @@ export default async function HomePage(){
     <HomeBannerAd/>
     <aside className="ogas-home-newsletter ogas-home-newsletter--wide">
       <span className="ogas-home-newsletter__mark" aria-hidden="true">✳</span>
-      <h2>Stay closer to the stories shaping your community.</h2>
-      <p>Subscribe to OgasTV Africa updates, from Lagos and beyond.</p>
-      <div className="ogas-home-newsletter__form" aria-label="Newsletter status"><span>Newsletter subscription will open after email verification is configured.</span></div>
-      <Link href="/latest" className="ogas-home-newsletter__button">Explore today's stories <ArrowRight size={14}/></Link>
+      <h2>Stay close to the stories shaping your community.</h2>
+      <p>Follow the reporting that matters, from Lagos and beyond.</p>
+      <div className="ogas-home-newsletter__links">
+        <Link href="/latest" className="ogas-home-newsletter__button">Explore the latest <ArrowRight size={14}/></Link>
+        <Link href="/watch" className="ogas-home-newsletter__button ogas-home-newsletter__button--secondary">Watch OgasTV Studio <ArrowRight size={14}/></Link>
+      </div>
     </aside>
   </div>;
 }
