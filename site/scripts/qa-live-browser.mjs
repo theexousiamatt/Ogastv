@@ -14,6 +14,14 @@ const issues = [];
 await fs.mkdir('qa-live-screenshots', { recursive: true });
 const browser = await chromium.launch({headless:true, args:['--no-sandbox']});
 try {
+  // Verify a real published article as part of the reader journey.
+  const discovery = await browser.newPage();
+  try {
+    await discovery.goto(ORIGIN+'/latest',{waitUntil:'domcontentloaded',timeout:45000});
+    const storyUrl=await discovery.locator('a[href^="/stories/"]').first().getAttribute('href');
+    if(storyUrl&&storyUrl.startsWith('/stories/'))routes.push(storyUrl);
+    else issues.push('No published article link found on latest-news archive');
+  } finally {await discovery.close();}
   for (const mode of viewports) {
     const context = await browser.newContext({
       viewport:mode.viewport, isMobile:mode.isMobile, hasTouch:mode.isMobile,
@@ -55,6 +63,14 @@ try {
         if(state.scrollWidth>state.width+3)issues.push(name+': horizontal overflow '+state.scrollWidth+'/'+state.width);
         if(state.missingImages.length)issues.push(name+': '+state.missingImages.length+' broken visible image(s)');
         if(pageErrors.length)issues.push(name+': '+pageErrors.join('; ').slice(0,350));
+        if(route.startsWith('/stories/')){
+          const save=page.locator('.ogas-reading__save-button');
+          if(await save.count()){
+            await save.click();
+            if(!(await save.getAttribute('aria-pressed'))?.includes('true'))
+              issues.push(name+': save-story action did not toggle');
+          }else issues.push(name+': save-story action missing');
+        }
         if(mode.isMobile&&route==='/'){
           const menu=page.locator('.ogas-public-mobile-menu');
           if(await menu.count()){
