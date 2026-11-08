@@ -37,6 +37,15 @@ type CmsArticle = {
   publicByline?: string;
 };
 
+/** Selecting story-card fields avoids loading rich-text bodies and revisions
+ * into every homepage and archive card. Populated image/category relations stay. */
+const CARD_FIELDS = {
+  title:true,slug:true,summary:true,firstPublishedAt:true,createdAt:true,
+  updatedAt:true,primaryCategory:true,featuredImage:true,publicByline:true,
+  editorialType:true,legacyFeaturedImageUrl:true,legacyFeaturedImageAlt:true,
+  originalWordpressUrl:true,
+} as const;
+
 // The original WordPress site is retired. A stale Hostinger environment
 // setting must not make production fetch the deleted WordPress endpoint.
 const payloadEnabled = () =>
@@ -105,7 +114,7 @@ export async function getArticles(limit = 24): Promise<Article[]> {
   if (!payloadEnabled()) return wp.getArticles(limit);
   const api = await cms();
   const result = await api.find({
-    collection: 'articles', overrideAccess: false, depth: 2,
+    collection: 'articles', overrideAccess: false, depth: 2, select: CARD_FIELDS,
     where: { _status: { equals: 'published' } }, sort: '-firstPublishedAt',
     limit: Math.min(limit, 100),
   });
@@ -132,7 +141,7 @@ export async function getArticlesInCategory(slug: string, limit = 24): Promise<A
   if (!categories.docs.length) return [];
   const ids = categories.docs.map(category => category.id);
   const result = await api.find({
-    collection: 'articles', overrideAccess: false, depth: 2, limit: Math.min(limit, 100),
+    collection: 'articles', overrideAccess: false, depth: 2, select: CARD_FIELDS, limit: Math.min(limit, 100),
     where: { and: [{ _status: { equals: 'published' } }, { or: [
       { primaryCategory: { in: ids } },
       { secondaryCategories: { in: ids } },
@@ -354,7 +363,7 @@ export async function searchPublicArticles(options: {
     ] });
   }
   const results = await api.find({
-    collection: 'articles', overrideAccess: false, depth: 2,
+    collection: 'articles', overrideAccess: false, depth: 2, select: CARD_FIELDS,
     where, page, limit, sort,
   });
   return { stories: (results.docs as CmsArticle[]).map(mapArticle),
