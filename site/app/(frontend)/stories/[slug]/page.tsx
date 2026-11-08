@@ -78,6 +78,7 @@ export default async function ArticlePage({ params }: Props) {
     isAccessibleForFree:true,
   };
   return <>
+    <div className="ogas-reading-progress" aria-hidden="true"/>
     <article className="ogas-reading">
       <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(structuredData).replace(/</g,'\\u003c')}}/>
       <nav aria-label="Breadcrumb" className="ogas-reading__breadcrumb">
@@ -95,7 +96,9 @@ export default async function ArticlePage({ params }: Props) {
         {article.subtitle&&<p className="ogas-reading__subtitle">{article.subtitle}</p>}
         {article.excerpt&&<p className="ogas-reading__summary">{article.excerpt}</p>}
         <div className="ogas-reading__byline">
-          <span><strong>{article.author||'OgasTV Africa Newsroom'}</strong><small>Reporting for OgasTV Africa</small></span>
+          <span><strong>{article.author?
+            <Link href={'/authors/'+encodeURIComponent(article.author)}>{article.author}</Link>:
+            'OgasTV Africa Newsroom'}</strong><small>Reporting for OgasTV Africa</small></span>
           <div className="ogas-reading__meta">
             <span><CalendarDays size={14} aria-hidden="true"/><time dateTime={article.date}>{prettyDate(article.date)}</time></span>
             <span><Clock3 size={14} aria-hidden="true"/>{minutes(html)} min read</span>
