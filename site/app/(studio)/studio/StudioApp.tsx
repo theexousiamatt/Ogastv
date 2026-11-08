@@ -614,7 +614,37 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
               <div className="ogas-editor-footnote"><CheckCircle2 size={15}/> {autoSaveState==='saving'?'Saving changes…':autoSaveState==='saved'?'All changes saved':autoSaveState==='error'?'Could not save changes':'Save your draft whenever you need a break.'}</div>
             </section>
             <aside className="ogas-editor-side"><section className="ogas-editor-panel"><h3>Featured image <span>Optional</span></h3>{chosenImage? <button type="button" className="ogas-chosen-cover" onClick={()=>setPicker(true)}><ArticleImage url={mediaUrl(chosenImage)} alt={chosenImage.alt||'Featured article photo'} missingText="Photo unavailable — choose another"/><span>Change image</span></button>:<button type="button" className="ogas-cover-upload" onClick={()=>setPicker(true)}><ImagePlus size={25}/><strong>Choose or upload a photo</strong><small>JPG, PNG, WebP or AVIF</small></button>}{editor.featuredImage&&<button className="ogas-remove-cover" onClick={()=>changeFeaturedImage('')}>Remove featured image</button>}</section>
-              <section className="ogas-editor-panel"><h3>Article details</h3><label className="ogas-input-label">Section <span>Required</span></label><select className="ogas-field" value={editor.primaryCategory} onChange={e=>setEditor(s=>({...s,primaryCategory:e.target.value}))}><option value="">Choose a section</option>{categories.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}</select><label className="ogas-input-label">Short introduction <span>Optional</span></label><textarea className="ogas-field" rows={4} value={editor.summary} onChange={e=>setEditor(s=>({...s,summary:e.target.value}))} placeholder="A brief introduction for readers."/><p className="ogas-helper">If you leave this blank, we'll use the opening of your article.</p></section>
+              <section className="ogas-editor-panel">
+                <h3>Article details</h3>
+                <label className="ogas-input-label" htmlFor="ogas-primary-category">Primary category <span>Required</span></label>
+                <select id="ogas-primary-category" className="ogas-field" value={editor.primaryCategory} onChange={e=>setEditor(current=>({
+                  ...current, primaryCategory:e.target.value,
+                  secondaryCategories:current.secondaryCategories.filter(id=>id!==e.target.value),
+                }))}>
+                  <option value="">Choose a category</option>
+                  {categories.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
+                </select>
+                <fieldset style={{border:0,margin:'16px 0',padding:0}}>
+                  <legend className="ogas-input-label">Additional categories <span>Optional</span></legend>
+                  <p className="ogas-helper">Published articles appear automatically in every category you choose.</p>
+                  <div style={{display:'grid',gap:8,maxHeight:190,overflowY:'auto',marginTop:10}}>
+                    {categories.filter(c=>String(c.id)!==editor.primaryCategory).map(c=>(
+                      <label key={String(c.id)} style={{display:'flex',alignItems:'center',gap:9,fontSize:13,cursor:'pointer'}}>
+                        <input type="checkbox" value={String(c.id)} checked={editor.secondaryCategories.includes(String(c.id))}
+                          onChange={e=>setEditor(current=>({...current,
+                            secondaryCategories:e.target.checked
+                              ? [...current.secondaryCategories.filter(id=>id!==String(c.id)),String(c.id)]
+                              : current.secondaryCategories.filter(id=>id!==String(c.id)),
+                          }))}/>
+                        <span>{c.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <label className="ogas-input-label">Short introduction <span>Optional</span></label>
+                <textarea className="ogas-field" rows={4} value={editor.summary} onChange={e=>setEditor(current=>({...current,summary:e.target.value}))} placeholder="A brief introduction for readers."/>
+                <p className="ogas-helper">If you leave this blank, we'll use the opening of your article.</p>
+              </section>
               <details className="ogas-editor-panel ogas-more-options ogas-story-advanced">
                 <summary><Settings2 size={17}/> More options <ChevronDown size={16}/></summary>
                 <div className="ogas-story-advanced__fields">
@@ -630,12 +660,6 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
                       <option value="explainer">Explainer</option><option value="opinion">Opinion</option>
                       <option value="interview">Interview</option><option value="sponsored">Sponsored</option>
                     </select>
-                  </label>
-                  <label>Additional sections
-                    <select multiple value={editor.secondaryCategories} onChange={e=>setEditor(s=>({...s,secondaryCategories:Array.from(e.target.selectedOptions,v=>v.value)}))}>
-                      {categories.map(c=><option key={String(c.id)} value={String(c.id)}>{c.name}</option>)}
-                    </select>
-                    <small>Hold Ctrl or Command to choose more than one.</small>
                   </label>
                   <label>Locations
                     <select multiple value={editor.locations} onChange={e=>setEditor(s=>({...s,locations:Array.from(e.target.selectedOptions,v=>v.value)}))}>

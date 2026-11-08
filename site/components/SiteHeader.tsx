@@ -1,18 +1,19 @@
 import Link from 'next/link';
 import { Play, Search, UserRound } from 'lucide-react';
+import { homepageCategoryDefinitions } from '@/lib/editorial-sections';
 
-// Homepage editorial sections are the source of truth for the primary menu.
-// Link to anchored sections, including from article pages, until standalone
-// category archives are available for every editorial desk.
+/** Category links open their canonical archives. Slugs are stable, and
+ * the canonical categories are already configured in the newsroom CMS.
+ * Avoid querying the database in the global header on every page request.
+ */
 export const editorialNav = [
   { title: 'Home', href: '/' },
-  { title: 'Latest Highlights', href: '/#ogas-highlights' },
-  { title: 'Lagos Watch', href: '/#ogas-lagos' },
-  { title: 'Government & Policies', href: '/#ogas-government' },
-  { title: 'Grassroots Voices', href: '/#ogas-voices' },
-  { title: 'Business & Investment', href: '/#ogas-business' },
-  { title: 'Personalities', href: '/#ogas-personalities' },
-  { title: 'OgasTV Studio', href: '/#ogas-studio' },
+  { title: 'Latest Highlights', href: '/latest' },
+  ...homepageCategoryDefinitions.map(def => ({
+    title: def.title,
+    href: '/latest?category=' + encodeURIComponent(def.slug),
+  })),
+  { title: 'OgasTV Studio', href: '/live' },
 ];
 
 export function SiteHeader() {
@@ -35,11 +36,10 @@ export function SiteHeader() {
         </div>
       </div>
       <nav className="ogas-public-nav ogas-public-nav--sections" aria-label="Editorial categories">
-        {editorialNav.map((item) => (
+        {editorialNav.map(item => (
           <Link href={item.href} key={item.title} className={item.href === '/' ? 'ogas-public-nav__active' : ''}>{item.title}</Link>
         ))}
         <Link href="/latest">All Stories</Link>
-        <Link href="/live" className="ogas-live-nav">Live <span className="ogas-live-dot" aria-hidden="true" /></Link>
       </nav>
     </header>
   );
