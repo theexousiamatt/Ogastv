@@ -5,7 +5,7 @@ import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical
 import * as wp from './wordpress';
 import sanitizeHtml from 'sanitize-html';
 import type { Article, Category } from './wordpress';
-import { homepageCategoryDefinitions, preferredSectionSlug } from './editorial-sections';
+import { homepageCategoryDefinitions, preferredSectionSlug, archiveCategoryAliases } from './editorial-sections';
 import type { HomepageCategoryKey } from './editorial-sections';
 
 export type { Article, Category } from './wordpress';
@@ -107,16 +107,16 @@ export async function getArticlesInCategory(slug: string, limit = 24): Promise<A
   if (!payloadEnabled()) return wp.getArticlesInCategory(slug, limit);
   const api = await cms();
   const categories = await api.find({
-    collection: 'categories', overrideAccess: false, limit: 1,
-    where: { slug: { equals: slug } },
+    collection: 'categories', overrideAccess: false, limit: 30,
+    where: { slug: { in: archiveCategoryAliases(slug) } },
   });
-  const category = categories.docs[0];
-  if (!category) return [];
+  if (!categories.docs.length) return [];
+  const ids = categories.docs.map(category => category.id);
   const result = await api.find({
     collection: 'articles', overrideAccess: false, depth: 2, limit: Math.min(limit, 100),
     where: { and: [{ _status: { equals: 'published' } }, { or: [
-      { primaryCategory: { equals: category.id } },
-      { secondaryCategories: { in: [category.id] } },
+      { primaryCategory: { in: ids } },
+      { secondaryCategories: { in: ids } },
     ] }] },
     sort: '-createdAt',
   });
@@ -302,14 +302,15 @@ export async function searchPublicArticles(options: {
   const api = await cms();
   const where: import('payload').Where = { and: [{ _status: { equals: 'published' } }] };
   if (categorySlug) {
-    const result = await api.find({
-      collection: 'categories', overrideAccess: false, depth: 0, limit: 1,
-      where: { slug: { equals: categorySlug } },
+    const categoryResult = await api.find({
+      collection: 'categories', overrideAccess: false, depth: 0, limit: 30,
+      where: { slug: { in: archiveCategoryAliases(categorySlug) } },
     });
-    if (!result.docs[0]) return { stories: [], total: 0, page, totalPages: 1 };
+    if (!categoryResult.docs.length) return { stories: [], total: 0, page, totalPages: 1 };
+    const ids = categoryResult.docs.map(category => category.id);
     where.and!.push({ or: [
-      { primaryCategory: { equals: result.docs[0].id } },
-      { secondaryCategories: { in: [result.docs[0].id] } },
+      { primaryCategory: { in: ids } },
+      { secondaryCategories: { in: ids } },
     ] });
   }
   if (query) {
