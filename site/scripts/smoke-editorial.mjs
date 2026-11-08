@@ -3,7 +3,9 @@ import { execFileSync } from 'node:child_process';
 
 // Destructive tests ONLY on the disposable, loopback-bound GitHub Actions database.
 // Never run against any public hostname or any customer database.
-const base = 'http://127.0.0.1:3100';
+const port = Number(process.env.PORT || '3000');
+if (port !== 3000 && port !== 3100) throw new Error('Unexpected CI smoke port');
+const base = 'http://127.0.0.1:' + port;
 if (process.env.CI !== 'true' ||
     !process.env.DATABASE_URL?.includes('@localhost:5432/ogastv_ci') ||
     process.env.DATABASE_TLS_REQUIRED !== 'false') {
