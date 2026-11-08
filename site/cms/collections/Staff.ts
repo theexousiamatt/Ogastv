@@ -5,7 +5,23 @@ import { FIRST_ADMIN_EMAIL } from '../first-admin-invite';
 export const Staff: CollectionConfig = {
   slug: 'staff-users',
   auth: {
-    verify: true, // Must be identical in migration CLI, CI, staging and production.
+    verify: {
+      generateEmailSubject: () => 'Verify your OgasTV Studio account',
+      generateEmailHTML: ({ token }) => {
+        const url = (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+          + '/studio/verify?token=' + encodeURIComponent(token);
+        return '<p>Welcome to the OgasTV Africa newsroom.</p><p>Verify your account to get started:</p><p><a href="' + url + '">Verify your OgasTV Studio account</a></p>';
+      },
+    },
+    forgotPassword: {
+      minRequestInterval: 60_000,
+      generateEmailSubject: () => 'Reset your OgasTV Studio password',
+      generateEmailHTML: ({ token }) => {
+        const url = (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+          + '/studio/reset-password?token=' + encodeURIComponent(token);
+        return '<p>A password reset was requested for your OgasTV Studio account.</p><p><a href="' + url + '">Reset your password</a></p><p>If you did not request this, you can ignore this email.</p>';
+      },
+    },
     maxLoginAttempts: 5,
     lockTime: 15 * 60 * 1000,
     tokenExpiration: 60 * 60 * 8,
