@@ -30,7 +30,7 @@ export function SiteHeader() {
             <Search size={16} aria-hidden="true" />
             <input type="search" name="q" placeholder="Search stories, topics..." aria-label="Search stories"/>
           </form>
-          <Link href="/admin" className="ogas-user-link" aria-label="Open newsroom"><UserRound size={17}/></Link>
+          <Link href="/studio" className="ogas-user-link" aria-label="Open OgasTV Studio"><UserRound size={17}/></Link>
         </div>
       </div>
       <nav className="ogas-public-nav ogas-public-nav--sections" aria-label="Editorial categories">
