@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
 import { canReview, canPublish, editorial } from '../access';
+import { addBroadcastTransitionTimes } from '../../lib/broadcast-timeline';
 
 const canEdit = ({ req }: { req: { user?: unknown } }) => canReview(req.user);
 const canDelete = ({ req }: { req: { user?: unknown } }) => canPublish(req.user);
@@ -43,6 +44,17 @@ export const LiveEvents: CollectionConfig = {
   slug: 'live-events',
   admin: { useAsTitle: 'title', group: 'Video & Live' },
   versions: { drafts: true, maxPerDoc: 20 },
+  hooks: {
+    beforeChange: [({data,originalDoc}) => {
+      // Applies equally to the End Broadcast button and manual newsroom status edits.
+      // Do not fill missing timestamps on unchanged historical ENDED records.
+      Object.assign(data,addBroadcastTransitionTimes(data,{
+        broadcastStatus:originalDoc?.broadcastStatus,
+        actualEnd:originalDoc?.actualEnd,
+      },new Date().toISOString()));
+      return data;
+    }],
+  },
   access: {
     read: ({ req }) => canReview(req.user) ? true : { _status: { equals: 'published' } },
     create: ({ req }) => editorial(req.user), update: canEdit, delete: canDelete,

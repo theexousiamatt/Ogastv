@@ -4,6 +4,7 @@ import config from '../../../payload.config';
 import { editorial, getStaff } from '../../../cms/access';
 import { PhoneBroadcaster } from '../../../components/PhoneBroadcaster';
 import { studioBroadcastStatus } from '../../../lib/broadcast-status';
+import { formatBroadcastDuration, formatLagosTimestamp } from '../../../lib/broadcast-timeline';
 import styles from '../../../components/PhoneBroadcaster.module.css';
 
 export const dynamic='force-dynamic';
@@ -42,14 +43,23 @@ export default async function BroadcastStudio() {
             actualEnd:typeof event.actualEnd==='string'?event.actualEnd:null,
             updatedAt:typeof event.updatedAt==='string'?event.updatedAt:null,
           },now);
-          const timestamp=event.actualStart||event.scheduledStart||event.updatedAt;
-          const date=timestamp?new Date(timestamp):null;
+          const started=typeof event.actualStart==='string'?event.actualStart:null;
+          const ended=typeof event.actualEnd==='string'?event.actualEnd:null;
+          const scheduled=typeof event.scheduledStart==='string'?event.scheduledStart:null;
+          const startText=formatLagosTimestamp(started);
+          const endText=formatLagosTimestamp(ended);
+          const scheduledText=formatLagosTimestamp(scheduled);
+          const duration=formatBroadcastDuration(started,ended);
           return <a key={event.id} href={'/broadcast-studio/'+event.id} className={styles.historyItem}>
             <span>
               <span className={styles.historyTitle}>{event.title}</span>
-              {date&&Number.isFinite(date.getTime())&&<time className={styles.historyDate} dateTime={date.toISOString()}>
-                {date.toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric',timeZone:'Africa/Lagos'})}
-              </time>}
+              <span className={styles.historyTimeline}>
+                {startText?<span>Started: <time dateTime={started!}>{startText}</time></span>:
+                  status==='scheduled'&&scheduledText?<span>Scheduled: <time dateTime={scheduled!}>{scheduledText}</time></span>:
+                  status==='ended'?<span>Start time unavailable</span>:null}
+                {status==='ended'&&<span>Ended: {endText?<time dateTime={ended!}>{endText}</time>:'Time unavailable'}</span>}
+                {status==='ended'&&duration&&<span>Duration: {duration}</span>}
+              </span>
             </span>
             <span className={[styles.historyStatus,status==='live'?styles.historyStatusLive:'',status==='interrupted'?styles.historyStatusInterrupted:''].filter(Boolean).join(' ')}>
               {statusLabels[status]}
