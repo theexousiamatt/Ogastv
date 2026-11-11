@@ -70,7 +70,8 @@ export async function POST(req:NextRequest) {
     }
     const id=Number(body?.eventId);
     if(!Number.isSafeInteger(id) || id<1) return err('Invalid broadcast');
-    const event:any=await cms.findByID({collection:'live-events',id,overrideAccess:true,depth:0,draft:true});
+    // Signaling must use the canonical state, never a historic version returned by draft:true.
+    const event:any=await cms.findByID({collection:'live-events',id,overrideAccess:true,depth:0,draft:false});
     if(!event) return err('Event not found',404);
     const owns=canBroadcast && event.publisherSessionId && body.sessionId===event.publisherSessionId &&
       String(event.broadcasterStaffId)===String(actor!.id);

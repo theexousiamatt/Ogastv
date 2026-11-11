@@ -64,6 +64,8 @@ jobs:
           grep -Fq "const INVITE_TOKEN_DIGEST = '$digest';" cms/first-admin-invite.ts
       - name: Test broadcast quality diagnostics
         run: node --experimental-strip-types --test scripts/broadcast-quality.test.mjs
+      - name: Test canonical broadcast status classification
+        run: node --experimental-strip-types --test scripts/broadcast-status.test.mjs
       - name: Typecheck
         run: npm run typecheck
       - name: Production build with disposable database
