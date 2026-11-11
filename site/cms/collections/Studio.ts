@@ -48,7 +48,10 @@ export const LiveEvents: CollectionConfig = {
     beforeChange: [({data,originalDoc}) => {
       // Applies equally to the End Broadcast button and manual newsroom status edits.
       // Do not fill missing timestamps on unchanged historical ENDED records.
-      Object.assign(data,addBroadcastTransitionTimes(data,originalDoc,new Date().toISOString()));
+      Object.assign(data,addBroadcastTransitionTimes(data,{
+        broadcastStatus:originalDoc?.broadcastStatus,
+        actualEnd:originalDoc?.actualEnd,
+      },new Date().toISOString()));
       return data;
     }],
   },
