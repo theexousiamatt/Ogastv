@@ -14,6 +14,31 @@ for(const path of ['/', '/latest', '/watch', '/live', '/about', '/contact', '/ed
   assert.equal(response.status,200,path+' should render publicly');
   assert.ok(response.text.length>20,path+' should not be empty');
 }
+// Every editorial menu destination must load, including desks without published stories.
+for(const [slug,label] of [
+  ['lagos-watch','Lagos Watch'],
+  ['government-policies','Government & Policies'],
+  ['grassroots-voices','Grassroots Voices'],
+  ['business-investment','Business & Investment'],
+  ['personalities','Personalities'],
+]){
+  const response=await visit('/section/'+slug);
+  assert.equal(response.status,200,'Menu category '+label+' should render');
+  assert.ok(response.text.includes(label),'Menu category '+label+' should show the matching desk');
+}
+const live=await visit('/live');
+assert.equal(live.status,200,'Live menu action should resolve');
+assert.ok(live.text.includes('Live from the story.'),'Live menu action reaches the public broadcast page');
+const headerSource=(await import('node:fs')).readFileSync(new URL('../components/SiteHeader.tsx',import.meta.url),'utf8');
+assert.ok(headerSource.includes('href="/live"'),'Global header must link directly to /live');
+assert.ok(headerSource.includes('ogas-public-live-entry'),'Desktop Live entry must remain visible');
+assert.ok(headerSource.includes('ogas-public-mobile-navigation__live'),'Mobile Live entry must remain visible');
+const liveSource=(await import('node:fs')).readFileSync(new URL('../app/(frontend)/live/page.tsx',import.meta.url),'utf8');
+assert.ok(liveSource.includes('[A-Za-z0-9_-]{11}'),'YouTube fallback accepts valid video IDs');
+const playerSource=(await import('node:fs')).readFileSync(new URL('../components/LiveViewer.tsx',import.meta.url),'utf8');
+assert.ok(playerSource.includes('await firstVideoFrame('),
+  'Live player must confirm a decoded frame before showing the playing state');
+
 const robots=await visit('/robots.txt');
 assert.match(robots.text,/Disallow: \/studio/,'Private newsroom excluded from indexing');
 const sitemap=await visit('/sitemap.xml');

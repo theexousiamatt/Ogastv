@@ -467,3 +467,40 @@ body button,body input{font:inherit}
   .ogas-home-hero__content>p{-webkit-line-clamp:3}
   .ogas-home-hero__visual{min-height:210px}
 }
+
+
+/* Navigation reliability: keep Live visible even when categories scroll
+   beyond the viewport on smaller laptops; show the actual current section. */
+.ogas-public-nav-shell{
+  display:flex;align-items:center;gap:10px;min-width:0;
+  padding:0 clamp(21px,3vw,49px) 12px;
+}
+.ogas-public-header .ogas-public-nav-shell .ogas-public-nav--sections{
+  flex:1 1 auto;width:auto;min-width:0;margin:0;padding:0;
+  overflow-x:auto;overflow-y:hidden;
+}
+.ogas-public-live-entry{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  flex:0 0 auto;padding:10px 17px;border:1px solid #b52b31;
+  border-radius:999px;color:#9c2530;text-decoration:none;font-size:12px;font-weight:800;
+  white-space:nowrap;background:#fff8f8;
+}
+.ogas-public-live-entry:hover,.ogas-public-live-entry--active{
+  background:#a5222d;color:#fff!important;
+}
+.ogas-public-live-entry--active .ogas-live-dot{background:#fff}
+.ogas-public-nav-shell a:focus-visible,
+.ogas-public-mobile-navigation a:focus-visible,
+.ogas-public-mobile-menu>summary:focus-visible{
+  outline:2px solid #a5222d;outline-offset:3px;
+}
+.ogas-public-mobile-navigation>a[aria-current="page"],
+.ogas-public-mobile-menu__panel a[aria-current="page"]{
+  background:#e9ede5;color:#273529;
+}
+@media(max-width:900px){
+  .ogas-public-nav-shell{padding:0 16px 12px}
+}
+@media(max-width:800px){
+  .ogas-public-nav-shell{display:none}
+}
