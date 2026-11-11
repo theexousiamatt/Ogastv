@@ -56,6 +56,6 @@ Repeat the sequence for **Wi-Fi** and **mobile data**, keeping everything else a
 
 ## Release notes
 
-The initial change targets 720p30 with an encoder *maximum* of 3.5 Mbps rather than enforcing a minimum. Browser congestion control remains enabled and may transmit below that limit. Do not raise the cap blindly on mobile data. If field tests still show quality collapse under normal movement, assess connection capacity, phone encoder performance, and then (in a separate change) whether Cloudflare SFU simulcast publishing / viewer layer selection is warranted.
+The initial change offers **HD 720p at up to 3.5 Mbps** (default for mobile data), and optional **Full HD 1080p at up to 5 Mbps** for a capable phone on strong Wi-Fi. Both target 30 FPS. These are encoder *maximums*, never minimum upload rates; browser congestion control continues adapting. Capture settings displayed by the app are the actual negotiated camera resolution, which can be lower than requested. If mobile data quality is poor, switch back to HD for the next broadcast. If field tests still show quality collapse under normal movement, assess connection capacity, phone encoder performance, and then (in a separate change) whether Cloudflare SFU simulcast publishing / viewer layer selection is warranted.
 
 Do not log stream identifiers, access tokens, recordings, or other sensitive personal content as part of diagnostics.
