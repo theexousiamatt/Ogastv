@@ -2,12 +2,14 @@ name: OgasTV application checks
 permissions:
   contents: write
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'site/**'
       - '.github/workflows/site-checks.yml'
   push:
-    branches: [main]
+    # Hostinger deploys from this feature branch, not the repository's older main.
+    branches: [main, feat/ogastv-reference-ui-2026-11-05]
     paths:
       - 'site/**'
       - '.github/workflows/site-checks.yml'
@@ -63,7 +65,8 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Production build with disposable database
-        run: npm run build
+        # Match Hostinger's configured npm run build:production command.
+        run: npm run build:production
 
       - name: Generate initial Payload migrations against disposable database
         run: |
