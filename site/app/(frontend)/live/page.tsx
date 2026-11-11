@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { getPayload } from 'payload';
 import config from '../../../payload.config';
-import { LiveViewer } from '../../../components/LiveViewer';
+import { LiveBroadcastStage } from '../../../components/LiveBroadcastStage';
 import './live.css';
 
 export const metadata:Metadata={title:'Live Broadcasts',description:'Watch OgasTV Nigeria live coverage and events.'};
@@ -30,30 +30,30 @@ export default async function LivePage() {
         <p>Follow live events, important conversations and breaking developments with OgasTV Nigeria.</p>
       </section>
       <section className="ogas-live-page__stage wrap" aria-label={isOnAir?'Live broadcast player':'Broadcast status'}>
-        <div className="live-player ogas-live-page__player">
-          {live&&live.sourceType!=='youtube'?
-            <LiveViewer eventId={Number(live.id)}/>:
-            youtubeId?
-              <div className="ogas-live-page__youtube">
-                <iframe
-                  title="OgasTV live broadcast"
-                  src={'https://www.youtube-nocookie.com/embed/'+youtubeId}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                />
-                <span className="ogas-live-page__youtube-badge">LIVE</span>
-              </div>:
-              <div className="live-placeholder ogas-live-page__offline">
-                <span className="ogas-live-page__offline-symbol" aria-hidden="true">◉</span>
-                <h2>Off air for now.</h2>
-                <p>Our next broadcast will appear here when we go live.</p>
-              </div>}
-        </div>
-        {live&&<div className="ogas-live-page__details">
-          <span className="ogas-live-page__status"><span aria-hidden="true"/> Live now</span>
-          <h2>{live.title}</h2>
-          {live.description&&<p>{live.description}</p>}
-        </div>}
+        {live&&live.sourceType!=='youtube'?
+          <LiveBroadcastStage eventId={Number(live.id)} title={String(live.title||'Live coverage')}
+            description={typeof live.description==='string'?live.description:null}/>:
+          <>
+            <div className="live-player ogas-live-page__player">
+              {youtubeId?
+                <div className="ogas-live-page__youtube">
+                  <iframe title="OgasTV live broadcast"
+                    src={'https://www.youtube-nocookie.com/embed/'+youtubeId}
+                    allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen/>
+                  <span className="ogas-live-page__youtube-badge">LIVE</span>
+                </div>:
+                <div className="live-placeholder ogas-live-page__offline">
+                  <span className="ogas-live-page__offline-symbol" aria-hidden="true">◉</span>
+                  <h2>Off air for now.</h2>
+                  <p>Our next broadcast will appear here when we go live.</p>
+                </div>}
+            </div>
+            {live&&<div className="ogas-live-page__details">
+              <span className="ogas-live-page__status"><span aria-hidden="true"/> Live now</span>
+              <h2>{live.title}</h2>
+              {live.description&&<p>{live.description}</p>}
+            </div>}
+          </>}
       </section>
     </div>
   );
