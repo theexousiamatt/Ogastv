@@ -257,6 +257,17 @@
 .historyItem:hover { background: #fafbf9; border-color: #cbd7c9; }
 .historyTitle { display: block; font-size: 14px; font-weight: 680; line-height: 1.35; overflow-wrap: anywhere; }
 .historyDate { display:block; font-size: 11px; color: #859087; margin-top: 4px; }
+.historyTimeline {
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  margin-top:5px;
+  color:#707b73;
+  font-size:11px;
+  line-height:1.45;
+}
+.historyTimeline time { font-variant-numeric:tabular-nums; }
+
 .historyStatus {
   font-size: 10px;
   font-weight: 770;
