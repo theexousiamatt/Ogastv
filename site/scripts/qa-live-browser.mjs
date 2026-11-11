@@ -77,6 +77,17 @@ try {
             await menu.locator('summary').click();
             const open=await menu.evaluate(el=>el.hasAttribute('open'));
             if(!open)issues.push(name+': mobile category menu fails to open');
+            else {
+              // Same-route clicks must close too: the persistent header is not remounted.
+              await menu.locator('a[href="/"]').click();
+              if(await menu.evaluate(el=>el.open))
+                issues.push(name+': category menu remains open after selecting Home on Home');
+              await menu.locator('summary').click();
+              await menu.locator('a[href="/section/grassroots-voices"]').click();
+              await page.waitForURL(url=>url.pathname==='/section/grassroots-voices',{timeout:15000});
+              if(await menu.evaluate(el=>el.open))
+                issues.push(name+': category menu remains open after route navigation');
+            }
           } else issues.push(name+': no mobile category menu found');
         }
       } catch (error) {
