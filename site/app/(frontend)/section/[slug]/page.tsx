@@ -79,8 +79,13 @@ export default async function SectionPage({params,searchParams}:Props){
     </div>
     {results.stories.length?
       <div className="ogas-archive__grid">{results.stories.map(item=><StoryCard article={item} key={item.id}/>)}</div>:
-      <div className="ogas-archive__empty"><h2>No reports found for these filters.</h2><p>Try another council or browse all {title.toLowerCase()} coverage.</p>
-        <Link href={'/section/'+encodeURIComponent(slug)}>Clear filters <ArrowRight size={15}/></Link></div>}
+      <div className="ogas-archive__empty">
+        <h2>{q||location?'No reports match your filters.':'No '+title.toLowerCase()+' stories published yet.'}</h2>
+        <p>{q||location?'Try changing your search or selected location.':'Articles will appear here after the newsroom publishes them under this editorial category.'}</p>
+        <Link href={q||location?'/section/'+encodeURIComponent(slug):'/latest'}>
+          {q||location?'Clear filters':'Browse latest stories'} <ArrowRight size={15}/>
+        </Link>
+      </div>}
     {results.totalPages>1&&<nav className="ogas-archive__pagination" aria-label="Archive pages">
       {results.page>1?<Link href={nextPage(results.page-1)}>← Previous</Link>:<span/>}
       <span>Page {results.page} of {results.totalPages}</span>
