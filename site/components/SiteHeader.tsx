@@ -35,13 +35,18 @@ export function SiteHeader(){
         <Link href="/studio" className="ogas-user-link" aria-label="Open staff newsroom"><UserRound size={18}/></Link>
       </div>
     </div>
-    <nav className="ogas-public-nav ogas-public-nav--sections" aria-label="News categories">
-      {navigation.map(item=><Link key={item.href} href={item.href}
-        aria-current={active(item.href)?'page':undefined}
-        className={[active(item.href)?'ogas-public-nav__active':'',item.href==='/live'?'ogas-live-nav':''].filter(Boolean).join(' ')}>
-        {item.title}{item.href==='/live'&&<span className="ogas-live-dot" aria-hidden="true"/>}
-      </Link>)}
-    </nav>
+    <div className="ogas-public-navigation-row">
+      <nav className="ogas-public-nav ogas-public-nav--sections" aria-label="News categories">
+        {navigation.filter(item=>item.href!=='/live').map(item=><Link key={item.href} href={item.href}
+          aria-current={active(item.href)?'page':undefined}
+          className={active(item.href)?'ogas-public-nav__active':''}>
+          {item.title}
+        </Link>)}
+      </nav>
+      <Link href="/live" className="ogas-live-shortcut" aria-current={active('/live')?'page':undefined}>
+        <span className="ogas-live-dot" aria-hidden="true"/> Live
+      </Link>
+    </div>
     <nav className="ogas-public-mobile-navigation" aria-label="Mobile news navigation">
       <Link href="/latest" aria-current={active('/latest')?'page':undefined}>Latest</Link>
       <Link href="/section/lagos-watch" aria-current={active('/section/lagos-watch')?'page':undefined}>Lagos Watch</Link>
