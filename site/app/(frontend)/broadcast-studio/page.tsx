@@ -33,7 +33,15 @@ export default async function BroadcastStudio() {
       <p className={styles.historyHelper}>Start a new broadcast above, or choose an existing event below. Older events remain available for reference.</p>
       <div className={styles.historyList}>
         {events.docs.map(event=>{
-          const status=studioBroadcastStatus(event,now);
+          // Payload's generic JsonObject does not expose optional collection fields in TS.
+          const status=studioBroadcastStatus({
+            broadcastStatus:typeof event.broadcastStatus==='string'?event.broadcastStatus:null,
+            sourceType:typeof event.sourceType==='string'?event.sourceType:null,
+            publisherSessionId:typeof event.publisherSessionId==='string'?event.publisherSessionId:null,
+            actualStart:typeof event.actualStart==='string'?event.actualStart:null,
+            actualEnd:typeof event.actualEnd==='string'?event.actualEnd:null,
+            updatedAt:typeof event.updatedAt==='string'?event.updatedAt:null,
+          },now);
           const timestamp=event.actualStart||event.scheduledStart||event.updatedAt;
           const date=timestamp?new Date(timestamp):null;
           return <a key={event.id} href={'/broadcast-studio/'+event.id} className={styles.historyItem}>
