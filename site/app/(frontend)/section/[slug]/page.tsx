@@ -41,6 +41,7 @@ export default async function SectionPage({params,searchParams}:Props){
   const results=await searchPublicArticles({query:q,category:slug,location,sort,page,limit:24});
   const nextPage=(num:number)=>href(slug,{q,location,sort:sort==='oldest'?'oldest':'',page:String(num)});
   const isLocal=archiveCategoryAliases('lagos-watch').includes(slug);
+  const hasFilters=Boolean(q||location||sort==='oldest'||page>1);
   return <div className="ogas-archive">
     <nav aria-label="Breadcrumb" className="ogas-archive__breadcrumb">
       <Link href="/">Home</Link><span aria-hidden="true">/</span><Link href="/latest">News</Link><span aria-hidden="true">/</span><span aria-current="page">{title}</span>
@@ -79,8 +80,14 @@ export default async function SectionPage({params,searchParams}:Props){
     </div>
     {results.stories.length?
       <div className="ogas-archive__grid">{results.stories.map(item=><StoryCard article={item} key={item.id}/>)}</div>:
-      <div className="ogas-archive__empty"><h2>No reports found for these filters.</h2><p>Try another council or browse all {title.toLowerCase()} coverage.</p>
-        <Link href={'/section/'+encodeURIComponent(slug)}>Clear filters <ArrowRight size={15}/></Link></div>}
+      <div className="ogas-archive__empty">
+        <h2>{hasFilters?'No stories match those filters.':'No published stories in '+title+' yet.'}</h2>
+        <p>{hasFilters?'Try adjusting your search or browsing the complete section.':
+          'This section is available, but our editors have not published coverage here yet.'}</p>
+        <Link href={hasFilters?'/section/'+encodeURIComponent(slug):'/latest'}>
+          {hasFilters?'Clear filters':'Browse latest stories'} <ArrowRight size={15}/>
+        </Link>
+      </div>}
     {results.totalPages>1&&<nav className="ogas-archive__pagination" aria-label="Archive pages">
       {results.page>1?<Link href={nextPage(results.page-1)}>← Previous</Link>:<span/>}
       <span>Page {results.page} of {results.totalPages}</span>
