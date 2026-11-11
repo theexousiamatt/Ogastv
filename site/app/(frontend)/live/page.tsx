@@ -14,7 +14,16 @@ export default async function LivePage() {
     where:{and:[{_status:{equals:'published'}},{broadcastStatus:{equals:'live'}}]},
   });
   const youtubeFallback=process.env.NEXT_PUBLIC_OGASTV_LIVE_YOUTUBE_ID||'';
-  const live=events.docs[0];
+  // A browser tab closed without pressing End can leave a published event marked
+  // live in Payload. Never advertise an orphaned SFU session indefinitely.
+  // Twenty-four hours is a conservative failsafe, not a heartbeat replacement.
+  const now=Date.now();
+  const live=events.docs.find(event=>{
+    if(event.sourceType==='youtube')return /^[A-Za-z0-9_-]{11}$/.test(event.youtubeVideoId||'');
+    if(event.sourceType!=='cloudflare'||!event.publisherSessionId)return false;
+    const started=Date.parse(event.actualStart||event.updatedAt||'');
+    return Number.isFinite(started)&&started<=now&&now-started<24*60*60*1000;
+  });
   const youtube=live?.sourceType==='youtube'?live.youtubeVideoId:!live?youtubeFallback:'';
   const youtubeId=typeof youtube==='string'&&/^[\\w-]{11}$/.test(youtube)?youtube:'';
   const isOnAir=Boolean(live||youtubeId);

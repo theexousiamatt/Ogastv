@@ -1,4 +1,8 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, Search, UserRound, Radio } from 'lucide-react';
 import { homepageCategoryDefinitions } from '@/lib/editorial-sections';
 
@@ -11,6 +15,11 @@ const navigation=[
 ];
 
 export function SiteHeader(){
+  const pathname=usePathname();
+  const mobileMenu=useRef<HTMLDetailsElement>(null);
+  useEffect(()=>{if(mobileMenu.current)mobileMenu.current.open=false},[pathname]);
+  const active=(href:string)=>pathname===href || (href!=='/'&&pathname.startsWith(href+'/'));
+  const closeMenu=()=>{if(mobileMenu.current)mobileMenu.current.open=false};
   return <header className="ogas-public-header">
     <div className="ogas-public-header__inner">
       <Link href="/" className="ogas-public-brand" aria-label="OgasTV Nigeria home">
@@ -26,21 +35,28 @@ export function SiteHeader(){
         <Link href="/studio" className="ogas-user-link" aria-label="Open staff newsroom"><UserRound size={18}/></Link>
       </div>
     </div>
-    <nav className="ogas-public-nav ogas-public-nav--sections" aria-label="News categories">
-      {navigation.map(item=><Link key={item.href} href={item.href}
-        className={item.href==='/'?'ogas-public-nav__active':item.href==='/live'?'ogas-live-nav':''}>
-        {item.title}{item.href==='/live'&&<span className="ogas-live-dot" aria-hidden="true"/>}
-      </Link>)}
-    </nav>
+    <div className="ogas-public-navigation-row">
+      <nav className="ogas-public-nav ogas-public-nav--sections" aria-label="News categories">
+        {navigation.filter(item=>item.href!=='/live').map(item=><Link key={item.href} href={item.href}
+          aria-current={active(item.href)?'page':undefined}
+          className={active(item.href)?'ogas-public-nav__active':''}>
+          {item.title}
+        </Link>)}
+      </nav>
+      <Link href="/live" className="ogas-live-shortcut" aria-current={active('/live')?'page':undefined}>
+        <span className="ogas-live-dot" aria-hidden="true"/> Live
+      </Link>
+    </div>
     <nav className="ogas-public-mobile-navigation" aria-label="Mobile news navigation">
-      <Link href="/latest">Latest</Link>
-      <Link href="/section/lagos-watch">Lagos Watch</Link>
-      <Link href="/live" className="ogas-public-mobile-navigation__live"><Radio size={14}/> Live</Link>
-      <details className="ogas-public-mobile-menu">
+      <Link href="/latest" aria-current={active('/latest')?'page':undefined}>Latest</Link>
+      <Link href="/section/lagos-watch" aria-current={active('/section/lagos-watch')?'page':undefined}>Lagos Watch</Link>
+      <Link href="/live" aria-current={active('/live')?'page':undefined} className="ogas-public-mobile-navigation__live"><Radio size={14}/> Live</Link>
+      <details className="ogas-public-mobile-menu" ref={mobileMenu} onKeyDown={event=>{if(event.key==='Escape')closeMenu()}}>
         <summary><Menu size={17} aria-hidden="true"/> Categories</summary>
         <div className="ogas-public-mobile-menu__panel">
           <span>EXPLORE OGASTV NIGERIA</span>
-          {navigation.map(item=><Link key={item.href} href={item.href}>{item.title}</Link>)}
+          {navigation.map(item=><Link key={item.href} href={item.href} onClick={closeMenu}
+            aria-current={active(item.href)?'page':undefined}>{item.title}</Link>)}
         </div>
       </details>
     </nav>

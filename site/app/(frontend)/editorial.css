@@ -278,6 +278,24 @@ body button,body input{font:inherit}
   .ogas-public-header .ogas-public-nav--sections{padding:0 15px 12px}
 }
 
+/* Keep Live visible and clickable even when the editorial categories overflow on laptops. */
+.ogas-public-navigation-row{display:flex;align-items:center;gap:9px;padding:0 clamp(21px,3vw,49px) 12px;min-width:0}
+.ogas-public-header .ogas-public-navigation-row .ogas-public-nav--sections{
+  flex:1 1 auto;min-width:0;width:auto;margin:0;padding:0;overflow-x:auto;
+}
+.ogas-public-header .ogas-live-shortcut{
+  display:inline-flex;align-items:center;gap:7px;flex:none;
+  padding:9px 13px;text-decoration:none;border-radius:99px;
+  color:var(--ogas-red);background:#fff5f2;font-weight:800;font-size:12px;
+  border:1px solid #f4dad7;
+}
+.ogas-public-header .ogas-live-shortcut:hover,.ogas-public-header .ogas-live-shortcut[aria-current="page"]{
+  color:#fff;background:var(--ogas-red);border-color:var(--ogas-red);
+}
+.ogas-public-header .ogas-live-shortcut[aria-current="page"] .ogas-live-dot{background:#fff}
+@media(max-width:900px){.ogas-public-navigation-row{padding:0 16px 12px;}}
+@media(max-width:800px){.ogas-public-navigation-row{display:none}}
+
 /* Approved transparent artwork. No icon/text recreation or background fill. */
 .ogas-public-header .ogas-public-brand{display:inline-flex;align-items:center;min-width:0;flex-shrink:0;padding:0;}
 .ogas-public-brand__logo{display:block;width:195px;height:auto;max-height:65px;object-fit:contain;object-position:left center;}
@@ -335,6 +353,8 @@ body button,body input{font:inherit}
   .ogas-public-mobile-navigation{display:flex;align-items:center;gap:8px;padding:0 16px 13px;position:relative;white-space:nowrap}
   .ogas-public-mobile-navigation>a{color:#555c52;text-decoration:none;font-size:12px;font-weight:750;padding:9px 11px;border-radius:8px;background:#f5f6f2}
   .ogas-public-mobile-navigation>a:hover{background:#e9ede5}
+  .ogas-public-mobile-navigation>a[aria-current="page"]{background:#e9eee5;color:#2f4d36;box-shadow:inset 0 0 0 1px #cbd8c5}
+  .ogas-public-mobile-navigation>a.ogas-public-mobile-navigation__live[aria-current="page"]{background:#fff0ee;color:#9b2826;box-shadow:inset 0 0 0 1px #f0c9c6}
   .ogas-public-mobile-navigation__live{display:inline-flex;align-items:center;gap:6px}
   .ogas-public-mobile-menu{position:relative;margin-left:auto;z-index:50}
   .ogas-public-mobile-menu>summary{display:flex;align-items:center;gap:7px;padding:9px 11px;border:1px solid #e3e7df;border-radius:8px;cursor:pointer;color:#303931;font-size:12px;font-weight:800;list-style:none}
@@ -344,6 +364,7 @@ body button,body input{font:inherit}
   .ogas-public-mobile-menu__panel>span{font-size:10px;letter-spacing:.12em;color:#8e938a;font-weight:850;margin:4px 8px 10px}
   .ogas-public-mobile-menu__panel a{font-size:13px;padding:11px 10px;text-decoration:none;font-weight:700;color:#353d32;white-space:normal;border-radius:7px}
   .ogas-public-mobile-menu__panel a:hover,.ogas-public-mobile-menu__panel a:focus-visible{background:#f4f6f1}
+  .ogas-public-mobile-menu__panel a[aria-current="page"]{background:#f1f4ed;color:#2c4930}
 }
 @media(max-width:650px){
   .ogas-public-header__inner{gap:8px}
