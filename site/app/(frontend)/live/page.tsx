@@ -16,7 +16,7 @@ export default async function LivePage() {
   const youtubeFallback=process.env.NEXT_PUBLIC_OGASTV_LIVE_YOUTUBE_ID||'';
   const live=events.docs[0];
   const youtube=live?.sourceType==='youtube'?live.youtubeVideoId:!live?youtubeFallback:'';
-  const youtubeId=typeof youtube==='string'&&/^[\\w-]{11}$/.test(youtube)?youtube:'';
+  const youtubeId=typeof youtube==='string'&&/^[A-Za-z0-9_-]{11}$/.test(youtube)?youtube:'';
   const isOnAir=Boolean(live||youtubeId);
 
   return (
@@ -50,7 +50,7 @@ export default async function LivePage() {
               </div>}
         </div>
         {live&&<div className="ogas-live-page__details">
-          <span className="ogas-live-page__status"><span aria-hidden="true"/> Live now</span>
+          <span className="ogas-live-page__status"><span aria-hidden="true"/> Broadcast coverage</span>
           <h2>{live.title}</h2>
           {live.description&&<p>{live.description}</p>}
         </div>}
