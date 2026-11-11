@@ -1,4 +1,8 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, Search, UserRound, Radio } from 'lucide-react';
 import { homepageCategoryDefinitions } from '@/lib/editorial-sections';
 
@@ -11,6 +15,16 @@ const navigation=[
 ];
 
 export function SiteHeader(){
+  const pathname=usePathname();
+  const mobileMenu=useRef<HTMLDetailsElement>(null);
+
+  // The persistent header survives client-side navigation in Next.js.
+  // Reset native <details> when a route changes, including Back/Forward.
+  useEffect(()=>{if(mobileMenu.current)mobileMenu.current.open=false},[pathname]);
+
+  // Also close synchronously for same-page links (which do not change pathname).
+  const closeMobileMenu=()=>{if(mobileMenu.current)mobileMenu.current.open=false};
+
   return <header className="ogas-public-header">
     <div className="ogas-public-header__inner">
       <Link href="/" className="ogas-public-brand" aria-label="OgasTV Nigeria home">
@@ -36,11 +50,11 @@ export function SiteHeader(){
       <Link href="/latest">Latest</Link>
       <Link href="/section/lagos-watch">Lagos Watch</Link>
       <Link href="/live" className="ogas-public-mobile-navigation__live"><Radio size={14}/> Live</Link>
-      <details className="ogas-public-mobile-menu">
+      <details className="ogas-public-mobile-menu" ref={mobileMenu} onKeyDown={event=>{if(event.key==="Escape")closeMobileMenu()}}>
         <summary><Menu size={17} aria-hidden="true"/> Categories</summary>
         <div className="ogas-public-mobile-menu__panel">
           <span>EXPLORE OGASTV NIGERIA</span>
-          {navigation.map(item=><Link key={item.href} href={item.href}>{item.title}</Link>)}
+          {navigation.map(item=><Link key={item.href} href={item.href} onClick={closeMobileMenu}>{item.title}</Link>)}
         </div>
       </details>
     </nav>
