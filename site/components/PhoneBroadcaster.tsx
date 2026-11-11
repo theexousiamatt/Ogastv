@@ -246,7 +246,7 @@ export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:stri
           ? 'Recommended for mobile data · 30 FPS'
           : 'Best on strong Wi-Fi · 30 FPS. Actual resolution depends on your phone.'}
       </span>
-    </div>
+    </div>}
     {(status==='preview'||status==='connecting'||status==='live')&&
       <p className={styles.captureNote}>{streamProfiles[streamProfile].label} · Camera: {capture}</p>}
     {!eventId&&status!=='live'&&status!=='ended'&&<label className={styles.titleField}>Broadcast title
