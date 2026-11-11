@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Camera, Mic, MicOff, Radio, RotateCcw, Square } from 'lucide-react';
 import { formatBroadcastDiagnostics, measureBroadcastQuality } from './broadcastQuality';
 import type { BroadcastQuality, BroadcastStat, OutboundSnapshot } from './broadcastQuality';
+import styles from './PhoneBroadcaster.module.css';
 
 async function signal(eventId:number|undefined,body:object) {
   const response=await fetch('/api/ogas-live',{method:'POST',credentials:'same-origin',
@@ -121,7 +122,22 @@ export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:stri
     const ticker=setInterval(()=>void poll(),3000);
     return ()=>{active=false;clearInterval(ticker)};
   },[status]);
-  useEffect(()=>()=>{connection.current?.close();media.current?.getTracks().forEach(t=>t.stop())},[]);
+  useEffect(()=>{
+    // A phone tab can close without the operator pressing End.
+    // Best-effort final signal prevents orphaned LIVE records on normal navigation.
+    const stopOnExit=()=>{
+      if(!session.current || !activeEventId.current) return;
+      const payload=JSON.stringify({eventId:activeEventId.current,action:'stop',sessionId:session.current});
+      navigator.sendBeacon?.('/api/ogas-live',new Blob([payload],{type:'application/json'}));
+    };
+    window.addEventListener('pagehide',stopOnExit);
+    return ()=>{
+      window.removeEventListener('pagehide',stopOnExit);
+      stopOnExit();
+      connection.current?.close();
+      media.current?.getTracks().forEach(t=>t.stop());
+    };
+  },[]);
   async function copyDiagnostics(){
     if(!quality) return;
     try {
@@ -206,43 +222,63 @@ export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:stri
       connection.current?.close();connection.current=null;
       media.current?.getTracks().forEach(t=>t.stop());media.current=null;
       if(video.current) video.current.srcObject=null;
-      session.current='';setQuality(null);setStatus('ended');
+      session.current='';
+      if(!eventId) activeEventId.current=undefined;
+      setQuality(null);setStatus('ended');
     }
   }
   const live=status==='live';
-  return <section style={{maxWidth:800,margin:'32px auto 70px',padding:'0 18px',fontFamily:'system-ui'}}>
-    <a href="/broadcast-studio" style={{color:'#8e2027'}}>← Broadcast studio</a>
-    <h1 style={{fontSize:'clamp(28px,5vw,44px)',letterSpacing:'-.05em',margin:'22px 0 5px'}}>{eventId?title:'Go live'}</h1>
-    <p style={{color:'#646967',marginBottom:22}}>Your camera, your story. Viewers watch directly on OgasTV.</p>
-    {(status==='idle'||status==='ended')&&<label style={{display:'block',fontSize:13,fontWeight:700,marginBottom:18}}>
-      Stream quality
-      <select value={streamProfile} onChange={e=>setStreamProfile(e.target.value as StreamProfile)}
-        style={{display:'block',width:'100%',padding:'12px 14px',marginTop:7,fontSize:15,borderRadius:10,border:'1px solid #d7ddd8',background:'#fff',color:'#222'}}>
-        <option value="hd">HD · 720p — recommended for mobile data</option>
-        <option value="fullhd">Full HD · 1080p — for strong Wi-Fi</option>
+  return <section className={styles.studio}>
+    {eventId&&<a href="/broadcast-studio" className={styles.backLink}>← Broadcast studio</a>}
+    <h1 className={styles.title}>{eventId?title:'Go live'}</h1>
+    <p className={styles.intro}>Your camera, your story. Viewers watch directly on OgasTV.</p>
+    {(status==='idle'||status==='ended')&&<div className={styles.settingPanel}>
+      <label className={styles.settingLabel} htmlFor="ogas-stream-quality">
+        Stream quality
+      </label>
+      <select id="ogas-stream-quality" className={styles.settingSelect}
+        value={streamProfile} onChange={e=>setStreamProfile(e.target.value as StreamProfile)}>
+        <option value="hd">HD · 720p</option>
+        <option value="fullhd">Full HD · 1080p</option>
       </select>
-      <span style={{fontWeight:400,fontSize:12,color:'#68716b',display:'block',marginTop:7}}>
-        Full HD requires a capable phone, good lighting and stable upload. Actual camera resolution may be lower.
+      <span className={styles.settingHelp}>
+        {streamProfile==='hd'
+          ? 'Recommended for mobile data · 30 FPS'
+          : 'Best on strong Wi-Fi · 30 FPS. Actual resolution depends on your phone.'}
       </span>
-    </label>}
-    {(status==='preview'||status==='connecting'||status==='live')&&
-      <p style={{fontSize:12,color:'#5a6560',margin:'-6px 0 16px'}}>Selected: {streamProfiles[streamProfile].label} · Camera: {capture}</p>}
-    {!eventId&&status!=='live'&&status!=='ended'&&<label style={{display:'block',fontWeight:650,marginBottom:16}}>Broadcast title
-      <input value={quickTitle} onChange={e=>setQuickTitle(e.target.value)} maxLength={120} placeholder="What are you covering?" required
-        style={{display:'block',width:'100%',boxSizing:'border-box',fontSize:16,padding:'14px 16px',marginTop:7,border:'1px solid #dadbd8',borderRadius:12,background:'white'}}/>
-    </label>}
-    <div style={{position:'relative',aspectRatio:'9/13',maxHeight:'68vh',borderRadius:22,background:'#12191b',overflow:'hidden',margin:'0 auto',display:'grid',placeItems:'center'}}>
-      <video ref={video} muted autoPlay playsInline style={{width:'100%',height:'100%',objectFit:'cover',transform:front?'scaleX(-1)':'none'}}/>
-      {status==='idle'||status==='ended'?<div style={{position:'absolute',color:'#fff',textAlign:'center'}}><Camera size={36}/><p>Camera preview is off</p></div>:null}
-      {live&&<span style={{position:'absolute',top:18,left:18,background:'#b22127',color:'white',padding:'8px 14px',borderRadius:99,fontSize:12,fontWeight:800}}>● LIVE · {Math.floor(seconds/60).toString().padStart(2,'0')}:{(seconds%60).toString().padStart(2,'0')}</span>}
     </div>
-    <div style={{display:'flex',gap:10,marginTop:20,justifyContent:'center',flexWrap:'wrap'}}>
-      {status==='idle'||status==='ended'?<button onClick={()=>preview(front?'user':'environment')} style={primary}><Camera size={18}/> Enable camera</button>:null}
-      {status==='preview'&&<><button onClick={switchCamera} style={secondary}><RotateCcw size={18}/> Switch camera</button><button onClick={toggleMic} style={secondary}>{muted?<MicOff size={18}/>:<Mic size={18}/>} {muted?'Unmute':'Mute'}</button><button onClick={goLive} disabled={!eventId&&quickTitle.trim().length<3} style={{...primary,opacity:!eventId&&quickTitle.trim().length<3?0.5:1}}><Radio size={18}/> Go live</button></>}
-      {live&&<><button onClick={toggleMic} style={secondary}>{muted?<MicOff size={18}/>:<Mic size={18}/>} {muted?'Unmute':'Mute'}</button><button onClick={end} style={primary}><Square size={17}/> End broadcast</button></>}
+    {(status==='preview'||status==='connecting'||status==='live')&&
+      <p className={styles.captureNote}>{streamProfiles[streamProfile].label} · Camera: {capture}</p>}
+    {!eventId&&status!=='live'&&status!=='ended'&&<label className={styles.titleField}>Broadcast title
+      <input className={styles.textInput} value={quickTitle} onChange={e=>setQuickTitle(e.target.value)} maxLength={120}
+        placeholder="What are you covering?" required/>
+    </label>}
+    <div className={styles.videoFrame}>
+      <video ref={video} muted autoPlay playsInline className={styles.cameraVideo}
+        style={{transform:front?'scaleX(-1)':'none'}}/>
+      {(status==='idle'||status==='ended')&&<div className={styles.cameraOff}>
+        <span className={styles.cameraIcon}><Camera size={27}/></span>
+        <span className={styles.cameraOffTitle}>Camera is off</span>
+        <p className={styles.cameraOffHint}>Preview your camera before you start broadcasting.</p>
+        <button type="button" className={styles.enableButton} onClick={()=>preview(front?'user':'environment')}>
+          <Camera size={16}/> Enable camera
+        </button>
+      </div>}
+      {live&&<span className={styles.cameraLive}>● LIVE · {Math.floor(seconds/60).toString().padStart(2,'0')}:{(seconds%60).toString().padStart(2,'0')}</span>}
+    </div>
+    <div className={styles.controls}>
+      {status==='preview'&&<>
+        <button type="button" onClick={switchCamera} className={styles.secondaryButton}><RotateCcw size={17}/> Switch camera</button>
+        <button type="button" onClick={toggleMic} className={styles.secondaryButton}>{muted?<MicOff size={17}/>:<Mic size={17}/>} {muted?'Unmute':'Mute'}</button>
+        <button type="button" onClick={goLive} disabled={!eventId&&quickTitle.trim().length<3} className={styles.primaryButton}><Radio size={17}/> Go live</button>
+      </>}
+      {live&&<>
+        <button type="button" onClick={toggleMic} className={styles.secondaryButton}>{muted?<MicOff size={17}/>:<Mic size={17}/>} {muted?'Unmute':'Mute'}</button>
+        <button type="button" onClick={end} className={styles.primaryButton}><Square size={17}/> End broadcast</button>
+      </>}
       {status==='connecting'&&<span role="status" style={{padding:12}}>Connecting to Cloudflare…</span>}
     </div>
-    {live&&<div aria-label="Live stream quality" style={{marginTop:18,padding:18,border:'1px solid #ddd',borderRadius:16,background:'#fafafa'}}>
+    {live&&<div aria-label="Live stream quality" className={styles.healthPanel}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>
         <strong style={{fontSize:15}}>Stream health</strong>
         <span role="status" aria-live="polite" style={{fontSize:13,fontWeight:700,color:quality?.level==='poor'?'#b4232c':quality?.level==='fair'?'#865300':'#376445'}}>
@@ -259,15 +295,13 @@ export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:stri
       <p style={{fontSize:12,color:'#626666',margin:'12px 0'}}>
         Camera: {capture}. {quality?.limitation==='bandwidth'?'Network bandwidth is limiting picture quality.':quality?.limitation==='cpu'?'Phone processing is limiting picture quality.':quality?.level==='poor'?'Try a stronger connection or stop moving until the signal recovers.':'Move the camera slowly and keep a steady connection.'}
       </p>
-      <button onClick={()=>void copyDiagnostics()} disabled={!quality} style={{...secondary,padding:'9px 12px',fontSize:12}}>
+      <button type="button" className={styles.secondaryButton} onClick={()=>void copyDiagnostics()} disabled={!quality} style={{padding:'9px 12px',fontSize:12}}>
         {copied?'Diagnostics copied':'Copy stream diagnostics'}
       </button>
       <p style={{fontSize:11,color:'#777',margin:'8px 0 0'}}>These are encoder and network indicators, not an assessment of focus or lighting. Measurements may be unavailable in some browsers. Sent video is not an upload-speed test.</p>
     </div>}
     {error&&<p role="alert" style={{padding:14,color:'#a21d24',background:'#fff1f1',borderRadius:12,marginTop:15}}>{error}</p>}
-    {live&&<p style={{textAlign:'center',marginTop:12}}><a href="/live" target="_blank" rel="noopener noreferrer" style={{color:'#a52227',fontWeight:700}}>View public live page ↗</a></p>}
-    <p style={{fontSize:12,color:'#777',textAlign:'center',marginTop:15}}>Keep this tab open during your broadcast. You'll need a stable connection.</p>
+    {live&&<p className={styles.liveLink}><a href="/live" target="_blank" rel="noopener noreferrer">View public live page ↗</a></p>}
+    <p className={styles.footerNote}>Keep this tab open during your broadcast. A stable connection gives your viewers a better picture.</p>
   </section>;
 }
-const primary:React.CSSProperties={background:'#a52227',color:'white',border:0,borderRadius:99,padding:'12px 19px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:8,cursor:'pointer'};
-const secondary:React.CSSProperties={background:'white',color:'#292b2a',border:'1px solid #ddd',borderRadius:99,padding:'12px 17px',fontWeight:700,display:'inline-flex',alignItems:'center',gap:8,cursor:'pointer'};
