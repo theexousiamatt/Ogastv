@@ -23,7 +23,16 @@ export async function GET(req: NextRequest) {
     const event = await cms.findByID({
       collection:'live-events',id,overrideAccess:true,depth:0,draft:false,
     }).catch(()=>null);
-    return respond(publicBroadcastState(event));
+    // Payload's generic JSON record has no statically declared event fields.
+    // Expose only the explicit public values, never the full CMS document.
+    return respond(publicBroadcastState(event?{
+      _status:typeof event._status==='string'?event._status:null,
+      sourceType:typeof event.sourceType==='string'?event.sourceType:null,
+      broadcastStatus:typeof event.broadcastStatus==='string'?event.broadcastStatus:null,
+      publisherSessionId:typeof event.publisherSessionId==='string'?event.publisherSessionId:null,
+      actualStart:typeof event.actualStart==='string'?event.actualStart:null,
+      actualEnd:typeof event.actualEnd==='string'?event.actualEnd:null,
+    }:null));
   } catch {
     return respond({error:'Unable to retrieve broadcast status'},503);
   }
