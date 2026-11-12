@@ -59,10 +59,9 @@ export function BroadcastSourceSelector({activeEvent}:{activeEvent?:ActiveEvent|
         </div>
         <div className={styles.activeNoticeActions}>
           {activeYouTube?
-            <button type="button" className={styles.activeNoticeAction}
-              onClick={()=>setSource('youtube')}>
+            <a className={styles.activeNoticeAction} href={'/broadcast-studio/'+activeEvent.id}>
               Manage YouTube event <ArrowUpRight size={15} aria-hidden="true"/>
-            </button>:
+            </a>:
             <a className={styles.activeNoticeAction} href="/studio/manage">
               Review event status <ArrowUpRight size={15} aria-hidden="true"/>
             </a>}
