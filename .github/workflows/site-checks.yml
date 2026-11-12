@@ -2,12 +2,14 @@ name: OgasTV application checks
 permissions:
   contents: write
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - 'site/**'
       - '.github/workflows/site-checks.yml'
   push:
-    branches: [main]
+    # Hostinger deploys from this feature branch, not the repository's older main.
+    branches: [main, feat/ogastv-reference-ui-2026-11-05]
     paths:
       - 'site/**'
       - '.github/workflows/site-checks.yml'
@@ -47,6 +49,8 @@ jobs:
           node-version: '24'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Verify official OgasTV Nigeria branding
+        run: npm run check:branding
       - name: Prepare isolated OgasTV schema
         env:
           PGPASSWORD: temporary-ci-db-password
@@ -56,11 +60,23 @@ jobs:
           # The real invitation is never present in CI or the repository.
           ci_token='ci-disposable-invite-only-never-deployed-2026-nov'
           digest=$(printf '%s' "$ci_token" | sha256sum | cut -d' ' -f1)
-          sed -i "s/eac379f779b3c82d8db42177fff01edd5fb70b8648c2b2b1521680230c76ef7d/$digest/" cms/first-admin-invite.ts
+          sed -i -E "s/const INVITE_TOKEN_DIGEST = '[0-9a-f]{64}';/const INVITE_TOKEN_DIGEST = '$digest';/" cms/first-admin-invite.ts
+          grep -Fq "const INVITE_TOKEN_DIGEST = '$digest';" cms/first-admin-invite.ts
+      - name: Test broadcast quality diagnostics
+        run: node --experimental-strip-types --test scripts/broadcast-quality.test.mjs
+      - name: Test canonical broadcast status classification
+        run: node --experimental-strip-types --test scripts/broadcast-status.test.mjs
+      - name: Validate YouTube Live URLs
+        run: node --experimental-strip-types --test scripts/youtube-live.test.mjs
+      - name: Test broadcast-end notifications and public status
+        run: node --experimental-strip-types --test scripts/public-broadcast-state.test.mjs
+      - name: Test broadcast timestamps and durations
+        run: node --experimental-strip-types --test scripts/broadcast-timeline.test.mjs
       - name: Typecheck
         run: npm run typecheck
       - name: Production build with disposable database
-        run: npm run build
+        # Match Hostinger's configured npm run build:production command.
+        run: npm run build:production
 
       - name: Generate initial Payload migrations against disposable database
         run: |
@@ -71,10 +87,27 @@ jobs:
           fi
       - name: Apply existing migrations to disposable PostgreSQL
         run: npm run cms:migrate
-      - name: Generate verification-field upgrade migration
-        run: npm run cms:migrate:create -- ogastv_auth_verification --skip-empty
-      - name: Apply verification upgrade migration
-        run: npm run cms:migrate
+      # The committed Payload migrations are authoritative. Generating and
+      # replaying a new migration after applying them causes duplicate CREATE
+      # TYPE/TABLE statements when the prior snapshot predates new collections.
+      - name: Verify advertising schema and optional image descriptions
+        env:
+          PGPASSWORD: temporary-ci-db-password
+        run: |
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='ogastv' AND table_name='ad_banners'" | grep -qx 1
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT is_nullable FROM information_schema.columns WHERE table_schema='ogastv' AND table_name='media' AND column_name='alt'" | grep -qx YES
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM information_schema.columns WHERE table_schema='ogastv' AND table_name='payload_locked_documents_rels' AND column_name='ad_banners_id'" | grep -qx 1
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM pg_constraint WHERE conname='payload_locked_documents_rels_ad_banners_fk'" | grep -qx 1
+      - name: Verify Payload schema snapshot has no new migration drift
+        run: |
+          before=$(find migrations -maxdepth 1 -name '*.ts' | wc -l)
+          npm run cms:migrate:create -- studio_schema_drift_check --skip-empty
+          after=$(find migrations -maxdepth 1 -name '*.ts' | wc -l)
+          if [ "$after" -ne "$before" ]; then
+            echo 'The Payload collection schema is missing changes from committed migration snapshots.'
+            exit 1
+          fi
+          echo 'No unrecorded Payload schema changes found.'
       - name: Verify verification columns
         env:
           PGPASSWORD: temporary-ci-db-password
@@ -85,18 +118,14 @@ jobs:
           PGPASSWORD: temporary-ci-db-password
         run: |
           psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='ogastv' AND table_name IN ('staff_users','articles','readers','categories','live_events','community_submissions')" | grep -qx 6
-      - name: Trial import using public WordPress content in disposable PostgreSQL
-        env:
-          WORDPRESS_IMPORT_EXECUTE: 'YES'
-          WORDPRESS_IMPORT_LIMIT: '2'
-        run: npm run import:wordpress
-      - name: Verify content count, provenance and draft state
+      # The original WordPress API has been removed after the content migration.
+      # This CI job tests the current CMS against isolated data, not the retired API.
+      - name: Verify clean disposable editorial database
         env:
           PGPASSWORD: temporary-ci-db-password
         run: |
-          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.articles WHERE original_wordpress_id IS NOT NULL AND _status = 'draft'" | grep -qx 2
-          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.wordpress_pages" | grep -qx 3
-          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.wordpress_media" | grep -qx 309
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.articles" | grep -qx 0
+          psql -h localhost -U postgres -d ogastv_ci -v ON_ERROR_STOP=1 -tAc "SELECT count(*) FROM ogastv.ad_banners" | grep -qx 0
       - name: Verify standalone includes styles and browser scripts
         run: |
           test -f .next/standalone/server.js
@@ -109,15 +138,16 @@ jobs:
       - name: Smoke-test admin and anonymous authorization
         env:
           READER_SIGNUP_ENABLED: 'false'
-          PORT: '3100'
+          PORT: '3000'
           HOSTNAME: '127.0.0.1'
+          CMS_CONTENT_SOURCE: payload
         run: |
           node .next/standalone/server.js > /tmp/ogastv-smoke.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           ready=0
           for attempt in $(seq 1 45); do
-            if curl --silent --fail 'http://127.0.0.1:3100/api/categories?limit=1' > /dev/null; then
+            if curl --silent --fail 'http://127.0.0.1:3000/api/categories?limit=1' > /dev/null; then
               ready=1
               break
             fi
@@ -130,24 +160,24 @@ jobs:
           fi
           css_file=$(find .next/standalone/.next/static -type f -name '*.css' -print -quit)
           css_path="/_next/static/${css_file#*.next/standalone/.next/static/}"
-          css_response=$(curl --silent --output /tmp/ogastv-style.css --write-out '%{http_code}' "http://127.0.0.1:3100$css_path")
+          css_response=$(curl --silent --output /tmp/ogastv-style.css --write-out '%{http_code}' "http://127.0.0.1:3000$css_path")
           if [ "$css_response" != '200' ] || [ ! -s /tmp/ogastv-style.css ]; then
             echo "CSS asset is not served from standalone runtime: HTTP $css_response ($css_path)"
             exit 1
           fi
           echo 'Stylesheet available over HTTP from standalone server'
-          reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3100/api/readers')
-          staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3100/api/staff-users')
+          reader_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-reader@example.invalid","password":"not-a-real-secret","displayName":"CI test"}'             'http://127.0.0.1:3000/api/readers')
+          staff_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST -H 'Content-Type: application/json'             -d '{"email":"ci-smoke-staff@example.invalid","password":"not-a-real-secret","name":"CI test"}'             'http://127.0.0.1:3000/api/staff-users')
           activation_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
             -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
             -d '{"token":"invalid-token","password":"incorrect-but-long-test-password"}' \
-            'http://127.0.0.1:3100/api/activate-newsroom')
+            'http://127.0.0.1:3000/api/activate-newsroom')
           case "$activation_status" in 403) ;; *) echo "Invalid admin invite accepted or unexpected HTTP $activation_status"; exit 1;; esac
           echo "Invalid administrator invitation correctly rejected"
           activated=$(curl --silent --output /tmp/activate-response.json --write-out '%{http_code}' -X POST \
             -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
             -d '{"token":"ci-disposable-invite-only-never-deployed-2026-nov","password":"local-test-password-very-long-2026"}' \
-            'http://127.0.0.1:3100/api/activate-newsroom')
+            'http://127.0.0.1:3000/api/activate-newsroom')
           if [ "$activated" != '201' ]; then
             echo "Invited first-admin activation failed with HTTP $activated"
             cat /tmp/activate-response.json
@@ -156,7 +186,7 @@ jobs:
           login_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
             -H 'Content-Type: application/json' \
             -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}' \
-            'http://127.0.0.1:3100/api/staff-users/login')
+            'http://127.0.0.1:3000/api/staff-users/login')
           if [ "$login_status" != '200' ]; then
             echo "Activated administrator cannot log in, HTTP $login_status"
             exit 1
@@ -164,16 +194,53 @@ jobs:
           replay_status=$(curl --silent --output /dev/null --write-out '%{http_code}' -X POST \
             -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json' \
             -d '{"token":"ci-disposable-invite-only-never-deployed-2026-nov","password":"local-test-password-very-long-2026"}' \
-            'http://127.0.0.1:3100/api/activate-newsroom')
+            'http://127.0.0.1:3000/api/activate-newsroom')
           if [ "$replay_status" != '410' ]; then
             echo "Invitation replay not blocked, HTTP $replay_status"
             exit 1
           fi
           echo "First-admin activation, login and replay protection all passed"
+          # The public and legacy admin entry points must never expose the
+          # deprecated Payload dashboard to regular newsroom staff.
+          studio_login_status=$(curl --silent --output /tmp/ogastv-studio-login.html --write-out '%{http_code}'             'http://127.0.0.1:3000/studio/login')
+          test "$studio_login_status" = '200' || { echo "Studio login is unavailable: HTTP $studio_login_status"; exit 1; }
+          grep -q 'Sign in to Studio' /tmp/ogastv-studio-login.html || { echo 'Custom sign-in form was not rendered'; exit 1; }
+          legacy_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3000/admin')
+          case "$legacy_destination" in */studio/login) ;; *) echo "Old admin root did not end in the custom Studio login: $legacy_destination"; exit 1;; esac
+          legacy_login_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3000/admin/login')
+          case "$legacy_login_destination" in */studio/login) ;; *) echo "Old login still exposed: $legacy_login_destination"; exit 1;; esac
+          legacy_collection_destination=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' 'http://127.0.0.1:3000/admin/collections/articles')
+          case "$legacy_collection_destination" in */studio/login) ;; *) echo "Old native collection still exposed: $legacy_collection_destination"; exit 1;; esac
+          echo 'Legacy admin routes resolve only to custom Studio'
+          authenticated_json=$(curl --silent -H 'Content-Type: application/json' -X POST \
+            -d '{"email":"ops@inspirarestudio.com","password":"local-test-password-very-long-2026"}' \
+            'http://localhost:3000/api/staff-users/login')
+          session_token=$(printf '%s' "$authenticated_json" | node -e 'let raw="";process.stdin.on("data",c=>raw+=c);process.stdin.on("end",()=>{try{process.stdout.write(JSON.parse(raw).token||"")}catch{}})')
+          unset authenticated_json
+          test -n "$session_token" || { echo "Staff REST login did not issue a JWT"; exit 1; }
+          # Verify the official Payload JWT authentication path in this disposable,
+          # non-browser HTTP test; browser cookies require fetch metadata supplied
+          # by a real browser on HTTPS and are verified during live acceptance QA.
+          studio_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -H "Authorization: JWT $session_token" 'http://localhost:3000/studio')
+          test "$studio_status" = '200' || { echo "Authenticated Studio access failed: HTTP $studio_status"; exit 1; }
+          account_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -H "Authorization: JWT $session_token" 'http://localhost:3000/studio/account')
+          test "$account_status" = '200' || { echo "Studio account access failed: HTTP $account_status"; exit 1; }
+          manage_status=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -H "Authorization: JWT $session_token" 'http://localhost:3000/studio/manage')
+          test "$manage_status" = '200' || { echo "Studio management access failed: HTTP $manage_status"; exit 1; }
+          unset session_token
+                    password_recovery_status=$(curl --silent --output /dev/null --write-out '%{http_code}'             -X POST -H 'Origin: http://localhost:3000' -H 'Content-Type: application/json'             -d '{"email":"ops@inspirarestudio.com"}' 'http://localhost:3000/api/studio/forgot-password')
+          test "$password_recovery_status" = '503' || { echo "SMTP-less recovery should fail safely: HTTP $password_recovery_status"; exit 1; }
+          echo 'Staff login, authenticated Studio, management, account and safe recovery smoke tests passed'
+
           echo "Unauthenticated reader creation HTTP $reader_status; staff creation HTTP $staff_status"
           case "$reader_status" in 401|403) ;; *) echo 'Public reader creation unexpectedly allowed'; exit 1;; esac
           case "$staff_status" in 401|403) ;; *) echo 'Public staff creation unexpectedly allowed'; exit 1;; esac
           node scripts/smoke-editorial.mjs
+          node scripts/smoke-public.mjs
+          node scripts/smoke-youtube-live.mjs
       - name: Archive generated migrations for review
         uses: actions/upload-artifact@v4
         with:

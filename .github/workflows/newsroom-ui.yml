@@ -5,6 +5,7 @@ on:
     branches:
       - design/ogastv-heroui-newsroom-2026-11-05
       - ux/ogastv-writer-first-2026-11-05
+      - feat/ogastv-reference-ui-2026-11-05
   pull_request:
     paths:
       - 'site/**'
@@ -15,7 +16,8 @@ permissions:
 
 jobs:
   newsroom:
-    runs-on: ubuntu-latest
+    # Playwright 1.56.1 cannot install Chromium dependencies on Ubuntu 26.04.
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17
@@ -48,6 +50,8 @@ jobs:
           node-version: '24'
       - name: Install packages
         run: npm install --no-audit --no-fund
+      - name: Verify official OgasTV Nigeria branding
+        run: npm run check:branding
       - name: Prepare private CMS schema
         env:
           PGPASSWORD: temporary-ci-db-password
@@ -58,11 +62,42 @@ jobs:
         run: npm run typecheck
       - name: Verify real story creation and review transition
         run: npx payload run ./scripts/check-writer-first.ts
-      - name: Production build
+      - name: Production build with Supabase S3 adapter enabled
+        # This is an isolated build; fake credentials never reach Supabase.
+        # The editorial upload smoke below uses local disposable storage.
+        env:
+          OGASTV_MEDIA_S3_ACCESS_KEY_ID: ci-disposable-storage-key
+          OGASTV_MEDIA_S3_SECRET_ACCESS_KEY: ci-disposable-storage-secret
         run: npm run build
+      - name: Upload approved OgasTV Nigeria logo for visual acceptance
+        uses: actions/upload-artifact@v4
+        with:
+          name: ogastv-nigeria-logo-preview
+          path: site/public/ogastv-nigeria-logo.png
+          retention-days: 7
       - name: Verify admin and HeroUI assets
         run: |
+          test -f public/ogastv-nigeria-logo.png
           test -f .next/standalone/server.js
           test -d .next/standalone/.next/static
           grep -q '"@heroui/react"' package.json
           echo "HeroUI newsroom build validated."
+
+      - name: Inspect published OgasTV on desktop and mobile
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/ogastv-reference-ui-2026-11-05'
+        working-directory: .
+        env:
+          PLAYWRIGHT_MODULE: /tmp/ogastv-live/node_modules/playwright/index.mjs
+          OGASTV_URL: https://ogastvafrica.ng
+        run: |
+          npm install --no-save --prefix /tmp/ogastv-live playwright@1.56.1
+          /tmp/ogastv-live/node_modules/.bin/playwright install --with-deps chromium
+          node site/scripts/audit-live.mjs
+      - name: Save browser acceptance screenshots
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/feat/ogastv-reference-ui-2026-11-05'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ogastv-live-desktop-mobile
+          path: live-audit/
+          if-no-files-found: warn
+          retention-days: 7

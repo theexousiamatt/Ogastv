@@ -1,20 +1,24 @@
-# OgasTV Africa — Custom Publishing Platform
+# OgasTV Nigeria — Custom Publishing Platform
 
 This `site/` folder contains the custom Next.js publication and the Payload CMS backend.
 The legacy `dist/` folder is the older local writing-desk prototype; it is deliberately preserved.
 
 ## Implemented foundation
 
-- Independent public website routes and protected Payload admin panel.
+- Public website and a **single custom OgasTV Studio** admin experience. Payload remains a headless CMS/API/auth engine; its native visual admin UI is removed.
 - Staff authentication model: Administrator, Editor-in-Chief, Editor, Journalist, Moderator, Advertising Manager.
 - Separate reader authentication model, saved-article and location-preference fields.
 - Database collections: Articles, Media, Categories, Tags, Locations, Programmes, Episodes, Live Events and Community Submissions.
-- Homepage curation configuration, drafts, revisions and editorial workflow fields.
+- WordPress-style category publishing: posts automatically appear in the matching homepage desks. Studio management covers the optional lead story, featured video, breaking news, programmes, episodes, community moderation and staff roles.
 - Public frontend pages for all eight editorial sections, article pages, category archives, Latest News and an off-air/live player.
 - Read-only WordPress adapter and separate CMS-backed content provider.
 - Automated TypeScript checks in GitHub Actions.
 
-**Not yet finished:** This is a foundation, not a functional production launch. The database must be provisioned. Editors cannot be expected to use the new CMS until it is initialized, tested and connected to the publishing workflow. WordPress migration, live provider status syncing, email delivery, reader UI, search, moderation intake, ads, analytics and persistent media storage remain implementation tasks.
+**Remaining work:** The site and newsroom are deployed, but real-device broadcast testing, reader UI, public community intake, email delivery, analytics and ongoing operational QA are still required. SMTP is currently not configured, so staff invitations and email recovery must remain disabled until outbound mail works.
+
+## Official logo
+
+The approved OgasTV Nigeria logo was supplied by the client. A web-sized transparent PNG derived from that upload is committed at `site/public/ogastv-nigeria-logo.png`. Builds must use that committed asset directly; do not regenerate the red OGAS TV lettering or black NIGERIA subtitle. The existing `ogastvafrica.ng` domain remains unchanged.
 
 ## Local development
 
@@ -25,16 +29,16 @@ Requires Node.js 24.22.1 or newer, or a Payload-compatible Node 22 release.
 3. Copy `.env.example` to `.env.local` and provide valid `DATABASE_URL` and `PAYLOAD_SECRET`.
 4. Keep `CMS_CONTENT_SOURCE=wordpress` while the new CMS is empty.
 5. `npm run dev`
-6. Visit `http://localhost:3000/` for the public site and `http://localhost:3000/admin` for the CMS.
+6. Visit `http://localhost:3000/` for the public site and `http://localhost:3000/studio` for the newsroom; sign in through `/studio/login`.
 7. Run `npm run typecheck` and `npm run build` with a working database configuration.
 
 Never add `.env.local`, real passwords, stream keys or service tokens to GitHub.
 
 ## First administrator — private setup only
 
-Staff signup must NOT be publicly open. During private local/staging initialization only, set `ALLOW_FIRST_ADMIN_SETUP=true`, create the first staff account from the protected admin setup interface, verify it has administrator permissions, then immediately unset `ALLOW_FIRST_ADMIN_SETUP` and restart. Do not expose a newly deployed empty database to public traffic while bootstrap mode is on. Subsequent staff accounts must be created by the administrator.
+Staff signup must NOT be publicly open. During private local/staging initialization only, set `ALLOW_FIRST_ADMIN_SETUP=true`, use the protected one-time staff activation flow, verify administrator permissions, then immediately unset `ALLOW_FIRST_ADMIN_SETUP` and restart. Do not expose a newly deployed empty database to public traffic while bootstrap mode is on. Subsequent staff accounts must be created by the administrator.
 
-Staff email verification is enforced in production; integrate a transactional email provider before deployment, and test verification, recovery and reset flows. Development authentication without verified outbound mail is **not** acceptable for production.
+Staff accounts are private. Administrators can provision another staff account, including another administrator, in Studio > Team & access; a single-use display of a generated temporary password is returned only to the signed-in administrator, and the account is verified through Payload's authenticated server-side flow. Configure and test a transactional email provider to enable automatic invitations and password recovery. The native Payload admin screen is intentionally not deployed. Development authentication without verified outbound mail is **not** acceptable for production.
 
 ## Connected Supabase project (verified November 5, 2026)
 
@@ -57,7 +61,7 @@ Run `npm run audit:wordpress` to inventory public WordPress resources. This is n
 
 ## Media
 
-The current Payload media collection accepts public editorial images and stores them locally. This is suitable only as an initial development adapter. Configure persistent media object storage (for example, R2) and backups before migration/production. Community evidence requires a separate private upload system and is not yet accepted publicly.
+Editorial media uses the configured Supabase S3-compatible storage adapter; ensure the server-side S3 credentials are configured in Hostinger so uploads survive deployments. Without them, local fallback storage is not a reliable production solution. Community evidence requires a separate private upload system and is not yet accepted publicly.
 
 ## Roles and safety
 
@@ -66,7 +70,7 @@ The current Payload media collection accepts public editorial images and stores 
 - Only Administrator and Editor-in-Chief roles may publish articles.
 - Public article reads are restricted to published content.
 - Community submissions are private, and public submissions remain disabled until secure intake, consent, file handling and anti-spam controls are implemented.
-- This initial model does not implement staff MFA, invite emails or an audit-trail dashboard; those are production requirements.
+- Staff MFA and a complete audit-trail dashboard remain future security improvements. Secure invitations and email recovery in Studio require configured SMTP; the UI blocks them if mail delivery is unavailable.
 
 ## Deployment
 

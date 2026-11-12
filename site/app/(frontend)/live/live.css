@@ -1,0 +1,241 @@
+/* OgasTV public broadcast page. Isolated from the newsroom and other editorial screens. */
+.ogas-live-page {
+  padding-bottom: 34px;
+}
+.ogas-live-page__heading {
+  text-align: center;
+  padding-top: clamp(18px, 2.6vw, 38px);
+  padding-bottom: 22px;
+}
+.ogas-live-page__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #8f1828;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.ogas-live-page__signal {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: #9c2029;
+  box-shadow: 0 0 0 4px #9c202912;
+}
+.ogas-live-page__heading h1 {
+  margin: 8px 0 7px;
+  font: 800 clamp(34px, 4.1vw, 52px)/1.08 'DM Sans', Arial, sans-serif;
+  letter-spacing: -.066em;
+  color: #202320;
+}
+.ogas-live-page__heading p {
+  max-width: 620px;
+  margin: 0 auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #737872;
+}
+.ogas-live-page__stage {
+  max-width: 1240px;
+}
+.ogas-live-page .live-player {
+  display: block;
+  width: 100%;
+  aspect-ratio: auto;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #121719;
+  box-shadow: 0 12px 30px #15201712;
+}
+.ogas-live-page .ogas-live-viewer,
+.ogas-live-page__youtube,
+.ogas-live-page__offline {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+.ogas-live-page .ogas-live-viewer {
+  min-height: 0;
+}
+.ogas-live-page .ogas-live-viewer video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.ogas-live-page__youtube {
+  position: relative;
+}
+.ogas-live-page .live-player iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+}
+.ogas-live-page__youtube-badge {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  pointer-events: none;
+  background: #a52130;
+  color: #fff;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .055em;
+}
+.ogas-live-page__offline {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 28px;
+  background: radial-gradient(circle at 50% 35%, #35463d, #131919 65%);
+}
+.ogas-live-page__offline-symbol {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border: 1px solid #ffffff39;
+  border-radius: 50%;
+  color: #e5ece7;
+  font-size: 32px !important;
+  margin-bottom: 14px;
+}
+.ogas-live-page__offline h2 {
+  font: 800 clamp(22px, 3vw, 30px)/1.2 'DM Sans', Arial, sans-serif;
+  letter-spacing: -.045em;
+  margin: 0 0 7px;
+}
+.ogas-live-page__offline p {
+  margin: 0;
+  color: #e0e4e0b8;
+  font-size: 13px;
+}
+.ogas-live-page__details {
+  margin: 18px 2px 0;
+  padding: 0 0 18px;
+  border-bottom: 1px solid #e9e8e5;
+}
+.ogas-live-page__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #941d2c;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  font-size: 10px;
+  font-weight: 800;
+}
+.ogas-live-page__status--ended { color:#66756a; }
+.ogas-live-page__status--ended:before {
+  content:'';
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#7a8a7d;
+}
+.ogas-live-page__status > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ac2232;
+}
+.ogas-live-page__details h2 {
+  margin: 7px 0 5px;
+  font-size: clamp(20px, 2.7vw, 28px);
+  font-weight: 800;
+  letter-spacing: -.05em;
+  line-height: 1.23;
+}
+.ogas-live-page__details p {
+  margin: 0;
+  color: #747a73;
+  line-height: 1.55;
+  font-size: 13px;
+}
+@media (max-width: 700px) {
+  /* Make the live feed the first substantial element of the mobile page. */
+  body:has(.ogas-live-page) .ogas-public-header__inner {
+    height: 62px;
+  }
+  body:has(.ogas-live-page) .ogas-mobile-nav {
+    padding-bottom: 9px;
+  }
+  #main:has(.ogas-live-page) {
+    padding-inline: 0;
+  }
+  .ogas-live-page {
+    padding-bottom: 16px;
+  }
+  .ogas-live-page__heading {
+    text-align: left;
+    padding: 13px 16px 12px;
+  }
+  .ogas-live-page__eyebrow {
+    gap: 7px;
+    font-size: 10px;
+  }
+  .ogas-live-page__heading h1 {
+    font-size: clamp(28px, 7.7vw, 36px);
+    line-height: 1.08;
+    margin: 5px 0 0;
+  }
+  .ogas-live-page__heading p {
+    display: none;
+  }
+  .ogas-live-page__stage {
+    max-width: none;
+    padding-inline: 0;
+  }
+  .ogas-live-page .live-player {
+    border-radius: 0;
+    box-shadow: none;
+  }
+  /* Square by default, tall when the incoming camera feed is portrait. */
+  .ogas-live-page .ogas-live-viewer,
+  .ogas-live-page__youtube,
+  .ogas-live-page__offline {
+    aspect-ratio: 1 / 1;
+  }
+  .ogas-live-page .ogas-live-viewer--portrait {
+    aspect-ratio: 9 / 16;
+  }
+  .ogas-live-page__details {
+    margin: 14px 16px 0;
+    padding-bottom: 14px;
+  }
+  .ogas-live-page__details h2 {
+    font-size: 20px;
+  }
+  .ogas-live-page__offline {
+    padding: 22px;
+  }
+  .ogas-live-page__offline-symbol {
+    width: 55px;
+    height: 55px;
+    font-size: 26px !important;
+    margin-bottom: 10px;
+  }
+  .ogas-live-page__offline p {
+    max-width: 240px;
+    font-size: 12px;
+  }
+}
+/* YouTube is a landscape embed even on a portrait phone. */
+@media (max-width: 700px) {
+  .ogas-live-page__youtube { aspect-ratio:16 / 9; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ogas-live-page * { transition: none !important; }
+}

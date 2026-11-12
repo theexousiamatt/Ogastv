@@ -1,0 +1,33 @@
+name: OgasTV live desktop and mobile visual QA
+
+on:
+  pull_request:
+    branches:
+      - feat/ogastv-reference-ui-2026-11-05
+  workflow_dispatch:
+
+jobs:
+  live-visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install browser test runner
+        working-directory: site
+        run: |
+          npm install --no-save --package-lock=false playwright
+          npx playwright install --with-deps chromium
+      - name: Verify live desktop and mobile layouts
+        working-directory: site
+        run: node scripts/qa-live-browser.mjs
+      - name: Attach screenshots and results even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ogastv-live-visual-qa
+          path: site/qa-live-screenshots/
+          if-no-files-found: warn
+          retention-days: 7

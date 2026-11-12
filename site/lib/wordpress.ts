@@ -32,7 +32,14 @@ export type Article = {
   originalUrl: string;
   category: { name: string; slug: string } | null;
   author: string | null;
-  image: { url: string; alt: string } | null;
+  image: { url: string; alt: string; caption?: string; credit?: string } | null;
+  updatedAt?: string;
+  subtitle?: string;
+  editorialType?: string;
+  correctionNotice?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  locations?: { name: string; slug: string }[];
 };
 
 export type Category = { id: number; slug: string; name: string };

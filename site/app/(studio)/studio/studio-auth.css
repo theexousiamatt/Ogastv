@@ -1,0 +1,32 @@
+.ogas-auth{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:42px 20px;background:#f7f7f5;color:#252724}
+.ogas-auth__brand{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:38px}
+.ogas-auth__brand img{width:215px;max-width:65vw;height:auto}
+.ogas-auth__brand p{margin:0;font-size:11px;font-weight:800;letter-spacing:.2em;color:#70766b}
+.ogas-auth__panel{background:#fff;border:1px solid #e3e3df;border-radius:18px;width:min(100%,492px);padding:clamp(25px,4vw,44px);box-shadow:0 22px 80px rgba(25,27,22,.045)}
+.ogas-auth__eyebrow{display:block;color:#b33228;letter-spacing:.13em;font-size:10px;font-weight:850;margin-bottom:18px}
+.ogas-auth__panel h1{font-size:clamp(33px,4vw,46px);letter-spacing:-.05em;line-height:1.08;margin:0 0 12px}
+.ogas-auth__intro{font-size:14px;line-height:1.6;color:#686b64;margin:0 0 31px}
+.ogas-auth__panel form{display:flex;flex-direction:column}
+.ogas-auth__panel label{font-size:12px;font-weight:750;margin:0 0 9px}
+.ogas-auth__field{border:1px solid #dfdfdc;background:#fbfbfa;display:flex;align-items:center;gap:11px;border-radius:9px;margin-bottom:21px;padding:0 15px;min-height:50px;color:#888d81}
+.ogas-auth__field:focus-within{border-color:#a4a89b;outline:2px solid #dde2d5}
+.ogas-auth__field input{font:inherit;border:0;outline:none;min-width:0;flex:1;height:48px;background:none;color:#222}
+.ogas-auth__field button{border:0;background:none;padding:5px;display:grid;place-items:center;color:#6b7066;cursor:pointer}
+.ogas-auth__submit{border:0;border-radius:9px;background:#b22a24;color:#fff;min-height:52px;padding:13px 17px;display:flex;align-items:center;justify-content:space-between;gap:14px;font-weight:750;cursor:pointer}
+.ogas-auth__submit:hover{background:#90211c}
+.ogas-auth__submit:disabled{opacity:.6;cursor:wait}
+.ogas-auth__error{background:#fff4f2;border:1px solid #efd3ce;border-radius:7px;padding:11px 13px;font-size:13px;color:#9f2f25;margin:0 0 20px}
+.ogas-auth__success{background:#f2f8ee;border:1px solid #c7ddbf;color:#2f5d27;border-radius:7px;padding:12px;margin:0 0 20px}
+.ogas-auth__help{font-size:12px;line-height:1.5;color:#70756c;margin:21px 0 0}
+.ogas-auth__back{margin-top:30px;color:#60645d;font-size:13px;text-decoration:none}
+.ogas-auth__back:hover{text-decoration:underline}
+.ogas-auth__account{max-width:600px;margin:0 auto;width:100%}
+.ogas-auth__account-header{width:min(100%,600px);display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+.ogas-auth__account-header a{font-size:13px;color:#4e554b;text-decoration:none}
+.ogas-auth__account .ogas-auth__panel{width:100%}
+.ogas-auth__account section+section{border-top:1px solid #eee;padding-top:25px;margin-top:24px}
+.ogas-auth__account h2{font-size:19px;letter-spacing:-.025em;margin:0 0 16px}
+.ogas-auth__account .ogas-auth__submit{width:100%;justify-content:center}
+.ogas-auth__muted{font-size:13px;color:#777c72;line-height:1.5;margin-top:0}
+.ogas-auth__signout{border:0;background:transparent;text-decoration:underline;color:#b22a24;cursor:pointer;padding:8px 0;font-size:13px}
+@media(max-width:570px){.ogas-auth__brand{margin-bottom:25px}.ogas-auth__panel{border-radius:13px}.ogas-auth__account-header{align-items:flex-start;flex-direction:column}}

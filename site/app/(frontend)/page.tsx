@@ -1,135 +1,154 @@
 import Link from 'next/link';
-import { StoryCard } from '@/components/StoryCard';
-import { getArticles, getArticlesInCategory, getCategories } from '@/lib/content';
-import type { Article, Category } from '@/lib/content';
+import { ArrowRight, ArrowUpRight, Clock3, Play, Clapperboard, MapPin } from 'lucide-react';
+import { getPublicHomepageData, getPublicDirectoryData } from '@/lib/public-cache';
+import { prioritiseLagosCouncils } from '@/lib/editorial-sections';
+import { prettyDate } from '@/lib/content';
+import type { Article, StudioEpisode } from '@/lib/content';
+import { FeaturedHero } from '@/components/FeaturedHero';
+import { HomeBannerAd } from '@/components/HomeBannerAd';
+import './home-sections.css';
 
-const featureSections = [
-  {
-    id: 'government',
-    eyebrow: 'Decisions & impact',
-    title: 'Government & Policies',
-    preferred: ['government-policies', 'government-and-policies', 'politics'],
-    description: 'Government decisions, policy explainers and the impact on everyday life.',
-  },
-  {
-    id: 'grassroots',
-    eyebrow: 'People first',
-    title: 'Grassroots Voices',
-    preferred: ['grassroots-voices', 'community', 'grassroots'],
-    description: 'Local experiences, interviews and community perspectives.',
-  },
-  {
-    id: 'business',
-    eyebrow: 'Enterprise & opportunity',
-    title: 'Business & Investment',
-    preferred: ['business-investment', 'business-and-investment', 'business'],
-    description: 'Local businesses, entrepreneurs and economic developments.',
-  },
-  {
-    id: 'personalities',
-    eyebrow: 'People creating impact',
-    title: 'Personalities',
-    preferred: ['personalities', 'interviews', 'profiles'],
-    description: 'Interviews and profiles of the people shaping our communities.',
-  },
-] as const;
+export const dynamic='force-dynamic';
 
-function categorySlug(categories: Category[], candidates: readonly string[]): string {
-  return candidates.find((slug) => categories.some((c) => c.slug === slug)) || candidates[0];
+function Thumb({story}:{story:Article}){
+  return <span className="ogas-editorial-thumb">
+    {story.image?
+      // eslint-disable-next-line @next/next/no-img-element
+      <img loading="lazy" decoding="async" src={story.image.url} alt={story.image.alt||''}/>:
+      <span aria-hidden="true" className="ogas-editorial-thumb__placeholder">
+        <span className="ogas-editorial-thumb__brand">OGAS<strong>TV</strong></span>
+        <span className="ogas-editorial-thumb__type">COMMUNITY REPORT</span>
+      </span>}
+  </span>;
+}
+function ArticleDate({story}:{story:Article}){
+  return <span className="ogas-public-date"><Clock3 size={12}/><time dateTime={story.date}>{prettyDate(story.date)}</time></span>;
+}
+function CompactStory({story}:{story:Article}){
+  return <article className="ogas-home-compact">
+    <Link href={'/stories/'+encodeURIComponent(story.slug)} className="ogas-home-compact__image" aria-label={'Read '+story.title}><Thumb story={story}/></Link>
+    <div>{story.category&&<span className="ogas-home-compact__category">{story.category.name}</span>}
+      <h3><Link href={'/stories/'+encodeURIComponent(story.slug)}>{story.title}</Link></h3><ArticleDate story={story}/>
+    </div>
+  </article>;
+}
+function EditorialCard({story,feature=false}:{story:Article;feature?:boolean}){
+  return <article className={'ogas-home-news-card'+(feature?' ogas-home-news-card--feature':'')}>
+    <Link href={'/stories/'+encodeURIComponent(story.slug)} className="ogas-home-news-card__image" aria-label={'Read '+story.title}><Thumb story={story}/></Link>
+    <div className="ogas-home-news-card__content">
+      {story.category&&<span className="ogas-category-label">{story.category.name}</span>}
+      <h3><Link href={'/stories/'+encodeURIComponent(story.slug)}>{story.title}</Link></h3>
+      {feature&&story.excerpt&&<p className="ogas-home-news-card__excerpt">{story.excerpt}</p>}
+      <ArticleDate story={story}/>
+    </div>
+  </article>;
+}
+type SectionMode='feature'|'voices'|'grid'|'profiles';
+function EditorialSection({id,title,description,stories,href,mode='grid',emptyText,accent=false,children}:{
+  id:string;title:string;description:string;stories:Article[];href:string;mode?:SectionMode;
+  emptyText:string;accent?:boolean;children?:React.ReactNode;
+}){
+  return <section className={'ogas-home-section ogas-home-section--'+mode+(accent?' ogas-home-section--accent':'')} aria-labelledby={id}>
+    <div className="ogas-home-section__heading">
+      <div><h2 id={id}>{title}</h2><p>{description}</p></div>
+      <Link href={href}>All {title.toLowerCase()} <ArrowUpRight size={16}/></Link>
+    </div>
+    {children}
+    {stories.length?mode==='feature'?
+      <div className="ogas-home-section__feature-grid">
+        <EditorialCard story={stories[0]} feature/>
+        <div className="ogas-home-section__supporting">{stories.slice(1,4).map(story=><CompactStory key={story.id} story={story}/>)}</div>
+      </div>:
+      <div className={'ogas-home-section__grid ogas-home-section__grid--'+mode}>
+        {stories.slice(0,mode==='profiles'?3:4).map((story,index)=>
+          <EditorialCard story={story} key={story.id} feature={mode==='voices'&&index===0}/>)}
+      </div>:
+      <div className="ogas-home-section__empty"><p>{emptyText}</p><Link href={href}>Explore stories <ArrowRight size={14}/></Link></div>}
+  </section>;
+}
+function VideoCard({episode}:{episode:StudioEpisode}){
+  return <a className="ogas-home-studio-card" href={'https://www.youtube.com/watch?v='+encodeURIComponent(episode.youtubeVideoId)}
+    target="_blank" rel="noopener noreferrer" aria-label={'Watch '+episode.title+' on YouTube'}>
+    <div className="ogas-home-studio-card__image">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img loading="lazy" decoding="async" src={episode.thumbnail?.url||'https://i.ytimg.com/vi/'+episode.youtubeVideoId+'/hqdefault.jpg'} alt={episode.thumbnail?.alt||''}/>
+      <span className="ogas-home-studio-card__play" aria-hidden="true"><Play size={20} fill="currentColor"/></span>
+    </div>
+    <span className="ogas-home-studio-card__label">OGASTV STUDIO · VIDEO</span>
+    <strong>{episode.title}</strong>
+    {episode.description&&<p>{episode.description}</p>}
+  </a>;
 }
 
-function EditorialSection({
-  id, eyebrow, title, slug, description, articles,
-}: {
-  id: string;
-  eyebrow: string;
-  title: string;
-  slug: string;
-  description: string;
-  articles: Article[];
-}) {
-  return (
-    <section className="section-block wrap" aria-labelledby={id + '-heading'}>
-      <div className="section-heading section-heading--large">
-        <div>
-          <span className="eyebrow">{eyebrow}</span>
-          <h2 id={id + '-heading'}>{title}<span className="heading-period">.</span></h2>
-        </div>
-        <Link className="inline-arrow" href={'/section/' + slug}>View all stories ↗</Link>
+export default async function HomePage(){
+  const [[latest,curated,automatic],[,locations]]=await Promise.all([getPublicHomepageData(),getPublicDirectoryData()]);
+  const lead=curated.lead||automatic.grassrootsVoices.stories.find(story=>Boolean(story.image))||
+    latest.find(story=>Boolean(story.image))||latest[0]||null;
+  const highlights=latest.filter(story=>String(story.id)!==String(lead?.id)).slice(0,5);
+  const lagosAreas=prioritiseLagosCouncils(locations.filter(item=>['lga','lcda'].includes(item.kind))).slice(0,8);
+  return <div className="ogas-public-home">
+    <FeaturedHero stories={lead?[lead]:[]}/>
+    <section className="ogas-home-section ogas-home-highlights" aria-labelledby="ogas-highlights">
+      <div className="ogas-home-section__heading">
+        <div><span className="ogas-home-section__eyebrow">The latest</span><h2 id="ogas-highlights">Latest Highlights</h2>
+          <p>Five important developments, at a glance.</p></div>
+        <Link href="/latest">See all stories <ArrowRight size={16}/></Link>
       </div>
-      {articles.length ? <div className="story-grid">
-        {articles.slice(0, 4).map((article) => <StoryCard article={article} key={article.id} />)}
-      </div> : <p className="empty-state">{description} Stories from this section will appear here when they are available.</p>}
+      {highlights.length?<div className="ogas-home-highlights__grid">
+        {highlights.map((story,index)=><div className="ogas-home-highlights__item" key={story.id}>
+          <span className="ogas-home-highlights__number">{String(index+1).padStart(2,'0')}</span>
+          <CompactStory story={story}/>
+        </div>)}
+      </div>:<div className="ogas-home-section__empty"><p>Our newsroom is preparing the latest reports.</p>
+        <Link href="/latest">Explore the newsroom <ArrowRight size={14}/></Link></div>}
     </section>
-  );
-}
 
-export default async function HomePage() {
-  const categories = await getCategories();
-  const slugs = featureSections.map((section) => categorySlug(categories, section.preferred));
-  const [articles, lagos, government, grassroots, business, personalities] = await Promise.all([
-    getArticles(24),
-    getArticlesInCategory('lagos-watch', 4),
-    ...slugs.map((slug) => getArticlesInCategory(slug, 4)),
-  ]);
-
-  const [lead, ...rest] = articles;
-  const highlights = rest.slice(0, 5);
-  const sectionArticles = [government, grassroots, business, personalities];
-
-  return (
-    <>
-      <header className="page-intro wrap">
-        <div className="eyebrow"><span className="rule-dot" /> Local voices. Wider perspectives.</div>
-        <div className="intro-line">
-          <h1>Stories that <em>move us.</em></h1>
-          <p>Grassroots journalism, essential developments and the people shaping Nigeria and beyond.</p>
-        </div>
-      </header>
-
-      <section className="lead-grid wrap" aria-label="Lead story and latest highlights">
-        <div className="lead-column">
-          <div className="section-heading"><h2>Lead grassroots story</h2><span>Editor's selection</span></div>
-          {lead ? <StoryCard article={lead} variant="lead" /> :
-            <p className="empty-state">The lead story will appear when the editorial archive is connected.</p>}
-        </div>
-        <div className="highlights-column">
-          <div className="section-heading"><h2>Latest highlights</h2><Link className="inline-arrow" href="/latest">All latest news ↗</Link></div>
-          {highlights.length ? highlights.map((article) => <StoryCard article={article} key={article.id} variant="compact" />)
-            : <p className="empty-state">The five latest highlights will appear here.</p>}
-        </div>
-      </section>
-
-      <section className="section-block wrap" aria-labelledby="lagos-watch-heading">
-        <div className="section-heading section-heading--large">
-          <div><span className="eyebrow">Close to home</span><h2 id="lagos-watch-heading">Lagos Watch<span className="heading-period">.</span></h2></div>
-          <Link className="inline-arrow" href="/section/lagos-watch">Explore Lagos reporting ↗</Link>
-        </div>
-        {lagos.length ? <div className="story-grid">{lagos.map((article) => <StoryCard article={article} key={article.id} />)}</div>
-          : <p className="empty-state">Stories from Lagos LGAs and LCDAs will appear here.</p>}
-      </section>
-
-      {featureSections.map((section, index) =>
-        <EditorialSection key={section.id}
-          id={section.id}
-          eyebrow={section.eyebrow}
-          title={section.title}
-          slug={slugs[index]}
-          description={section.description}
-          articles={sectionArticles[index]} />
-      )}
-
-      <section className="studio-panel" id="studio" aria-labelledby="studio-heading">
-        <div className="wrap studio-inner">
-          <div>
-            <span className="eyebrow">Programmes, live coverage & conversations</span>
-            <h2 id="studio-heading">OgasTV <em>Studio.</em></h2>
-            <p>Watch stories as they unfold, hear from community voices and explore recorded programmes.</p>
-            <Link href="/live" className="button-dark">Watch & explore ↗</Link>
-          </div>
-          <div className="studio-art" aria-hidden="true"><div className="studio-play">▶</div><span>OGASTV / STUDIO</span></div>
-        </div>
-      </section>
-    </>
-  );
+    <EditorialSection id="ogas-lagos" title="Lagos Watch" mode="feature" accent
+      description="From Kosofe to Ikorodu: everyday life and decisions across Lagos councils."
+      stories={automatic.lagosWatch.stories} href="/section/lagos-watch"
+      emptyText="Council updates will appear here as editors publish them.">
+      {lagosAreas.length>0&&<nav className="ogas-home-councils" aria-label="Explore Lagos councils">
+        <MapPin size={15} aria-hidden="true"/><span>Explore councils</span>
+        {lagosAreas.map(area=><Link key={area.slug} href={'/section/lagos-watch?location='+encodeURIComponent(area.slug)}>{area.name}</Link>)}
+      </nav>}
+    </EditorialSection>
+    <EditorialSection id="ogas-government" title="Government & Policies" mode="feature"
+      description="Clear reporting on government decisions and what they mean for ordinary people."
+      stories={automatic.government.stories} href="/section/government-policies"
+      emptyText="People-first policy reporting will appear here as it is published."/>
+    <EditorialSection id="ogas-voices" title="Grassroots Voices" mode="voices" accent
+      description="Residents' experiences, opinions and community concerns, heard without filters."
+      stories={automatic.grassrootsVoices.stories} href="/section/grassroots-voices"
+      emptyText="The next voices from our communities will appear here."/>
+    <EditorialSection id="ogas-business" title="Business & Investment" mode="grid"
+      description="Entrepreneurs, local opportunities and investments changing communities."
+      stories={automatic.business.stories} href="/section/business-investment"
+      emptyText="New business and investment stories are on their way."/>
+    <EditorialSection id="ogas-personalities" title="Personalities" mode="profiles" accent
+      description="Meet the people shaping change, through interviews and detailed profiles."
+      stories={automatic.personalities.stories} href="/section/personalities"
+      emptyText="Interviews and profiles will be featured here."/>
+    <section className="ogas-home-section ogas-home-studio" aria-labelledby="ogas-studio">
+      <div className="ogas-home-section__heading">
+        <div><span className="ogas-home-section__eyebrow"><Clapperboard size={14}/> Watch and listen</span>
+          <h2 id="ogas-studio">OgasTV Studio</h2>
+          <p>Video podcasts, interviews and presenter-led coverage.</p></div>
+        <Link href="/watch">Explore programmes <ArrowUpRight size={16}/></Link>
+      </div>
+      {curated.studioEpisodes.length?<div className="ogas-home-studio__grid">
+        {curated.studioEpisodes.map(episode=><VideoCard key={episode.id} episode={episode}/>)}
+      </div>:<div className="ogas-home-section__empty"><p>Our latest programmes, interviews and coverage will appear here.</p>
+        <Link href="/watch">Visit OgasTV Studio <ArrowRight size={14}/></Link></div>}
+    </section>
+    <HomeBannerAd/>
+    <aside className="ogas-home-newsletter ogas-home-newsletter--wide">
+      <span className="ogas-home-newsletter__mark" aria-hidden="true">✳</span>
+      <h2>Stay close to the stories shaping your community.</h2>
+      <p>Follow the reporting that matters, from Lagos and beyond.</p>
+      <div className="ogas-home-newsletter__links">
+        <Link href="/latest" className="ogas-home-newsletter__button">Explore the latest <ArrowRight size={14}/></Link>
+        <Link href="/watch" className="ogas-home-newsletter__button ogas-home-newsletter__button--secondary">Watch OgasTV Studio <ArrowRight size={14}/></Link>
+      </div>
+    </aside>
+  </div>;
 }

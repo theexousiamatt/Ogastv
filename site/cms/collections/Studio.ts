@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload';
-import { canReview, canPublish } from '../access';
+import { canReview, canPublish, editorial } from '../access';
+import { addBroadcastTransitionTimes } from '../../lib/broadcast-timeline';
 
 const canEdit = ({ req }: { req: { user?: unknown } }) => canReview(req.user);
 const canDelete = ({ req }: { req: { user?: unknown } }) => canPublish(req.user);
@@ -43,9 +44,20 @@ export const LiveEvents: CollectionConfig = {
   slug: 'live-events',
   admin: { useAsTitle: 'title', group: 'Video & Live' },
   versions: { drafts: true, maxPerDoc: 20 },
+  hooks: {
+    beforeChange: [({data,originalDoc}) => {
+      // Applies equally to the End Broadcast button and manual newsroom status edits.
+      // Do not fill missing timestamps on unchanged historical ENDED records.
+      Object.assign(data,addBroadcastTransitionTimes(data,{
+        broadcastStatus:originalDoc?.broadcastStatus,
+        actualEnd:originalDoc?.actualEnd,
+      },new Date().toISOString()));
+      return data;
+    }],
+  },
   access: {
     read: ({ req }) => canReview(req.user) ? true : { _status: { equals: 'published' } },
-    create: canEdit, update: canEdit, delete: canDelete,
+    create: ({ req }) => editorial(req.user), update: canEdit, delete: canDelete,
   },
   fields: [
     { name: 'title', type: 'text', required: true },
@@ -68,6 +80,9 @@ export const LiveEvents: CollectionConfig = {
         { label: 'Cancelled', value: 'cancelled' },
       ],
     },
+    { name: 'sourceType', type: 'select', defaultValue: 'cloudflare', options: [{ label: 'Phone camera (Cloudflare)', value: 'cloudflare' }, { label: 'YouTube', value: 'youtube' }] },
+    { name: 'publisherSessionId', type: 'text', admin: { hidden: true }, access: { read: ({ req }) => canReview(req.user) } },
+    { name: 'broadcasterStaffId', type: 'text', admin: { hidden: true }, access: { read: ({ req }) => canReview(req.user) } },
     { name: 'youtubeVideoId', type: 'text',
       validate: (value: unknown) => !value || /^[\w-]{11}$/.test(String(value)) || 'Enter a valid YouTube video ID.' },
     { name: 'recording', type: 'relationship', relationTo: 'episodes' },

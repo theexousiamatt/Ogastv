@@ -3,7 +3,9 @@ import { execFileSync } from 'node:child_process';
 
 // Destructive tests ONLY on the disposable, loopback-bound GitHub Actions database.
 // Never run against any public hostname or any customer database.
-const base = 'http://127.0.0.1:3100';
+const port = Number(process.env.PORT || '3000');
+if (port !== 3000 && port !== 3100) throw new Error('Unexpected CI smoke port');
+const base = 'http://127.0.0.1:' + port;
 if (process.env.CI !== 'true' ||
     !process.env.DATABASE_URL?.includes('@localhost:5432/ogastv_ci') ||
     process.env.DATABASE_TLS_REQUIRED !== 'false') {
@@ -152,9 +154,48 @@ requireStatus(await api('/api/articles/' + writerArticle.id, {
 
 const uploaded = new FormData();
 uploaded.append('_payload', JSON.stringify({ alt: '1x1 CI image upload test' }));
-uploaded.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nQAAAABJRU5ErkJggg==','base64')], { type: 'image/png' }), 'qa-1px.png');
+uploaded.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGNsNNdmYGBgYmBgYGBgAAALJADnu5XVPgAAAABJRU5ErkJggg==','base64')], { type: 'image/png' }), 'qa-1px.png');
 const media = await api('/api/media', { method: 'POST', token: admin.token, form: uploaded });
 requireStatus(media, 201, 'editorial media image upload');
 assert.ok(media.body.doc?.id, 'Media record created');
+assert.equal(media.body.doc.mimeType, 'image/webp', 'New uploads are converted to compact WebP files');
 
-console.log('PASS: draft visibility, editorial review, role access, published edits, image uploads');
+
+const optionalDescriptionFile = new FormData();
+optionalDescriptionFile.append('_payload', JSON.stringify({}));
+optionalDescriptionFile.append('file', new Blob([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGNsNNdmYGBgYmBgYGBgAAALJADnu5XVPgAAAABJRU5ErkJggg==', 'base64')], {type:'image/png'}), 'qa-optional-description.png');
+const optionalMedia = await api('/api/media', {method:'POST',token:admin.token,form:optionalDescriptionFile});
+requireStatus(optionalMedia,201,'image upload without a description');
+assert.ok(optionalMedia.body.doc?.id,'Optional-description media record created');
+
+const adBase = {
+  name:'CI banner', banner:optionalMedia.body.doc.id,
+  destinationUrl:'https://example.com/advertiser',
+  startsAt:'2030-02-10T08:00:00.000Z', endsAt:'2030-02-12T08:00:00.000Z',
+  status:'scheduled', placement:'homepage'
+};
+const publicAds = await api('/api/ad-banners?limit=1');
+assert.ok([401,403].includes(publicAds.status),'Anonymous access to campaigns is denied');
+const scheduledAd = await api('/api/ad-banners',{method:'POST',token:admin.token,data:adBase});
+requireStatus(scheduledAd,201,'authorized administrator schedules a banner');
+assert.ok(scheduledAd.body.doc?.id,'Scheduled banner has an ID');
+const conflict = await api('/api/ad-banners',{
+  method:'POST',token:admin.token,
+  data:{...adBase,name:'Overlapping booking',startsAt:'2030-02-11T08:00:00.000Z',endsAt:'2030-02-13T08:00:00.000Z'}
+});
+assert.ok(conflict.status>=400,'A second overlapping banner is rejected');
+const invalidDestination = await api('/api/ad-banners',{
+  method:'POST',token:admin.token,
+  data:{...adBase,name:'Invalid link',destinationUrl:'ftp://example.com',startsAt:'2030-02-15T08:00:00.000Z',endsAt:'2030-02-16T08:00:00.000Z'}
+});
+assert.ok(invalidDestination.status>=400,'Unsupported link protocol is rejected');
+// Verify the media library delete flow and its server-side safeguards.
+const forbiddenMediaDelete = await api('/api/media/' + media.body.doc.id, {method:'DELETE',token:journalist.token});
+assert.ok([401,403].includes(forbiddenMediaDelete.status),'Journalists cannot delete shared media');
+const protectedMediaDelete = await api('/api/media/' + optionalMedia.body.doc.id, {method:'DELETE',token:admin.token});
+assert.ok(protectedMediaDelete.status >= 400,'An active advertisement image cannot be deleted');
+requireStatus(await api('/api/media/' + media.body.doc.id,{method:'DELETE',token:editor.token}),200,'Editor deletes an unreferenced image');
+requireStatus(await api('/api/ad-banners/' + scheduledAd.body.doc.id,{method:'DELETE',token:admin.token}),200,'Administrator removes test advertisement');
+requireStatus(await api('/api/media/' + optionalMedia.body.doc.id,{method:'DELETE',token:admin.token}),200,'Administrator deletes image after advertisement removed');
+console.log('PASS: drafts, review, permissions, publishing, WebP image optimization, media deletion guards and advertising bookings');
+
