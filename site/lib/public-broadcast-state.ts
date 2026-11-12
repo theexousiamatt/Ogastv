@@ -1,4 +1,6 @@
-import { isYouTubeLiveVideoId } from './youtube-live';
+// Inline for Node's strip-types regression runner (which does not resolve extensionless .ts imports).
+const isValidYouTubeId = (value:unknown):value is string =>
+  typeof value==='string' && /^[A-Za-z0-9_-]{11}$/.test(value);
 /** Minimal public event state. Never expose Cloudflare session IDs or newsroom metadata. */
 export type PublicBroadcastRecord = {
   broadcastStatus?: string | null;
@@ -29,6 +31,6 @@ export function publicBroadcastState(event: PublicBroadcastRecord | null): Publi
   const activeCloudflare = event.broadcastStatus === 'live' &&
     event.sourceType === 'cloudflare' && !!event.publisherSessionId?.trim();
   const activeYouTube = event.broadcastStatus === 'live' &&
-    event.sourceType === 'youtube' && isYouTubeLiveVideoId(event.youtubeVideoId);
+    event.sourceType === 'youtube' && isValidYouTubeId(event.youtubeVideoId);
   return {state:activeCloudflare||activeYouTube?'live':'offline',actualStart,actualEnd:null};
 }
