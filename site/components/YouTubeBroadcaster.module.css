@@ -150,3 +150,9 @@
 
 .youtubeStep{display:block;margin:0 0 5px;color:#a52a35;font-size:11px;font-weight:790;letter-spacing:.02em}
 @media(max-width:640px){.youtubeStep{font-size:10px}}
+
+.activeNoticeActions{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:9px}
+.activeNoticeSecondary{color:#65776a;font-size:11px;font-weight:680;white-space:nowrap;text-decoration:underline;text-underline-offset:3px}
+.activeNoticeSecondary:hover{color:#294b36}
+.activeNoticeSecondary:focus-visible{outline:3px solid #b7d4bd;outline-offset:3px}
+@media(max-width:640px){.activeNoticeActions{justify-content:flex-start}}
