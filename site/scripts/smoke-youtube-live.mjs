@@ -15,7 +15,7 @@ const login=await jsonFetch('/api/staff-users/login',{
 });
 assert.equal(login.response.status,200,'Disposable newsroom staff must be able to sign in');
 assert.equal(typeof login.body.token,'string','Newsroom login must return JWT');
-const authHeaders={'Content-Type':'application/json','Origin':origin,Authorization:'JWT '+login.body.token};
+const authHeaders={'Content-Type':'application/json','Origin':publicOrigin,Authorization:'JWT '+login.body.token};
 function publish(data,headers=authHeaders){
   return jsonFetch('/api/ogas-live/youtube',{
     method:'POST',headers,body:JSON.stringify(data)
