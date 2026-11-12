@@ -267,7 +267,9 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false
     </div>}
     {(status==='preview'||status==='connecting'||status==='live')&&
       <p className={styles.captureNote}>{streamProfiles[streamProfile].label} · Camera: {capture}</p>}
-      <p className={styles.setupHint}>Your broadcast goes live only after you confirm the camera preview and select <strong>Go live</strong>.</p>
+      {!live&&status!=='connecting'&&<p className={styles.setupHint}>
+        Your broadcast starts only after you preview your camera and select <strong>Go live</strong>.
+      </p>}
       </div>
       <div className={styles.previewColumn}>
         <div className={styles.previewHeading}>
