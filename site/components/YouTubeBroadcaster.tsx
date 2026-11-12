@@ -1,5 +1,6 @@
 'use client';
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, ExternalLink, Radio, Square, Youtube } from 'lucide-react';
 import { parseYouTubeLiveId, isYouTubeLiveVideoId } from '../lib/youtube-live';
