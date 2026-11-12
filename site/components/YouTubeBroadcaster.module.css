@@ -156,3 +156,44 @@
 .activeNoticeSecondary:hover{color:#294b36}
 .activeNoticeSecondary:focus-visible{outline:3px solid #b7d4bd;outline-offset:3px}
 @media(max-width:640px){.activeNoticeActions{justify-content:flex-start}}
+
+
+/* Broadcast Studio workflow refinements */
+.refreshStatus{
+  display:inline-flex;align-items:center;gap:6px;
+  border:0;background:transparent;color:#5b7262;cursor:pointer;
+  font:inherit;font-size:12px;font-weight:670;padding:9px 3px;
+}
+.refreshStatus:hover{color:#263b2b;text-decoration:underline;text-underline-offset:3px}
+.refreshStatus:focus-visible{outline:3px solid #b7d4bd;outline-offset:2px;border-radius:5px}
+.activeNoticeInterrupted{background:#fffaf2;border-color:#ebddc5}
+.activeNotice .activeNoticeAction{cursor:pointer;font-family:inherit}
+.activeNoticeActions{gap:7px 15px}
+.activeNoticeContent{gap:5px}
+.activeNoticeDescription{max-width:55ch;font-size:12px}
+.how{padding:0;margin:0 0 20px;border:0;background:transparent}
+.how summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;
+  font-size:12px;font-weight:700;color:#596c5e;padding:10px 0}
+.how summary::-webkit-details-marker{display:none}
+.how summary span{margin-left:auto;color:#97a299;font-size:16px}
+.how[open] summary span{transform:rotate(45deg)}
+.how p{margin:0 0 5px;background:#f7f9f6;border:1px solid #e6ede6;border-radius:10px;padding:12px}
+.how summary:focus-visible{outline:3px solid #b7d4bd;outline-offset:3px}
+.publishBlocked{font-size:12px;line-height:1.5;padding:12px 14px;
+  background:#fff9ef;border:1px solid #e8d7b9;border-radius:10px;color:#735626}
+.endConfirmation{margin-top:15px;border-top:1px solid #d8e4d8;padding-top:15px}
+.endConfirmation>strong{font-size:14px;color:#213a29}
+.endConfirmation>p{font-size:12px;margin:7px 0 12px;line-height:1.5}
+.endConfirmation .actions{margin-top:0}
+@media(max-width:420px){
+  .sourceGrid{grid-template-columns:minmax(0,1fr)}
+  .sourceCard{min-height:65px;padding:11px 14px;align-items:center;gap:12px}
+  .sourceIcon{width:36px;height:36px}
+  .sourceCopy strong{font-size:13px}
+  .sourceCopy span{font-size:11px}
+  .sourceCheck{display:block}
+  .headerActions a{font-size:11px}
+  .activeNoticeActions{flex-direction:column;align-items:stretch;width:100%;gap:4px}
+  .refreshStatus{justify-content:center}
+  .activeNoticeAction{justify-content:center}
+}
