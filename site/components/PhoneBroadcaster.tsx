@@ -75,8 +75,8 @@ async function configureVideoEncoder(sender: RTCRtpSender, maxBitrate: number) {
     }
   }
 }
-export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false}:{
-  eventId?:number;title?:string;embedded?:boolean;
+export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false,blockedByActiveEvent=false}:{
+  eventId?:number;title?:string;embedded?:boolean;blockedByActiveEvent?:boolean;
   onStatusChange?:(status:'idle'|'preview'|'connecting'|'live'|'ended')=>void;
 }){
   const video=useRef<HTMLVideoElement>(null);
@@ -89,6 +89,8 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false
   const [status,setStatus]=useState<'idle'|'preview'|'connecting'|'live'|'ended'>('idle');
   useEffect(()=>{onStatusChange?.(status)},[onStatusChange,status]);
   const [error,setError]=useState('');
+  const [confirmEnd,setConfirmEnd]=useState(false);
+  const [ending,setEnding]=useState(false);
   const [muted,setMuted]=useState(false);
   const [front,setFront]=useState(false);
   const [seconds,setSeconds]=useState(0);
@@ -183,7 +185,7 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false
     setMuted(next);
   }
   async function goLive(){
-    if(!media.current || status!=='preview')return;
+    if(blockedByActiveEvent || !media.current || status!=='preview')return;
     setError('');setStatus('connecting');setQuality(null);setCopied(false);
     try{
       const pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.cloudflare.com:3478'}]});
@@ -219,17 +221,22 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false
     }
   }
   async function end(){
-    setError('');
-    try{if(session.current&&activeEventId.current)await signal(activeEventId.current,{action:'stop',sessionId:session.current})}
-    catch(e){setError(e instanceof Error?e.message:'Could not mark broadcast ended')}
-    finally {
+    if(ending || status!=='live')return;
+    setError('');setEnding(true);
+    try {
+      if(!session.current||!activeEventId.current)throw new Error('The session is missing. Please review this event in the newsroom.');
+      // Keep the local broadcast open until the server confirms the end.
+      // Otherwise an API failure would leave viewers watching a stale LIVE event.
+      await signal(activeEventId.current,{action:'stop',sessionId:session.current});
       connection.current?.close();connection.current=null;
       media.current?.getTracks().forEach(t=>t.stop());media.current=null;
-      if(video.current) video.current.srcObject=null;
+      if(video.current)video.current.srcObject=null;
       session.current='';
-      if(!eventId) activeEventId.current=undefined;
-      setQuality(null);setStatus('ended');
-    }
+      if(!eventId)activeEventId.current=undefined;
+      setQuality(null);setStatus('ended');setConfirmEnd(false);
+    } catch(e){
+      setError(e instanceof Error?e.message:'Could not end the broadcast. Try again.');
+    } finally {setEnding(false)}
   }
   const live=status==='live';
   return <section className={[styles.studio,embedded?styles.studioEmbedded:''].filter(Boolean).join(' ')}>
@@ -247,8 +254,9 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false
     <div className={styles.setupGrid}>
       <div className={styles.setupFields}>
     {!eventId&&status!=='live'&&status!=='ended'&&<label className={styles.titleField}>Broadcast title
-      <input className={styles.textInput} value={quickTitle} onChange={e=>setQuickTitle(e.target.value)} maxLength={120}
-        placeholder="What are you covering?" required/>
+      <input className={styles.textInput} value={quickTitle} onChange={e=>setQuickTitle(e.target.value)} minLength={3} maxLength={120}
+        placeholder="e.g. Lagos Community Town Hall" required/>
+      <span className={styles.fieldHelper}>This title will appear on the public live page.</span>
     </label>}
     {(status==='idle'||status==='ended')&&<div className={styles.settingPanel}>
       <label className={styles.settingLabel} htmlFor="ogas-stream-quality">
@@ -267,8 +275,15 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false
     </div>}
     {(status==='preview'||status==='connecting'||status==='live')&&
       <p className={styles.captureNote}>{streamProfiles[streamProfile].label} · Camera: {capture}</p>}
-      {!live&&status!=='connecting'&&<p className={styles.setupHint}>
-        Your broadcast starts only after you preview your camera and select <strong>Go live</strong>.
+      {blockedByActiveEvent&&<p className={styles.conflictNote} role="status">
+        A previous event is still marked LIVE. You can preview your camera, but you must resolve that event above before broadcasting.
+      </p>}
+      {!live&&status!=='connecting'&&!blockedByActiveEvent&&<p className={styles.setupHint} role="status">
+        {status==='preview'
+          ? quickTitle.trim().length>=3||Boolean(eventId)
+            ? <><strong>Camera ready.</strong> Review your framing, then select Go live.</>
+            : <>Camera ready. Add a title to enable Go live.</>
+          : 'Enable your camera to check your framing. Nothing is broadcast until you select Go live.'}
       </p>}
       </div>
       <div className={styles.previewColumn}>
@@ -293,14 +308,29 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false
       {status==='preview'&&<>
         <button type="button" onClick={switchCamera} className={styles.secondaryButton}><RotateCcw size={17}/> Switch camera</button>
         <button type="button" onClick={toggleMic} className={styles.secondaryButton}>{muted?<MicOff size={17}/>:<Mic size={17}/>} {muted?'Unmute':'Mute'}</button>
-        <button type="button" onClick={goLive} disabled={!eventId&&quickTitle.trim().length<3} className={styles.primaryButton}><Radio size={17}/> Go live</button>
+        <button type="button" onClick={goLive}
+          disabled={blockedByActiveEvent||(!eventId&&quickTitle.trim().length<3)}
+          className={styles.primaryButton}><Radio size={17}/> Go live</button>
       </>}
       {live&&<>
         <button type="button" onClick={toggleMic} className={styles.secondaryButton}>{muted?<MicOff size={17}/>:<Mic size={17}/>} {muted?'Unmute':'Mute'}</button>
-        <button type="button" onClick={end} className={styles.primaryButton}><Square size={17}/> End broadcast</button>
+        <button type="button" onClick={()=>setConfirmEnd(true)} disabled={confirmEnd||ending}
+          className={styles.primaryButton}><Square size={17}/> End broadcast</button>
       </>}
       {status==='connecting'&&<span role="status" style={{padding:12}}>Connecting to Cloudflare…</span>}
     </div>
+    {live&&confirmEnd&&<div className={styles.endConfirmation} role="group" aria-label="Confirm end of broadcast">
+      <strong>End this live broadcast?</strong>
+      <p>Everyone watching will see “This broadcast has ended”. This cannot be undone.</p>
+      <div className={styles.endConfirmationActions}>
+        <button type="button" className={styles.secondaryButton} onClick={()=>setConfirmEnd(false)} disabled={ending}>
+          Keep broadcasting
+        </button>
+        <button type="button" className={styles.primaryButton} onClick={()=>void end()} disabled={ending}>
+          <Square size={16}/> {ending?'Ending…':'Yes, end for everyone'}
+        </button>
+      </div>
+    </div>}
       </div>
     </div>
     {live&&<div aria-label="Live stream quality" className={styles.healthPanel}>
