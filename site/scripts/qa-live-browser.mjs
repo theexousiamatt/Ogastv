@@ -36,36 +36,6 @@ try {
       try {
         const response = await page.goto(ORIGIN+route,{waitUntil:'domcontentloaded',timeout:45000});
         status = response?.status() || 0;
-        const name=(route==='/'?'home':route.replaceAll('/','-').replace(/^-/,''))+'-'+mode.name;
-        // Save appears in the article heading. Test it before the deliberate
-        // full-page scroll, which may trigger unrelated media/layout transitions.
-        if(route.startsWith('/stories/')){
-          const save=page.locator('.ogas-reading__save-button');
-          if(await save.count()){
-            if(!(await save.isVisible())){
-              // Report the actual computed state instead of an unhelpful 30s click timeout.
-              const details=await save.evaluate(node=>{
-                const parts=[];
-                let el=node;
-                for(let n=0;el&&n<5;n++,el=el.parentElement){
-                  const css=getComputedStyle(el);
-                  const rect=el.getBoundingClientRect();
-                  parts.push({tag:el.tagName,className:typeof el.className==='string'?el.className:'',
-                    display:css.display,visibility:css.visibility,opacity:css.opacity,
-                    width:Math.round(rect.width),height:Math.round(rect.height)});
-                }
-                return parts;
-              });
-              issues.push(name+': save-story button hidden '+JSON.stringify(details));
-            }else{
-              await save.scrollIntoViewIfNeeded({timeout:10000});
-              await save.click({timeout:10000});
-              if(!(await save.getAttribute('aria-pressed'))?.includes('true'))
-                issues.push(name+': save-story action did not toggle');
-            }
-          }else issues.push(name+': save-story action missing');
-        }
-
         // Trigger lazy images as a real reader scrolls the article/archive.
         await page.evaluate(async () => {
           const step = Math.max(480, Math.round(innerHeight * .85));
@@ -86,13 +56,21 @@ try {
           }).slice(0,10).map(img=>img.src),
           headings:[...document.querySelectorAll('h1')].map(el=>el.textContent?.trim()).slice(0,3),
         }));
-
+        const name=(route==='/'?'home':route.replaceAll('/','-').replace(/^-/,''))+'-'+mode.name;
         await page.screenshot({path:path.join('qa-live-screenshots',name+'.png'),fullPage:true,timeout:30000});
         results.push({route,device:mode.name,status,...state,pageErrors});
         if(status!==200)issues.push(name+': HTTP '+status);
         if(state.scrollWidth>state.width+3)issues.push(name+': horizontal overflow '+state.scrollWidth+'/'+state.width);
         if(state.missingImages.length)issues.push(name+': '+state.missingImages.length+' broken visible image(s)');
         if(pageErrors.length)issues.push(name+': '+pageErrors.join('; ').slice(0,350));
+        if(route.startsWith('/stories/')){
+          const save=page.locator('.ogas-reading__save-button');
+          if(await save.count()){
+            await save.click();
+            if(!(await save.getAttribute('aria-pressed'))?.includes('true'))
+              issues.push(name+': save-story action did not toggle');
+          }else issues.push(name+': save-story action missing');
+        }
         if(mode.isMobile&&route==='/'){
           const menu=page.locator('.ogas-public-mobile-menu');
           if(await menu.count()){
