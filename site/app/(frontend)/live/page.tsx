@@ -13,12 +13,14 @@ export default async function LivePage(){
   const cms=await getPayload({config});
   const events=await cms.find({
     collection:'live-events',overrideAccess:true,draft:false,depth:0,limit:25,sort:'-updatedAt',
-    where:{and:[{_status:{equals:'published'}},{broadcastStatus:{equals:'live'}}]},
+    where:{and:[{_status:{equals:'published'}},{broadcastStatus:{equals:'live'}},
+      {actualEnd:{exists:false}}]},
   });
   const now=Date.now();
   // Show only event-backed broadcasts. A static environment-video fallback could
   // incorrectly display LIVE after every newsroom event has ended.
   const live=events.docs.find(event=>{
+    if(event.actualEnd)return false;
     if(event.sourceType==='youtube')return isYouTubeLiveVideoId(event.youtubeVideoId);
     if(event.sourceType!=='cloudflare'||!event.publisherSessionId)return false;
     const started=Date.parse(event.actualStart||event.updatedAt||'');
