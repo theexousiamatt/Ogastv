@@ -22,5 +22,12 @@ test('a scheduled event is not marked LIVE',()=>{
   assert.equal(studioBroadcastStatus({broadcastStatus:'scheduled',sourceType:'cloudflare'},now),'scheduled');
 });
 test('YouTube events do not require Cloudflare publisher identifiers',()=>{
-  assert.equal(studioBroadcastStatus({broadcastStatus:'live',sourceType:'youtube'},now),'live');
+  assert.equal(studioBroadcastStatus({broadcastStatus:'live',sourceType:'youtube',youtubeVideoId:'AbC012_xY-z'},now),'live');
+});
+
+test('valid YouTube video can be LIVE without a Cloudflare session',()=>{
+  assert.equal(studioBroadcastStatus({broadcastStatus:'live',sourceType:'youtube',youtubeVideoId:'AbC012_xY-z'},now),'live');
+});
+test('YouTube event without video ID is interrupted instead of falsely LIVE',()=>{
+  assert.equal(studioBroadcastStatus({broadcastStatus:'live',sourceType:'youtube'},now),'interrupted');
 });
