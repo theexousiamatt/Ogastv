@@ -60,7 +60,8 @@ export async function POST(req:NextRequest){
       const now=new Date().toISOString();
       if(existingId){
         await cms.update({collection:'live-events',id:existingId,overrideAccess:true,draft:false,data:{
-          broadcastStatus:'live',_status:'published',sourceType:'youtube',actualStart:now,actualEnd:null
+          broadcastStatus:'live',_status:'published',sourceType:'youtube',actualStart:now,actualEnd:null,
+          broadcasterStaffId:String(actor.id)
         }});
         return reply({ok:true,eventId:existingId,youtubeVideoId:sourceId});
       }
