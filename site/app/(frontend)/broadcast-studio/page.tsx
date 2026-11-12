@@ -26,9 +26,12 @@ export default async function BroadcastStudio() {
   // A draft:true read can resurrect a historical 'live' label after an event ended.
   const events=await cms.find({collection:'live-events',overrideAccess:true,draft:false,depth:0,limit:10,sort:'-updatedAt'});
   const now=Date.now();
+  const activeEvent=events.docs.find(event=>event.broadcastStatus==='live');
 
   return <main className={styles.studioPage}>
-    <BroadcastSourceSelector />
+    <BroadcastSourceSelector activeEvent={activeEvent?{
+      id:Number(activeEvent.id),title:String(activeEvent.title||'Untitled event')
+    }:null}/>
     <details className={styles.history}>
       <summary className={styles.historySummary}>Previous and scheduled broadcasts</summary>
       <p className={styles.historyHelper}>Start a new broadcast above, or choose an existing event below. Older events remain available for reference.</p>
