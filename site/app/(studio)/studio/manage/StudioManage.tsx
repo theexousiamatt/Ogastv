@@ -68,7 +68,7 @@ const fields:Record<'programmes'|'episodes'|'live-events'|'community',Field[]>={
     {key:'broadcastStatus',label:'Broadcast status',type:'select',options:statuses},
     {key:'sourceType',label:'Video source',type:'select',options:[
       {label:'Phone camera / Cloudflare',value:'cloudflare'},{label:'YouTube',value:'youtube'}]},
-    {key:'youtubeVideoId',label:'YouTube video ID (when relevant)',type:'text'},
+    {key:'youtubeVideoId',label:'YouTube video ID (for scheduled YouTube events)',type:'text'},
     {key:'recording',label:'Recording / replay',type:'relation',source:'episodes'},
     {key:'actualStart',label:'Actual start',type:'date'},
     {key:'actualEnd',label:'Actual end',type:'date'},
@@ -86,7 +86,7 @@ const tabDetails:Record<Tab,{title:string;description:string;Icon:typeof Home;co
   team:{title:'Team',description:'Manage staff roles and send secure newsroom invitations.',Icon:UsersRound,collection:'staff-users'},
   programmes:{title:'Programmes',description:'Manage OgasTV Studio shows, their covers and presenters.',Icon:Clapperboard,collection:'programmes'},
   episodes:{title:'Episodes',description:'Publish video podcasts, presenter-led coverage and YouTube episodes.',Icon:BookOpen,collection:'episodes'},
-  'live-events':{title:'Live events',description:'Create broadcast records, schedule coverage and attach replays. Start actual camera sessions from Broadcast Studio.',Icon:Radio,collection:'live-events'},
+  'live-events':{title:'Live events',description:'Create broadcast records, schedule coverage and attach replays. Start phone-camera or YouTube Live sessions from Broadcast Studio.',Icon:Radio,collection:'live-events'},
   community:{title:'Community stories',description:'Review resident submissions while protecting their contact details and publication consent.',Icon:MapPin,collection:'community-submissions'},
 };
 const optionUrls:Record<string,string>={

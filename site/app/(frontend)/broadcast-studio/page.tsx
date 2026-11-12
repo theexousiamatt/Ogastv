@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { getPayload } from 'payload';
 import config from '../../../payload.config';
 import { editorial, getStaff } from '../../../cms/access';
-import { PhoneBroadcaster } from '../../../components/PhoneBroadcaster';
+import { BroadcastSourceSelector } from '../../../components/BroadcastSourceSelector';
 import { studioBroadcastStatus } from '../../../lib/broadcast-status';
 import { formatBroadcastDuration, formatLagosTimestamp } from '../../../lib/broadcast-timeline';
 import styles from '../../../components/PhoneBroadcaster.module.css';
@@ -26,9 +26,12 @@ export default async function BroadcastStudio() {
   // A draft:true read can resurrect a historical 'live' label after an event ended.
   const events=await cms.find({collection:'live-events',overrideAccess:true,draft:false,depth:0,limit:10,sort:'-updatedAt'});
   const now=Date.now();
+  const activeEvent=events.docs.find(event=>event.broadcastStatus==='live');
 
   return <main className={styles.studioPage}>
-    <PhoneBroadcaster />
+    <BroadcastSourceSelector activeEvent={activeEvent?{
+      id:Number(activeEvent.id),title:String(activeEvent.title||'Untitled event')
+    }:null}/>
     <details className={styles.history}>
       <summary className={styles.historySummary}>Previous and scheduled broadcasts</summary>
       <p className={styles.historyHelper}>Start a new broadcast above, or choose an existing event below. Older events remain available for reference.</p>
@@ -39,6 +42,7 @@ export default async function BroadcastStudio() {
             broadcastStatus:typeof event.broadcastStatus==='string'?event.broadcastStatus:null,
             sourceType:typeof event.sourceType==='string'?event.sourceType:null,
             publisherSessionId:typeof event.publisherSessionId==='string'?event.publisherSessionId:null,
+            youtubeVideoId:typeof event.youtubeVideoId==='string'?event.youtubeVideoId:null,
             actualStart:typeof event.actualStart==='string'?event.actualStart:null,
             actualEnd:typeof event.actualEnd==='string'?event.actualEnd:null,
             updatedAt:typeof event.updatedAt==='string'?event.updatedAt:null,

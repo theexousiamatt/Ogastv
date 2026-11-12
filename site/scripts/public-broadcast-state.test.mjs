@@ -28,3 +28,15 @@ test('unpublished events never reveal timings or status',()=>{
 test('unknown events are offline',()=>{
   assert.deepEqual(publicBroadcastState(null),{state:'offline',actualStart:null,actualEnd:null});
 });
+
+test('published YouTube event with a valid video ID is live',()=>{
+  assert.equal(publicBroadcastState({_status:'published',sourceType:'youtube',broadcastStatus:'live',youtubeVideoId:'AbC012_xY-z'}).state,'live');
+});
+test('YouTube event without a valid ID is not live',()=>{
+  assert.equal(publicBroadcastState({_status:'published',sourceType:'youtube',broadcastStatus:'live',youtubeVideoId:'invalid'}).state,'offline');
+});
+test('ended YouTube event returns saved end time to connected viewers',()=>{
+  assert.deepEqual(publicBroadcastState({_status:'published',sourceType:'youtube',broadcastStatus:'ended',
+    youtubeVideoId:'AbC012_xY-z',actualStart:'2026-11-12T05:00:00Z',actualEnd:'2026-11-12T05:30:00Z'}),
+    {state:'ended',actualStart:'2026-11-12T05:00:00Z',actualEnd:'2026-11-12T05:30:00Z'});
+});

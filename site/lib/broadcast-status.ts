@@ -1,3 +1,6 @@
+// Inline for Node's strip-types regression runner (which does not resolve extensionless .ts imports).
+const isValidYouTubeId = (value:unknown):value is string =>
+  typeof value==='string' && /^[A-Za-z0-9_-]{11}$/.test(value);
 /** Derive the newsroom display label from the canonical (non-draft) event.
  * Historical Payload version records may still say "live" after a stream ends.
  * Do not treat a stale or missing Cloudflare publisher session as actively on air.
@@ -6,6 +9,7 @@ export type StudioBroadcastEvent = {
   broadcastStatus?: string | null;
   sourceType?: string | null;
   publisherSessionId?: string | null;
+  youtubeVideoId?: string | null;
   actualStart?: string | null;
   actualEnd?: string | null;
   updatedAt?: string | null;
@@ -16,7 +20,8 @@ export type StudioBroadcastStatus = 'live' | 'ended' | 'scheduled' | 'interrupte
 export function studioBroadcastStatus(event: StudioBroadcastEvent, now = Date.now()): StudioBroadcastStatus {
   if (event.broadcastStatus === 'ended' || event.actualEnd) return 'ended';
   if (event.broadcastStatus !== 'live') return 'scheduled';
-  if (event.sourceType !== 'cloudflare') return 'live';
+  if (event.sourceType === 'youtube') return isValidYouTubeId(event.youtubeVideoId)?'live':'interrupted';
+  if (event.sourceType !== 'cloudflare') return 'interrupted';
   if (!event.publisherSessionId?.trim()) return 'interrupted';
   const started = Date.parse(event.actualStart || event.updatedAt || '');
   // A stale client can leave a Cloudflare SFU event marked live after closing its tab.

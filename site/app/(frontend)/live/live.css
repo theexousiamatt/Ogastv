@@ -232,6 +232,10 @@
     font-size: 12px;
   }
 }
+/* YouTube is a landscape embed even on a portrait phone. */
+@media (max-width: 700px) {
+  .ogas-live-page__youtube { aspect-ratio:16 / 9; }
+}
 @media (prefers-reduced-motion: reduce) {
   .ogas-live-page * { transition: none !important; }
 }
