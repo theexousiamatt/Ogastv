@@ -27,19 +27,22 @@ export function BroadcastSourceSelector({activeEvent}:{activeEvent?:ActiveEvent|
       {activeEvent&&<div className={styles.activeNotice} role="status">
         <div className={styles.activeNoticeContent}>
           <span className={styles.activeNoticeLabel}>
-            <span className={activeEvent.state==='interrupted'?styles.activeNoticeWarningDot:styles.activeNoticeDot} aria-hidden="true"/>
-            {activeEvent.state==='interrupted'?'Session needs review':'Event marked live'}
+            <span className={activeEvent.state!=='live'?styles.activeNoticeWarningDot:styles.activeNoticeDot} aria-hidden="true"/>
+            {activeEvent.state!=='live'?'Session needs review':'Event marked live'}
           </span>
           <strong>{activeEvent.title}</strong>
           <span className={styles.activeNoticeDescription}>
-            {activeEvent.state==='interrupted'
+            {activeEvent.state!=='live'
               ? 'This session may be disconnected. Review its status before starting another broadcast.'
               : 'End this event before publishing a different stream.'}
           </span>
         </div>
-        <a className={styles.activeNoticeAction} href={'/broadcast-studio/'+activeEvent.id}>
-          Open event <ArrowUpRight size={15} aria-hidden="true"/>
-        </a>
+        <div className={styles.activeNoticeActions}>
+          <a className={styles.activeNoticeAction} href="/studio/manage">
+            Manage status <ArrowUpRight size={15} aria-hidden="true"/>
+          </a>
+          <a className={styles.activeNoticeSecondary} href={'/broadcast-studio/'+activeEvent.id}>Open event</a>
+        </div>
       </div>}
       <div className={styles.sourceLabelRow}>
         <span className={styles.sourceLabel}>01 <span aria-hidden="true">/</span> Broadcast source</span>
