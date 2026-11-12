@@ -39,6 +39,7 @@ export default async function BroadcastStudio() {
             broadcastStatus:typeof event.broadcastStatus==='string'?event.broadcastStatus:null,
             sourceType:typeof event.sourceType==='string'?event.sourceType:null,
             publisherSessionId:typeof event.publisherSessionId==='string'?event.publisherSessionId:null,
+            youtubeVideoId:typeof event.youtubeVideoId==='string'?event.youtubeVideoId:null,
             actualStart:typeof event.actualStart==='string'?event.actualStart:null,
             actualEnd:typeof event.actualEnd==='string'?event.actualEnd:null,
             updatedAt:typeof event.updatedAt==='string'?event.updatedAt:null,
