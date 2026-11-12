@@ -75,9 +75,20 @@ export async function POST(req:NextRequest) {
     if(!event) return err('Event not found',404);
     const owns=canBroadcast && event.publisherSessionId && body.sessionId===event.publisherSessionId &&
       String(event.broadcasterStaffId)===String(actor!.id);
+    // The public site has a single featured stream. A historical end timestamp
+    // takes precedence over a stale LIVE flag left by older newsroom edits.
+    async function anotherEventIsLive() {
+      const active=await cms.find({collection:'live-events',overrideAccess:true,draft:false,
+        depth:0,limit:10,where:{and:[
+          {_status:{equals:'published'}},{broadcastStatus:{equals:'live'}},
+          {actualEnd:{exists:false}}
+        ]}});
+      return active.docs.some(item=>Number(item.id)!==id);
+    }
     if(body.action==='start') {
       if(!canBroadcast) return err('Authorized newsroom login required',403);
-      if(event.broadcastStatus==='live') return err('This event is already broadcasting',409);
+      if(event.broadcastStatus==='live'&&!event.actualEnd) return err('This event is already broadcasting',409);
+      if(await anotherEventIsLive())return err('Another event is marked LIVE. End it in the Broadcast Studio before starting a new stream.',409);
       const session=await realtime('/sessions/new','POST');
       await cms.update({collection:'live-events',id,overrideAccess:true,data:{
         sourceType:'cloudflare',publisherSessionId:session.sessionId,broadcasterStaffId:String(actor!.id),
@@ -100,6 +111,7 @@ export async function POST(req:NextRequest) {
     }
     if(body.action==='go-live') {
       if(!owns) return err('Broadcast ownership required',403);
+      if(await anotherEventIsLive())return err('Another event went live while you were connecting. End it before continuing.',409);
       await cms.update({collection:'live-events',id,overrideAccess:true,data:{
         _status:'published',sourceType:'cloudflare',broadcastStatus:'live',actualStart:new Date().toISOString()
       }});
@@ -114,7 +126,7 @@ export async function POST(req:NextRequest) {
       return NextResponse.json({ok:true});
     }
     if(body.action==='watch') {
-      if(event.broadcastStatus!=='live' || event._status!=='published' || event.sourceType!=='cloudflare' ||
+      if(event.broadcastStatus!=='live' || !!event.actualEnd || event._status!=='published' || event.sourceType!=='cloudflare' ||
         !event.publisherSessionId) return err('Currently off air',404);
       const session=await realtime('/sessions/new','POST');
       const receive=await realtime('/sessions/'+encodeURIComponent(session.sessionId)+'/tracks/new','POST',{
@@ -126,7 +138,7 @@ export async function POST(req:NextRequest) {
         ticket:token(id,session.sessionId)});
     }
     if(body.action==='answer') {
-      if(event.broadcastStatus!=='live' || !body.sessionId || !body.ticket ||
+      if(event.broadcastStatus!=='live' || !!event.actualEnd || !body.sessionId || !body.ticket ||
         !validTicket(id,body.sessionId,body.ticket) || !validSDP(body.sessionDescription) ||
         body.sessionDescription.type!=='answer') return err('Invalid viewer session',403);
       await realtime('/sessions/'+encodeURIComponent(body.sessionId)+'/renegotiate','PUT',{

@@ -26,7 +26,14 @@ export default async function BroadcastStudio() {
   // A draft:true read can resurrect a historical 'live' label after an event ended.
   const events=await cms.find({collection:'live-events',overrideAccess:true,draft:false,depth:0,limit:10,sort:'-updatedAt'});
   const now=Date.now();
-  const activeEvent=events.docs.find(event=>event.broadcastStatus==='live');
+  // Query the active event independently: it might not be one of the ten
+  // most recently edited history records shown further down this page.
+  const activeEvents=await cms.find({collection:'live-events',overrideAccess:true,draft:false,
+    depth:0,limit:1,sort:'-updatedAt',where:{and:[
+      {_status:{equals:'published'}},{broadcastStatus:{equals:'live'}},
+      {actualEnd:{exists:false}}
+    ]}});
+  const activeEvent=activeEvents.docs[0];
   // A previous broadcaster can leave a CMS event marked LIVE after disconnecting.
   // Keep it visible for staff to review, but do not claim the video is transmitting.
   const activeState=activeEvent?studioBroadcastStatus({
@@ -41,7 +48,9 @@ export default async function BroadcastStudio() {
 
   return <main className={styles.studioPage}>
     <BroadcastSourceSelector activeEvent={activeEvent&&activeState?{
-      id:Number(activeEvent.id),title:String(activeEvent.title||'Untitled event'),state:activeState
+      id:Number(activeEvent.id),title:String(activeEvent.title||'Untitled event'),state:activeState,
+      sourceType:activeEvent.sourceType==='youtube'?'youtube':'cloudflare',
+      videoId:typeof activeEvent.youtubeVideoId==='string'?activeEvent.youtubeVideoId:null
     }:null}/>
     <details className={styles.history}>
       <summary className={styles.historySummary}>Previous and scheduled broadcasts</summary>

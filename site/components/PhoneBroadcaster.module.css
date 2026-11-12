@@ -367,3 +367,21 @@
  .setupFields{padding:13px}
  .videoFrame{max-height:40dvh}
 }
+
+
+/* Broadcast setup guardrails and readable instructional copy */
+.fieldHelper{display:block;font-size:11px;font-weight:450;color:#778278;
+  line-height:1.5;margin-top:7px}
+.conflictNote{padding:12px 14px;border-radius:11px;border:1px solid #ead8b8;
+  background:#fffaf0;color:#735526;font-size:12px;line-height:1.55;margin:16px 0 0}
+.endConfirmation{margin-top:12px;padding:15px;border-radius:12px;
+  border:1px solid #e8c9cc;background:#fff9f9;color:#4c2c31}
+.endConfirmation>strong{font-size:14px;font-weight:760}
+.endConfirmation>p{font-size:12px;line-height:1.55;margin:6px 0 12px;color:#75545a}
+.endConfirmationActions{display:flex;gap:9px;flex-wrap:wrap}
+.endConfirmationActions>button{flex:1 1 175px}
+@media(max-width:640px){
+  .endConfirmation{padding:12px}
+  .endConfirmationActions{display:grid;grid-template-columns:minmax(0,1fr)}
+  .endConfirmationActions>button{width:100%}
+}
