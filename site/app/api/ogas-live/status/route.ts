@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
       sourceType:typeof event.sourceType==='string'?event.sourceType:null,
       broadcastStatus:typeof event.broadcastStatus==='string'?event.broadcastStatus:null,
       publisherSessionId:typeof event.publisherSessionId==='string'?event.publisherSessionId:null,
+      youtubeVideoId:typeof event.youtubeVideoId==='string'?event.youtubeVideoId:null,
       actualStart:typeof event.actualStart==='string'?event.actualStart:null,
       actualEnd:typeof event.actualEnd==='string'?event.actualEnd:null,
     }:null));
