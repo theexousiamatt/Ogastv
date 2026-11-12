@@ -80,3 +80,5 @@
 .activeNotice>span:first-child{font-weight:550;flex-basis:100%}
 .activeNotice a{color:#8e332b;font-weight:760;text-underline-offset:2px}
 @media(max-width:640px){.activeNotice{gap:6px 13px;padding:11px}}
+
+.sourceCard:disabled{opacity:.5;cursor:not-allowed}
