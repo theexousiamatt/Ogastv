@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 
 const origin=process.env.OGASTV_TEST_ORIGIN||'http://localhost:3000';
+// The smoke test runs against the optimized production Next.js server, so the
+// origin check intentionally expects OgasTV's HTTPS domain even on localhost.
+const publicOrigin=process.env.OGASTV_PUBLIC_ORIGIN||'https://ogastvafrica.ng';
 async function jsonFetch(path,options){
   const response=await fetch(origin+path,options);
   const body=await response.json().catch(()=>({}));
@@ -20,11 +23,11 @@ function publish(data,headers=authHeaders){
 }
 const sampleId='AbC012_xY-z';
 let result=await publish({action:'start',title:'Test Youtube newsroom event',youtubeUrl:'https://youtube.com/live/'+sampleId},
-  {'Content-Type':'application/json',Origin:origin});
+  {'Content-Type':'application/json',Origin:publicOrigin});
 assert.equal(result.response.status,403,'Public reader must not publish YouTube events');
 
 result=await publish({action:'start',title:'Test YouTube newsroom event',youtubeUrl:'https://evil.example/live/'+sampleId});
-assert.equal(result.response.status,400,'Untrusted YouTube URL must be rejected');
+assert.equal(result.response.status,400,'Untrusted YouTube URL must be rejected: '+JSON.stringify(result.body));
 
 result=await publish({action:'start',title:'Test YouTube newsroom event',youtubeUrl:'https://youtube.com/live/'+sampleId,
   description:'Temporary integration smoke test'});
