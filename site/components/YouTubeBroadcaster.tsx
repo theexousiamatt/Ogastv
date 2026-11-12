@@ -57,8 +57,9 @@ export function YouTubeBroadcaster({eventId,title='',videoId=null,status='schedu
   }
   return <section className={styles.panel} aria-labelledby="ogas-youtube-heading">
     <div className={styles.titleRow}><span className={styles.youtubeIcon}><Youtube size={23}/></span>
-      <div><h2 id="ogas-youtube-heading" className={styles.title}>YouTube Live</h2>
-      <p className={styles.intro}>Feature a livestream on OgasTV without leaving YouTube.</p></div>
+      <div><span className={styles.youtubeStep}>02 / YouTube setup</span>
+      <h2 id="ogas-youtube-heading" className={styles.title}>Connect your YouTube livestream</h2>
+      <p className={styles.intro}>Add an existing livestream to OgasTV's live page.</p></div>
     </div>
     <div className={styles.how}>
       <strong>Before publishing</strong>

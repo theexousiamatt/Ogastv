@@ -27,10 +27,21 @@ export default async function BroadcastStudio() {
   const events=await cms.find({collection:'live-events',overrideAccess:true,draft:false,depth:0,limit:10,sort:'-updatedAt'});
   const now=Date.now();
   const activeEvent=events.docs.find(event=>event.broadcastStatus==='live');
+  // A previous broadcaster can leave a CMS event marked LIVE after disconnecting.
+  // Keep it visible for staff to review, but do not claim the video is transmitting.
+  const activeState=activeEvent?studioBroadcastStatus({
+    broadcastStatus:typeof activeEvent.broadcastStatus==='string'?activeEvent.broadcastStatus:null,
+    sourceType:typeof activeEvent.sourceType==='string'?activeEvent.sourceType:null,
+    publisherSessionId:typeof activeEvent.publisherSessionId==='string'?activeEvent.publisherSessionId:null,
+    youtubeVideoId:typeof activeEvent.youtubeVideoId==='string'?activeEvent.youtubeVideoId:null,
+    actualStart:typeof activeEvent.actualStart==='string'?activeEvent.actualStart:null,
+    actualEnd:typeof activeEvent.actualEnd==='string'?activeEvent.actualEnd:null,
+    updatedAt:typeof activeEvent.updatedAt==='string'?activeEvent.updatedAt:null,
+  },now):null;
 
   return <main className={styles.studioPage}>
-    <BroadcastSourceSelector activeEvent={activeEvent?{
-      id:Number(activeEvent.id),title:String(activeEvent.title||'Untitled event')
+    <BroadcastSourceSelector activeEvent={activeEvent&&activeState?{
+      id:Number(activeEvent.id),title:String(activeEvent.title||'Untitled event'),state:activeState
     }:null}/>
     <details className={styles.history}>
       <summary className={styles.historySummary}>Previous and scheduled broadcasts</summary>

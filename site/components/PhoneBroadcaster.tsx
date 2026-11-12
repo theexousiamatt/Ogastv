@@ -75,8 +75,9 @@ async function configureVideoEncoder(sender: RTCRtpSender, maxBitrate: number) {
     }
   }
 }
-export function PhoneBroadcaster({eventId,title='',onStatusChange}:{
-  eventId?:number;title?:string;onStatusChange?:(status:'idle'|'preview'|'connecting'|'live'|'ended')=>void;
+export function PhoneBroadcaster({eventId,title='',onStatusChange,embedded=false}:{
+  eventId?:number;title?:string;embedded?:boolean;
+  onStatusChange?:(status:'idle'|'preview'|'connecting'|'live'|'ended')=>void;
 }){
   const video=useRef<HTMLVideoElement>(null);
   const media=useRef<MediaStream|null>(null);
@@ -231,10 +232,24 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange}:{
     }
   }
   const live=status==='live';
-  return <section className={styles.studio}>
+  return <section className={[styles.studio,embedded?styles.studioEmbedded:''].filter(Boolean).join(' ')}>
     {eventId&&<a href="/broadcast-studio" className={styles.backLink}>← Broadcast studio</a>}
-    <h1 className={styles.title}>{eventId?title:'Go live'}</h1>
-    <p className={styles.intro}>Your camera, your story. Viewers watch directly on OgasTV.</p>
+    {embedded?
+      <div className={styles.setupHeading}>
+        <span className={styles.stepEyebrow}>02 <span aria-hidden="true">/</span> Camera setup</span>
+        <h2>Prepare your camera</h2>
+        <p>Set your title, choose video quality and check your preview.</p>
+      </div>:
+      <>
+        <h1 className={styles.title}>{eventId?title:'Go live'}</h1>
+        <p className={styles.intro}>Your camera, your story. Viewers watch directly on OgasTV.</p>
+      </>}
+    <div className={styles.setupGrid}>
+      <div className={styles.setupFields}>
+    {!eventId&&status!=='live'&&status!=='ended'&&<label className={styles.titleField}>Broadcast title
+      <input className={styles.textInput} value={quickTitle} onChange={e=>setQuickTitle(e.target.value)} maxLength={120}
+        placeholder="What are you covering?" required/>
+    </label>}
     {(status==='idle'||status==='ended')&&<div className={styles.settingPanel}>
       <label className={styles.settingLabel} htmlFor="ogas-stream-quality">
         Stream quality
@@ -252,10 +267,15 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange}:{
     </div>}
     {(status==='preview'||status==='connecting'||status==='live')&&
       <p className={styles.captureNote}>{streamProfiles[streamProfile].label} · Camera: {capture}</p>}
-    {!eventId&&status!=='live'&&status!=='ended'&&<label className={styles.titleField}>Broadcast title
-      <input className={styles.textInput} value={quickTitle} onChange={e=>setQuickTitle(e.target.value)} maxLength={120}
-        placeholder="What are you covering?" required/>
-    </label>}
+      {!live&&status!=='connecting'&&<p className={styles.setupHint}>
+        Your broadcast starts only after you preview your camera and select <strong>Go live</strong>.
+      </p>}
+      </div>
+      <div className={styles.previewColumn}>
+        <div className={styles.previewHeading}>
+          <span>Camera preview</span>
+          <span className={styles.previewStatus}>{status==='live'?'● ON AIR':status==='preview'?'● READY':status==='connecting'?'CONNECTING':'CAMERA OFF'}</span>
+        </div>
     <div className={styles.videoFrame}>
       <video ref={video} muted autoPlay playsInline className={styles.cameraVideo}
         style={{transform:front?'scaleX(-1)':'none'}}/>
@@ -280,6 +300,8 @@ export function PhoneBroadcaster({eventId,title='',onStatusChange}:{
         <button type="button" onClick={end} className={styles.primaryButton}><Square size={17}/> End broadcast</button>
       </>}
       {status==='connecting'&&<span role="status" style={{padding:12}}>Connecting to Cloudflare…</span>}
+    </div>
+      </div>
     </div>
     {live&&<div aria-label="Live stream quality" className={styles.healthPanel}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>

@@ -307,3 +307,63 @@
 @media (prefers-reduced-motion: reduce) {
   .historyItem,.primaryButton,.secondaryButton,.enableButton { transition: none; }
 }
+
+/* Two-column desktop setup; compact single-column controls on phones. */
+.studioPage{max-width:1100px;padding:0 24px}
+.studio{max-width:1040px}
+.studioEmbedded{padding:0;margin:17px auto 12px}
+.setupHeading{margin:0 0 15px}
+.stepEyebrow{display:inline-block;font-size:12px;color:#37463b;font-weight:750}
+.stepEyebrow span{padding:0 3px;color:#afbbb1;font-weight:400}
+.setupHeading h2{font-size:clamp(21px,2.5vw,25px);font-weight:760;letter-spacing:-.045em;line-height:1.2;margin:7px 0 4px}
+.setupHeading p{color:#6b776e;font-size:12px;line-height:1.5;margin:0}
+.setupGrid{display:grid;grid-template-columns:minmax(0,0.89fr) minmax(0,1.11fr);gap:20px;align-items:start}
+.setupFields{min-width:0;background:#f9faf8;border:1px solid #e3e9e2;border-radius:16px;padding:22px}
+.titleField{margin:0 0 19px;font-size:13px}
+.textInput{margin-top:9px;min-height:47px}
+.settingPanel{background:transparent;border:0;border-radius:0;padding:0;margin:0}
+.settingSelect{background:#fff;margin-top:9px}
+.settingHelp{font-size:11px;line-height:1.45}
+.setupHint{font-size:12px;line-height:1.6;color:#728077;margin:22px 0 0;border-top:1px solid #e5eae3;padding-top:15px}
+.setupHint strong{color:#3a5641;font-weight:720}
+.previewColumn{min-width:0}
+.previewHeading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 9px;font-size:12px;color:#38473c;font-weight:730}
+.previewStatus{font-size:10px;letter-spacing:.045em;color:#7a867e;font-weight:780}
+.videoFrame{max-width:none;width:100%;aspect-ratio:4 / 4;max-height:520px;margin:0;border-radius:16px}
+.cameraIcon{width:54px;height:54px;margin-bottom:0}
+.cameraOffHint{font-size:12px}
+.controls{max-width:none;margin:12px 0 0;gap:8px}
+.controls>button{flex:1 1 auto}
+.controls .primaryButton{flex:1 0 100%;order:-1}
+.healthPanel{max-width:none}
+.footerNote,.liveLink{max-width:none}
+.history{max-width:1040px;margin-top:36px}
+@media(max-width:800px){
+ .setupGrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:15px}
+ .setupFields{padding:17px}
+ .videoFrame{aspect-ratio:4 / 5;max-height:470px}
+}
+@media(max-width:640px){
+ .studioPage{padding:0 16px 42px}
+ .studioEmbedded{padding:0;margin:15px auto 10px}
+ .setupHeading{margin-bottom:12px}
+ .setupHeading h2{font-size:23px}
+ .setupHeading p{font-size:12px}
+ .setupGrid{grid-template-columns:minmax(0,1fr);gap:14px}
+ .setupFields{padding:15px;border-radius:13px}
+ .titleField{font-size:12px;margin-bottom:13px}
+ .textInput{margin-top:7px;min-height:44px}
+ .settingLabel{font-size:12px}
+ .settingSelect{min-height:43px;margin-top:7px}
+ .settingHelp{font-size:11px;margin-top:6px}
+ .setupHint{padding-top:10px;margin-top:12px;font-size:11px}
+ .previewHeading{margin-bottom:8px}
+ .videoFrame{max-width:100%;aspect-ratio:4 / 4.2;max-height:43dvh;border-radius:14px}
+ .controls{margin-top:10px}
+ .history{margin-top:25px}
+}
+@media(max-width:370px){
+ .studioPage{padding-inline:12px}
+ .setupFields{padding:13px}
+ .videoFrame{max-height:40dvh}
+}
