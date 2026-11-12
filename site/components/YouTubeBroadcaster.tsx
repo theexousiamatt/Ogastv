@@ -8,7 +8,7 @@ import { formatLagosTimestamp } from '../lib/broadcast-timeline';
 import styles from './YouTubeBroadcaster.module.css';
 
 type EventStatus='scheduled'|'live'|'ended'|'interrupted'|'cancelled'|'replay_available';
-type Props={eventId?:number;title?:string;videoId?:string|null;status?:string};
+type Props={eventId?:number;title?:string;videoId?:string|null;status?:string;blockedByActiveEvent?:boolean};
 async function youtubeAction(body:object){
   const response=await fetch('/api/ogas-live/youtube',{method:'POST',credentials:'same-origin',
     headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
@@ -16,7 +16,7 @@ async function youtubeAction(body:object){
   if(!response.ok)throw new Error(typeof data.error==='string'?data.error:'Could not update the broadcast.');
   return data as {eventId?:number;actualEnd?:string|null};
 }
-export function YouTubeBroadcaster({eventId,title='',videoId=null,status='scheduled'}:Props){
+export function YouTubeBroadcaster({eventId,title='',videoId=null,status='scheduled',blockedByActiveEvent=false}:Props){
   const router=useRouter();
   const existing=Number.isSafeInteger(eventId)&&Number(eventId)>0;
   const [name,setName]=useState(title);
@@ -28,13 +28,14 @@ export function YouTubeBroadcaster({eventId,title='',videoId=null,status='schedu
   );
   const [endedAt,setEndedAt]=useState<string|null>(null);
   const [busy,setBusy]=useState(false);
+  const [confirmEnd,setConfirmEnd]=useState(false);
   const [error,setError]=useState('');
   const parsed=parseYouTubeLiveId(url);
   const publishable=Boolean(parsed&&name.trim().length>=3&&name.trim().length<=120);
 
   async function publish(e:FormEvent<HTMLFormElement>){
     e.preventDefault();
-    if(busy||broadcastStatus==='live'||broadcastStatus==='ended'||!publishable)return;
+    if(busy||blockedByActiveEvent||broadcastStatus==='live'||broadcastStatus==='ended'||!publishable)return;
     setBusy(true);setError('');
     try{
       const result=await youtubeAction(existing?
@@ -50,7 +51,7 @@ export function YouTubeBroadcaster({eventId,title='',videoId=null,status='schedu
     setBusy(true);setError('');
     try{
       const result=await youtubeAction({action:'end',eventId:id});
-      setEndedAt(result.actualEnd||null);setBroadcastStatus('ended');
+      setEndedAt(result.actualEnd||null);setBroadcastStatus('ended');setConfirmEnd(false);
       router.refresh();
     }catch(e){setError(e instanceof Error?e.message:'Unable to end event');}
     finally{setBusy(false)}
@@ -61,10 +62,10 @@ export function YouTubeBroadcaster({eventId,title='',videoId=null,status='schedu
       <h2 id="ogas-youtube-heading" className={styles.title}>Connect your YouTube livestream</h2>
       <p className={styles.intro}>Add an existing livestream to OgasTV's live page.</p></div>
     </div>
-    <div className={styles.how}>
-      <strong>Before publishing</strong>
-      <p>Start your broadcast in YouTube Studio and allow embedding. Paste the video link here to show it on OgasTV. This will not start or stop the YouTube broadcast itself.</p>
-    </div>
+    <details className={styles.how}>
+      <summary>Before you connect YouTube <span aria-hidden="true">+</span></summary>
+      <p>Start your livestream in YouTube Studio and allow embedding. OgasTV shows that video on its live page—it does not start or stop streaming on YouTube.</p>
+    </details>
     {broadcastStatus==='ended'?<div className={styles.finished} role="status">
       <CheckCircle2 size={25}/><div><strong>Broadcast ended on OgasTV</strong>
       <p>{endedAt?'Ended '+formatLagosTimestamp(endedAt):'This event is no longer live.'}</p>
@@ -78,10 +79,20 @@ export function YouTubeBroadcaster({eventId,title='',videoId=null,status='schedu
           <ExternalLink size={16}/> View public live page
         </a>
         {id&&<a href={'/broadcast-studio/'+id} className={styles.secondary}>Manage event</a>}
-        <button type="button" className={styles.end} onClick={()=>void end()} disabled={busy}>
-          <Square size={15}/> {busy?'Ending…':'End OgasTV broadcast'}
+        <button type="button" className={styles.end} onClick={()=>setConfirmEnd(true)} disabled={busy||confirmEnd}>
+          <Square size={15}/> End OgasTV broadcast
         </button>
       </div>
+      {confirmEnd&&<div className={styles.endConfirmation} role="group" aria-label="Confirm end of YouTube broadcast">
+        <strong>End this event on OgasTV?</strong>
+        <p>Current OgasTV viewers will see “This broadcast has ended”. The video on YouTube will keep playing until you stop it there.</p>
+        <div className={styles.actions}>
+          <button type="button" className={styles.secondary} onClick={()=>setConfirmEnd(false)} disabled={busy}>Cancel</button>
+          <button type="button" className={styles.end} onClick={()=>void end()} disabled={busy}>
+            <Square size={15}/> {busy?'Ending…':'Yes, end on OgasTV'}
+          </button>
+        </div>
+      </div>}
     </div>:<form onSubmit={e=>void publish(e)}>
       <div className={styles.field}><label htmlFor="youtube-broadcast-title">Broadcast title</label>
         <input id="youtube-broadcast-title" value={name} onChange={e=>setName(e.target.value)}
@@ -90,7 +101,7 @@ export function YouTubeBroadcaster({eventId,title='',videoId=null,status='schedu
         <input id="youtube-broadcast-url" inputMode="url" autoCapitalize="none" autoCorrect="off"
           placeholder="https://youtube.com/live/..." value={url} onChange={e=>setUrl(e.target.value)}
           readOnly={existing} required aria-describedby="youtube-link-help" spellCheck={false}/>
-        <span id="youtube-link-help" className={styles.hint}>Supports YouTube /live, /watch, youtu.be links and 11-character video IDs.</span>
+        <span id="youtube-link-help" className={styles.hint}>Paste the link to the livestream already running on YouTube.</span>
         {url.trim()&&!parsed&&<span className={styles.validation}>Enter a valid YouTube video link.</span>}
       </div>
       {!existing&&<div className={styles.field}><label htmlFor="youtube-broadcast-description">Description <span className={styles.optional}>(optional)</span></label>
@@ -104,7 +115,10 @@ export function YouTubeBroadcaster({eventId,title='',videoId=null,status='schedu
           referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/>
         <p>Confirm the video is live and can be embedded. OgasTV does not verify YouTube's live status automatically.</p>
       </div>}
-      <button type="submit" className={styles.publish} disabled={busy||!publishable}>
+      {blockedByActiveEvent&&<p role="status" className={styles.publishBlocked}>
+        An existing event is still marked LIVE. Review or end that event above before publishing a new one.
+      </p>}
+      <button type="submit" className={styles.publish} disabled={busy||blockedByActiveEvent||!publishable}>
         <Radio size={17}/>{busy?'Publishing…':'Publish live on OgasTV'}
       </button>
     </form>}
