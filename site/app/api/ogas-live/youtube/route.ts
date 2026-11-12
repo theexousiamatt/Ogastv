@@ -58,7 +58,8 @@ export async function POST(req:NextRequest){
       // The public site has one primary live player. Never silently replace
       // an existing Cloudflare/YouTube event or mark it ended on behalf of staff.
       const currentlyLive=await cms.find({collection:'live-events',overrideAccess:true,draft:false,depth:0,limit:5,
-        where:{and:[{_status:{equals:'published'}},{broadcastStatus:{equals:'live'}}]}});
+        where:{and:[{_status:{equals:'published'}},{broadcastStatus:{equals:'live'}},
+          {actualEnd:{exists:false}}]}});
       const active=currentlyLive.docs.find(e=>Number(e.id)!==existingId);
       if(active)return reply({error:'Another event is marked LIVE. End it in Broadcast Studio before publishing a YouTube stream.'},409);
       const now=new Date().toISOString();
