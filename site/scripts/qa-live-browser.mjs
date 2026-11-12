@@ -36,33 +36,9 @@ try {
       try {
         const response = await page.goto(ORIGIN+route,{waitUntil:'domcontentloaded',timeout:45000});
         status = response?.status() || 0;
-        // Trigger lazy images as a real reader scrolls the article/archive.
-        await page.evaluate(async () => {
-          const step = Math.max(480, Math.round(innerHeight * .85));
-          for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
-            window.scrollTo(0, y);
-            await new Promise(resolve => setTimeout(resolve, 45));
-          }
-          window.scrollTo(0, 0);
-        });
-        await page.waitForTimeout(800);
-        const state = await page.evaluate(() => ({
-          title:document.title,
-          width:innerWidth,
-          scrollWidth:document.documentElement.scrollWidth,
-          missingImages:[...document.images].filter(img=>{
-            const box=img.getBoundingClientRect();
-            return box.width>0 && box.height>0 && img.complete && img.naturalWidth===0;
-          }).slice(0,10).map(img=>img.src),
-          headings:[...document.querySelectorAll('h1')].map(el=>el.textContent?.trim()).slice(0,3),
-        }));
         const name=(route==='/'?'home':route.replaceAll('/','-').replace(/^-/,''))+'-'+mode.name;
-        await page.screenshot({path:path.join('qa-live-screenshots',name+'.png'),fullPage:true,timeout:30000});
-        results.push({route,device:mode.name,status,...state,pageErrors});
-        if(status!==200)issues.push(name+': HTTP '+status);
-        if(state.scrollWidth>state.width+3)issues.push(name+': horizontal overflow '+state.scrollWidth+'/'+state.width);
-        if(state.missingImages.length)issues.push(name+': '+state.missingImages.length+' broken visible image(s)');
-        if(pageErrors.length)issues.push(name+': '+pageErrors.join('; ').slice(0,350));
+        // Save appears in the article heading. Test it before the deliberate
+        // full-page scroll, which may trigger unrelated media/layout transitions.
         if(route.startsWith('/stories/')){
           const save=page.locator('.ogas-reading__save-button');
           if(await save.count()){
@@ -89,6 +65,34 @@ try {
             }
           }else issues.push(name+': save-story action missing');
         }
+
+        // Trigger lazy images as a real reader scrolls the article/archive.
+        await page.evaluate(async () => {
+          const step = Math.max(480, Math.round(innerHeight * .85));
+          for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
+            window.scrollTo(0, y);
+            await new Promise(resolve => setTimeout(resolve, 45));
+          }
+          window.scrollTo(0, 0);
+        });
+        await page.waitForTimeout(800);
+        const state = await page.evaluate(() => ({
+          title:document.title,
+          width:innerWidth,
+          scrollWidth:document.documentElement.scrollWidth,
+          missingImages:[...document.images].filter(img=>{
+            const box=img.getBoundingClientRect();
+            return box.width>0 && box.height>0 && img.complete && img.naturalWidth===0;
+          }).slice(0,10).map(img=>img.src),
+          headings:[...document.querySelectorAll('h1')].map(el=>el.textContent?.trim()).slice(0,3),
+        }));
+
+        await page.screenshot({path:path.join('qa-live-screenshots',name+'.png'),fullPage:true,timeout:30000});
+        results.push({route,device:mode.name,status,...state,pageErrors});
+        if(status!==200)issues.push(name+': HTTP '+status);
+        if(state.scrollWidth>state.width+3)issues.push(name+': horizontal overflow '+state.scrollWidth+'/'+state.width);
+        if(state.missingImages.length)issues.push(name+': '+state.missingImages.length+' broken visible image(s)');
+        if(pageErrors.length)issues.push(name+': '+pageErrors.join('; ').slice(0,350));
         if(mode.isMobile&&route==='/'){
           const menu=page.locator('.ogas-public-mobile-menu');
           if(await menu.count()){
