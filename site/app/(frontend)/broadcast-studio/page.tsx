@@ -30,7 +30,8 @@ export default async function BroadcastStudio() {
   // most recently edited history records shown further down this page.
   const activeEvents=await cms.find({collection:'live-events',overrideAccess:true,draft:false,
     depth:0,limit:1,sort:'-updatedAt',where:{and:[
-      {_status:{equals:'published'}},{broadcastStatus:{equals:'live'}}
+      {_status:{equals:'published'}},{broadcastStatus:{equals:'live'}},
+      {actualEnd:{exists:false}}
     ]}});
   const activeEvent=activeEvents.docs[0];
   // A previous broadcaster can leave a CMS event marked LIVE after disconnecting.
