@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { getPayload } from 'payload';
 import config from '../../../payload.config';
 import { editorial, getStaff } from '../../../cms/access';
-import { PhoneBroadcaster } from '../../../components/PhoneBroadcaster';
+import { BroadcastSourceSelector } from '../../../components/BroadcastSourceSelector';
 import { studioBroadcastStatus } from '../../../lib/broadcast-status';
 import { formatBroadcastDuration, formatLagosTimestamp } from '../../../lib/broadcast-timeline';
 import styles from '../../../components/PhoneBroadcaster.module.css';
@@ -28,7 +28,7 @@ export default async function BroadcastStudio() {
   const now=Date.now();
 
   return <main className={styles.studioPage}>
-    <PhoneBroadcaster />
+    <BroadcastSourceSelector />
     <details className={styles.history}>
       <summary className={styles.historySummary}>Previous and scheduled broadcasts</summary>
       <p className={styles.historyHelper}>Start a new broadcast above, or choose an existing event below. Older events remain available for reference.</p>
