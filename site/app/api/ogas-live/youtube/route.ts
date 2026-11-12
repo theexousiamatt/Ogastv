@@ -13,9 +13,13 @@ function validOrigin(req:NextRequest){
   if(!origin)return false;
   try{
     const url=new URL(origin);
-    return process.env.NODE_ENV==='production'
-      ? url.protocol==='https:'&&url.port===''&&['ogastvafrica.ng','www.ogastvafrica.ng'].includes(url.hostname)
-      : url.origin===req.nextUrl.origin;
+    const isPublicOrigin=url.protocol==='https:'&&url.port==='' &&
+      ['ogastvafrica.ng','www.ogastvafrica.ng'].includes(url.hostname) &&
+      url.origin===origin;
+    if(isPublicOrigin)return true;
+    // Standalone CI builds can run with a non-production NODE_ENV while
+    // still serving the production build. Reject arbitrary cross-origin posts.
+    return process.env.NODE_ENV!=='production' && url.origin===req.nextUrl.origin;
   }catch{return false}
 }
 /** YouTube is an existing third-party livestream embedded here.
