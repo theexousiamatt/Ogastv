@@ -82,3 +82,68 @@
 @media(max-width:640px){.activeNotice{gap:6px 13px;padding:11px}}
 
 .sourceCard:disabled{opacity:.5;cursor:not-allowed}
+
+/* Broadcast Studio 2.0 — unified editorial layout and compact source navigation. */
+.sourceSection{max-width:1040px;padding:26px 0 0}
+.headerMeta{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 10px}
+.headerActions{display:flex;align-items:center;gap:18px}
+.headerActions a{display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:650;text-decoration:none;color:#536057;white-space:nowrap}
+.headerActions a:last-child{color:#9c2632}
+.headerActions a:hover{text-decoration:underline;text-underline-offset:4px}
+.headerActions a:focus-visible,.activeNoticeAction:focus-visible{outline:3px solid #b7d4bd;outline-offset:3px;border-radius:5px}
+.sourceHeading{font-size:clamp(30px,3.8vw,43px);letter-spacing:-.056em;margin:8px 0 7px}
+.sourceIntro{font-size:14px;color:#68756b;margin:0 0 21px;line-height:1.5}
+.sourceLabelRow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 0 10px}
+.sourceLabel{color:#344137;font-size:12px;font-weight:760;letter-spacing:.015em}
+.sourceLabel>span{color:#b1bdb3;font-weight:500;padding:0 3px}
+.sourceLabelHint{color:#819086;font-size:11px}
+.sourceGrid{gap:10px;margin:0}
+.sourceCard{min-height:78px;padding:15px 17px;border-radius:13px;gap:12px}
+.sourceCardActive{background:#f1f6f0;border-color:#89a590;box-shadow:inset 0 0 0 1px #a9c2ad}
+.sourceIcon{display:grid;place-items:center;flex:none;width:38px;height:38px;border:1px solid #e4e9e3;border-radius:11px;background:#f9faf8;color:#516056}
+.sourceCardActive .sourceIcon{background:#e6efe5;border-color:#d0dfd1;color:#315a3b}
+.sourceCopy strong{font-size:14px;letter-spacing:-.01em}
+.sourceCopy span{font-size:12px;color:#728077}
+.sourceCard:focus-visible{outline:3px solid #9fbea7;outline-offset:3px}
+.activeNotice{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 15px;margin:0 0 20px;background:#f8f9f6;border:1px solid #e0e7dc;border-radius:12px;color:#2e3b31}
+.activeNoticeContent{display:grid;gap:3px;min-width:0}
+.activeNoticeContent strong{font-size:13px;font-weight:750;overflow-wrap:anywhere;color:#253128}
+.activeNoticeLabel{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.035em;text-transform:uppercase;font-weight:790;color:#9c2f39}
+.activeNoticeDot,.activeNoticeWarningDot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ba3941}
+.activeNoticeWarningDot{background:#ba8523}
+.activeNoticeDescription{font-size:11px;color:#66736a;line-height:1.45}
+.activeNoticeAction{flex:none;display:inline-flex;gap:4px;align-items:center;padding:10px 12px;border:1px solid #dce5dc;border-radius:9px;background:#fff;color:#314638;font-size:12px;font-weight:700;text-decoration:none}
+.activeNoticeAction:hover{border-color:#aac3ad;background:#f6faf6}
+.panel{max-width:1040px;margin:18px auto 28px;padding:24px;border-radius:16px}
+.titleRow{margin-bottom:14px}
+.title{font-size:22px}
+.how{padding:11px 14px;border-color:#e7ece6;background:#fafbf9;margin-bottom:18px}
+.how p{font-size:12px}
+@media(max-width:640px){
+ .sourceSection{padding:15px 0 0}
+ .headerMeta{align-items:center;gap:7px;margin-bottom:9px}
+ .eyebrow{font-size:10px}
+ .headerActions{gap:11px}
+ .headerActions a{font-size:11px}
+ .headerActions a:first-child{display:none}
+ .sourceHeading{font-size:32px;margin:7px 0 6px}
+ .sourceIntro{font-size:12px;margin-bottom:17px}
+ .sourceLabelRow{margin-bottom:9px}
+ .sourceLabelHint{font-size:10px}
+ .sourceGrid{gap:8px}
+ .sourceCard{min-height:72px;gap:8px;padding:11px 10px;border-radius:12px;align-items:center}
+ .sourceIcon{width:31px;height:34px;border-radius:9px}
+ .sourceCopy strong{font-size:12px}
+ .sourceCopy span{font-size:10px;line-height:1.25}
+ .sourceCheck{width:15px;height:15px}
+ .activeNotice{align-items:flex-start;padding:12px 13px;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+ .activeNoticeContent{flex:1 1 180px}
+ .activeNoticeAction{font-size:11px;padding:8px 10px}
+ .panel{margin-top:15px;padding:16px}
+}
+@media(max-width:380px){
+ .sourceCard{padding:10px 8px}
+ .sourceIcon{width:29px;height:29px}
+ .sourceCheck{display:none}
+ .sourceCopy span{font-size:10px}
+}
