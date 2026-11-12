@@ -7,6 +7,8 @@ import styles from './YouTubeBroadcaster.module.css';
 
 export function BroadcastSourceSelector({activeEvent}:{activeEvent?:{id:number;title:string}|null}){
   const [source,setSource]=useState<'phone'|'youtube'>('phone');
+  const [phoneStatus,setPhoneStatus]=useState<'idle'|'preview'|'connecting'|'live'|'ended'>('idle');
+  const phoneActive=phoneStatus==='live'||phoneStatus==='connecting';
   return <>
     <section className={styles.sourceSection} aria-labelledby="broadcast-source-title">
       <div className={styles.eyebrow}>OgasTV / Broadcast Studio</div>
@@ -26,13 +28,15 @@ export function BroadcastSourceSelector({activeEvent}:{activeEvent?:{id:number;t
           {source==='phone'&&<CheckCircle2 className={styles.sourceCheck} size={19} aria-hidden="true"/>}
         </button>
         <button type="button" className={[styles.sourceCard,source==='youtube'?styles.sourceCardActive:''].join(' ')}
-          onClick={()=>setSource('youtube')} aria-pressed={source==='youtube'}>
+          onClick={()=>setSource('youtube')} aria-pressed={source==='youtube'}
+          disabled={source==='phone'&&phoneActive}
+          title={source==='phone'&&phoneActive?'End your phone broadcast before switching source':undefined}>
           <Youtube size={24} aria-hidden="true"/>
           <span className={styles.sourceCopy}><strong>YouTube Live</strong><span>Embed a stream already on YouTube</span></span>
           {source==='youtube'&&<CheckCircle2 className={styles.sourceCheck} size={19} aria-hidden="true"/>}
         </button>
       </div>
     </section>
-    {source==='phone'?<PhoneBroadcaster/>:<YouTubeBroadcaster/>}
+    {source==='phone'?<PhoneBroadcaster onStatusChange={setPhoneStatus}/>:<YouTubeBroadcaster/>}
   </>;
 }
