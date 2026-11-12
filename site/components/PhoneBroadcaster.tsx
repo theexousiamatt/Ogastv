@@ -75,7 +75,9 @@ async function configureVideoEncoder(sender: RTCRtpSender, maxBitrate: number) {
     }
   }
 }
-export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:string}){
+export function PhoneBroadcaster({eventId,title='',onStatusChange}:{
+  eventId?:number;title?:string;onStatusChange?:(status:'idle'|'preview'|'connecting'|'live'|'ended')=>void;
+}){
   const video=useRef<HTMLVideoElement>(null);
   const media=useRef<MediaStream|null>(null);
   const connection=useRef<RTCPeerConnection|null>(null);
@@ -84,6 +86,7 @@ export function PhoneBroadcaster({eventId,title=''}:{eventId?:number;title?:stri
   const [quickTitle,setQuickTitle]=useState(title);
   const [streamProfile,setStreamProfile]=useState<StreamProfile>('hd');
   const [status,setStatus]=useState<'idle'|'preview'|'connecting'|'live'|'ended'>('idle');
+  useEffect(()=>{onStatusChange?.(status)},[onStatusChange,status]);
   const [error,setError]=useState('');
   const [muted,setMuted]=useState(false);
   const [front,setFront]=useState(false);
