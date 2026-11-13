@@ -1,7 +1,7 @@
 'use client';
 
 import { useDeferredValue, useMemo, useState } from 'react';
-import { Search, SlidersHorizontal, CalendarDays, ArrowUpRight, Clapperboard, X } from 'lucide-react';
+import { Search, SlidersHorizontal, CalendarDays, Clapperboard, X } from 'lucide-react';
 import { YouTubeArchivePlayer } from './YouTubeArchivePlayer';
 import styles from './StudioLibrary.module.css';
 
@@ -76,8 +76,6 @@ export function StudioLibrary({videos}:{videos:LibraryVideo[]}){
             <span className={styles.date}><CalendarDays size={13}/>{readableDate(video.releasedAt)}</span></div>
           <h3>{video.title}</h3>
           {video.description&&<p className={styles.description}>{video.description}</p>}
-          <a href={'https://www.youtube.com/watch?v='+video.youtubeVideoId} target="_blank" rel="noopener noreferrer" className={styles.source}>
-            View original on YouTube <ArrowUpRight size={14}/></a>
         </div>
       </article>)}
     </div>:<div className={styles.empty}>
