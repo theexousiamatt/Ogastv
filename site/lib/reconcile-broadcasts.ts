@@ -1,11 +1,11 @@
-import type { BasePayload } from 'payload';
+import type { Payload } from 'payload';
 import { cloudflareBroadcastHealth, youtubeBroadcastHealth } from './broadcast-health';
 
 export type SyncResult={ checked:number; live:number; interrupted:number; ended:number; unknown:number };
 
 /** Runs on a trusted schedule. Idempotent for already-ended events. Never
  * interpret a third-party API failure as stream termination. */
-export async function reconcileBroadcasts(cms:BasePayload):Promise<SyncResult>{
+export async function reconcileBroadcasts(cms:Payload):Promise<SyncResult>{
   const summary:SyncResult={checked:0,live:0,interrupted:0,ended:0,unknown:0};
   const events=await cms.find({
     collection:'live-events',overrideAccess:true,draft:false,depth:0,
