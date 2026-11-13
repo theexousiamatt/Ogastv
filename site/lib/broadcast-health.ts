@@ -1,4 +1,6 @@
-import { isYouTubeLiveVideoId } from './youtube-live';
+// Inline the ID check so native Node TS tests can import this module directly.
+const isYouTubeLiveVideoId = (value:unknown):value is string =>
+  typeof value==='string' && /^[A-Za-z0-9_-]{11}$/.test(value);
 
 export type SourceHealth =
   | { status:'live'; startedAt?:string }
