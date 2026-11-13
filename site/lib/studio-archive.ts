@@ -17,7 +17,7 @@ export async function getStudioArchive(limit = 36): Promise<StudioEpisode[]> {
       collection: 'live-events',
       overrideAccess: true,
       draft: false,
-      depth: 0,
+      depth: 1,
       limit: max,
       sort: '-actualEnd',
       where: { and: [
@@ -35,7 +35,9 @@ export async function getStudioArchive(limit = 36): Promise<StudioEpisode[]> {
         title: event.title,
         description: typeof event.description === 'string' ? event.description : '',
         youtubeVideoId: event.youtubeVideoId,
-        thumbnail: null,
+        thumbnail: event.artwork && typeof event.artwork === 'object' && typeof event.artwork.url === 'string'
+          ? {url:event.artwork.url,alt:typeof event.artwork.alt==='string'?event.artwork.alt:event.title}
+          : null,
         releasedAt: event.actualEnd,
         programmeTitle: 'Past live coverage',
       }];
