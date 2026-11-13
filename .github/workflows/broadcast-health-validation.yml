@@ -26,3 +26,4 @@ jobs:
           node-version: '24'
       - run: npm install --ignore-scripts --no-audit --no-fund
       - run: npm run typecheck
+      - run: node --test tests/broadcast-health.test.mjs
