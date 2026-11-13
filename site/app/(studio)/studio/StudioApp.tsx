@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { StudioAdvanced } from './StudioAdvanced';
+import { StudioLiveEvents } from './StudioLiveEvents';
 import { prepareEditorialImage, uploadEditorialImage } from './media-upload';
 import { StudioRichEditor, canEditRichBody } from './StudioRichEditor';
 import {
@@ -13,7 +14,7 @@ import {
   Search, Settings2, ShieldCheck, Sparkles, Trash2, UploadCloud, UsersRound, X,
 } from 'lucide-react';
 
-type Tab = 'home' | 'articles' | 'write' | 'media' | 'live' | 'ads' | 'advanced';
+type Tab = 'home' | 'articles' | 'write' | 'media' | 'live' | 'events' | 'ads' | 'advanced';
 type Media = { id: string | number; url?: string; thumbnailURL?: string; alt?: string; filename?: string; mimeType?: string };
 type Category = { id: string | number; name: string };
 type TaxonomyItem = {id:string|number;name:string;slug?:string;};
@@ -45,10 +46,10 @@ const emptyEditor = (): Editor => ({
   metaTitle:'',metaDescription:'',correctionNotice:'',sourceLinks:[],
 });
 const pageSize = 30;
-const icons = {home: Home, articles: Newspaper, write: Plus, media: ImageIcon, live: Radio, ads: LayoutGrid, advanced: Settings2};
+const icons = {home: Home, articles: Newspaper, write: Plus, media: ImageIcon, live: Radio, events: CalendarDays, ads: LayoutGrid, advanced: Settings2};
 const topNav: {key: Tab; label: string}[] = [
   {key: 'home',label: 'Home'}, {key: 'articles',label: 'Articles'},
-  {key: 'write',label: 'Write'}, {key: 'live',label: 'Go live'},
+  {key: 'write',label: 'Write'}, {key: 'live',label: 'Go live'}, {key: 'events',label: 'Live events'},
   {key: 'media',label: 'Media'}, {key: 'ads',label: 'Ads'},
   {key: 'advanced',label: 'Advanced'},
 ];
@@ -581,7 +582,7 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
 
     <div className="ogas-workspace">
       <header className="ogas-topbar">
-        <div className="ogas-breadcrumb"><span>Newsroom</span><ChevronRight size={15}/><strong>{tab==='home'?'Home':tab==='articles'?'Your articles':tab==='write'?'Write an article':tab==='media'?'Media library':tab==='live'?'Go live':tab==='advanced'?'Advanced settings':'Advertisements'}</strong></div>
+        <div className="ogas-breadcrumb"><span>Newsroom</span><ChevronRight size={15}/><strong>{tab==='home'?'Home':tab==='articles'?'Your articles':tab==='write'?'Write an article':tab==='media'?'Media library':tab==='live'?'Go live':tab==='events'?'Live events':tab==='advanced'?'Advanced settings':'Advertisements'}</strong></div>
         <div className="ogas-top-actions"><span className="ogas-systems"><span/> Signed in securely</span><a className="ogas-top-website" href="/" target="_blank" rel="noopener noreferrer">View website <ArrowUpRight size={15}/></a><span className="ogas-avatar ogas-avatar--top">{firstName.slice(0,2).toUpperCase()}</span></div>
       </header>
 
@@ -749,6 +750,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
           {media.length?<div className="ogas-photo-grid">{media.map(m=><article key={String(m.id)} className="ogas-photo-card"><div className="ogas-photo-visual">{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||''} missingText="Photo unavailable"/>:<ImageIcon size={30}/>}</div><div className="ogas-photo-copy"><strong title={m.alt||m.filename||'Untitled photo'}>{m.alt||m.filename||'Untitled photo'}</strong><small title={m.filename||''}>{m.filename||'Uploaded image'}</small>{canDeleteMedia&&<button type="button" className="ogas-media-delete" disabled={busy} onClick={()=>void deleteMediaItem(m)} aria-label={'Delete '+(m.alt||m.filename||'image')}><Trash2 size={15}/> Delete image</button>}</div></article>)}</div>:<div className="ogas-empty"><ImageIcon size={28}/><h3>No photos yet</h3><p>Upload a photo to start your media library.</p></div>}
         </>}
 
+        {tab==='events'&&<StudioLiveEvents role={role}/>}
+
         {tab==='live'&&<>
           <section className="ogas-heading"><span className="ogas-eyebrow"><span className="ogas-eyebrow-dot"/> BROADCAST STUDIO</span><h1>Ready to go live?</h1><p>Start broadcasting using the studio you already know.</p></section>
           <div className="ogas-broadcast-grid"><div className="ogas-live-stage"><div className="ogas-live-icon"><Radio size={58} strokeWidth={1.4}/></div><span className="ogas-live-label">OGASTV NIGERIA · LIVE STUDIO</span><div className="ogas-live-rings" aria-hidden="true"/></div><div className="ogas-live-control"><span className="ogas-eyebrow">BROADCAST SETUP</span><h2>You're almost there.</h2><p>The camera, microphone and Go Live controls are waiting in the broadcast studio.</p><div className="ogas-live-check"><CheckCircle2 size={19}/><span>Your existing broadcast workflow is unchanged.</span></div><a className="ogas-button ogas-button--red" href="/broadcast-studio">Open broadcast studio <ArrowUpRight size={17}/></a></div></div>
@@ -763,8 +766,8 @@ export function StudioApp({staffId,name,role}: {staffId:string;name:string;role:
       </main>
     </div>
 
-    <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?resumeWriting():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
-    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button>{role==='administrator'&&<a href="/studio/manage?tab=team"><UsersRound size={18}/> Team &amp; access</a>}<a href="/studio/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
+    <nav className="ogas-mobile-nav" aria-label="Mobile newsroom navigation">{topNav.slice(0,4).map(x=>{const Icon=icons[x.key];return <button key={x.key} className={tab===x.key?'active':''} onClick={()=>x.key==='write'?resumeWriting():navigate(x.key)}><Icon size={19} strokeWidth={2.1}/><span>{x.label}</span></button>;})}<button onClick={()=>setMore(s=>!s)} className={['media','ads','advanced','events'].includes(tab)?'active':''}><Menu size={19}/><span>More</span></button></nav>
+    {more&&<div className="ogas-mobile-more"><button onClick={()=>navigate('events')}><CalendarDays size={18}/> Live events</button><button onClick={()=>navigate('media')}><ImageIcon size={18}/> Media library</button>{canAds&&<button onClick={()=>navigate('ads')}><LayoutGrid size={18}/> Advertisements</button>}<button onClick={()=>navigate('advanced')}><Settings2 size={18}/> Advanced settings</button>{role==='administrator'&&<a href="/studio/manage?tab=team"><UsersRound size={18}/> Team &amp; access</a>}<a href="/studio/account">Account & password</a><a href="/"><ExternalLink size={18}/> View website</a></div>}
 
     {picker&&<div className="ogas-modal-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPicker(false);}}><div className="ogas-modal" role="dialog" aria-modal="true" aria-label="Choose an article photo"><header><div><h2>Choose a photo</h2><p>Select an existing image or upload a new one.</p></div><button onClick={()=>setPicker(false)} aria-label="Close"><X size={21}/></button></header><div className="ogas-picker-grid">{media.map(m=><button key={String(m.id)} onClick={()=>changeFeaturedImage(String(m.id))}>{mediaUrl(m)?<ArticleImage url={mediaUrl(m)} alt={m.alt||m.filename||'Photo'} missingText="Photo unavailable"/>:<ImageIcon size={28}/>}<span>{m.alt||m.filename||'Photo'}</span></button>)}</div><div className="ogas-picker-upload"><label className="ogas-input-label">Upload a new photo</label><input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>setUploadFile(e.target.files?.[0]||null)}/>{uploadPreviewUrl&&<div className="ogas-picker-selected"><img src={uploadPreviewUrl} alt="Selected image preview, not yet uploaded"/><span>{uploadFile?.name}<small>Ready to upload</small></span></div>}<input placeholder="Image description (optional)" value={fileDescription} onChange={e=>setFileDescription(e.target.value)}/><button className="ogas-button ogas-button--red" disabled={!uploadFile||busy} onClick={()=>void upload()}>{busy?(uploadStage==='optimizing'?'Optimizing…':uploadStage==='processing'?'Processing…':uploadStage==='uploading'?'Uploading '+uploadProgress+'%':'Please wait…'):'Upload and use'} <ArrowRight size={16}/></button>{busy&&uploadStage!=='idle'&&<div role="status" aria-live="polite" style={{width:'100%',marginTop:10}}>
   <div style={{height:5,background:'#e8e8e8',borderRadius:999,overflow:'hidden'}}>
