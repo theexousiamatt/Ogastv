@@ -55,7 +55,7 @@ export function YouTubeLiveStage({eventId,videoId,title,description}:{
       <div className="ogas-live-page__youtube">
         {playing?<>
           <iframe ref={iframe} key={videoId} title={'OgasTV Live: '+title}
-            src={'https://www.youtube-nocookie.com/embed/'+videoId+'?autoplay=1&mute=1&playsinline=1&enablejsapi=1&rel=0'}
+            src={'https://www.youtube-nocookie.com/embed/'+videoId+'?autoplay=1&mute=1&playsinline=1&enablejsapi=1&rel=0&origin=https%3A%2F%2Fogastvafrica.ng'}
             allow="autoplay; encrypted-media; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen/>
