@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import config from '../../../../payload.config';
 import { editorial, getStaff } from '../../../../cms/access';
 import { parseYouTubeLiveId, isYouTubeLiveVideoId } from '../../../../lib/youtube-live';
+import { youtubeBroadcastHealth } from '../../../../lib/broadcast-health';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -54,6 +55,19 @@ export async function POST(req:NextRequest){
         sourceId=typeof event.youtubeVideoId==='string'?event.youtubeVideoId:null;
         if(!isYouTubeLiveVideoId(sourceId))return reply({error:'Attach a valid YouTube video ID to this event first.'},400);
         title=String(event.title||'');
+      }
+      // Verify the source BEFORE publishing. A URL alone does not mean a live stream.
+      const verified=await youtubeBroadcastHealth(sourceId!);
+      if(verified.status==='unknown'){
+        const configuration=verified.reason==='youtube_api_key_missing';
+        return reply({error:configuration
+          ?'YouTube verification is not configured. Ask an administrator to add YOUTUBE_API_KEY.'
+          :'Could not verify this YouTube livestream ('+verified.reason+'). Try again.'},configuration?503:502);
+      }
+      if(verified.status!=='live'){
+        return reply({error:verified.status==='ended'
+          ?'This YouTube stream has already ended. It belongs in the archive, not the live player.'
+          :'This YouTube stream is not live yet. Start it in YouTube Studio before publishing.'},409);
       }
       // The public site has one primary live player. Never silently replace
       // an existing Cloudflare/YouTube event or mark it ended on behalf of staff.
