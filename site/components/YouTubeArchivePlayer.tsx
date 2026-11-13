@@ -26,9 +26,7 @@ export function YouTubeArchivePlayer({videoId,title,thumbnail}:{videoId:string;t
         <img src={thumbnail} alt="" loading="lazy" decoding="async"
           onError={()=>setImageFailed(true)} className={styles.image}/></>}
       <span className={styles.scrim} aria-hidden="true"/>
-      <span className={styles.corner} aria-hidden="true">OGASTV <strong>STUDIO</strong></span>
       <span className={styles.play} aria-hidden="true"><Play fill="currentColor" size={24}/></span>
-      <span className={styles.watch} aria-hidden="true">WATCH VIDEO <span>↗</span></span>
     </button>}
   </div>;
 }
