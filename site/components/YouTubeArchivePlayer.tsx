@@ -1,38 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { Play } from 'lucide-react';
+import { Play, RotateCcw } from 'lucide-react';
 import { isYouTubeLiveVideoId } from '../lib/youtube-live';
+import styles from './YouTubeArchivePlayer.module.css';
 
-/** Click-to-load embeds prevent dozens of YouTube players from downloading
- * until a visitor explicitly chooses a recording to watch. */
-export function YouTubeArchivePlayer({videoId,title,thumbnail}:{
-  videoId:string; title:string; thumbnail:string;
-}){
+/** Branded preview until playback is requested. The official YouTube iframe
+ * takes over during playback; its native branding and controls are not hidden. */
+export function YouTubeArchivePlayer({videoId,title,thumbnail}:{videoId:string;title:string;thumbnail:string}){
   const [playing,setPlaying]=useState(false);
+  const [imageFailed,setImageFailed]=useState(false);
   if(!isYouTubeLiveVideoId(videoId))return null;
-  return <div className="ogas-watch__image" style={{position:'relative',aspectRatio:'16 / 9',overflow:'hidden'}}>
-    {playing?
-      <iframe
-        title={'Watch '+title}
-        loading="lazy"
+  return <div className={styles.frame}>
+    {playing?<>
+      <iframe title={'Watch '+title} loading="lazy"
         src={'https://www.youtube-nocookie.com/embed/'+videoId+'?autoplay=1&rel=0'}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerPolicy="strict-origin-when-cross-origin"
-        allowFullScreen
-        style={{position:'absolute',inset:0,width:'100%',height:'100%',border:0}}
-      />:
-      <button type="button" onClick={()=>setPlaying(true)}
-        aria-label={'Play '+title+' on OgasTV'}
-        style={{display:'block',position:'relative',width:'100%',height:'100%',border:0,cursor:'pointer',padding:0,background:'#131916',color:'white'}}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img loading="lazy" decoding="async" alt="" src={thumbnail}
-          style={{display:'block',width:'100%',height:'100%',objectFit:'cover'}}/>
-        <span aria-hidden="true" style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,.12)'}}>
-          <span style={{display:'grid',placeItems:'center',background:'#ba2026',borderRadius:'50%',width:58,height:58,color:'#fff',boxShadow:'0 4px 24px rgba(0,0,0,.3)'}}>
-            <Play size={22} fill="currentColor"/>
-          </span>
-        </span>
-      </button>}
+        referrerPolicy="strict-origin-when-cross-origin" allowFullScreen
+        className={styles.iframe}/>
+      <button type="button" className={styles.reset} onClick={()=>setPlaying(false)}
+        aria-label={'Return to preview of '+title}><RotateCcw size={14}/> Preview</button>
+    </>:<button type="button" className={styles.poster} onClick={()=>setPlaying(true)}
+        aria-label={'Play '+title+' on OgasTV'}>
+      {!imageFailed&&<>{/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={thumbnail} alt="" loading="lazy" decoding="async"
+          onError={()=>setImageFailed(true)} className={styles.image}/></>}
+      <span className={styles.scrim} aria-hidden="true"/>
+      <span className={styles.corner} aria-hidden="true">OGASTV <strong>STUDIO</strong></span>
+      <span className={styles.play} aria-hidden="true"><Play fill="currentColor" size={24}/></span>
+      <span className={styles.watch} aria-hidden="true">WATCH VIDEO <span>↗</span></span>
+    </button>}
   </div>;
 }
