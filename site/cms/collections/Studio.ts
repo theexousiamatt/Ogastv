@@ -45,6 +45,15 @@ export const LiveEvents: CollectionConfig = {
   admin: { useAsTitle: 'title', group: 'Video & Live' },
   versions: { drafts: true, maxPerDoc: 20 },
   hooks: {
+    beforeDelete: [({req,id}) => {
+      // Prevent bypassing the newsroom UI to delete a transmitting broadcast.
+      // Payload collection access still limits deletion to administrators/EIC.
+      return req.payload.findByID({collection:'live-events',id,overrideAccess:true,depth:0,draft:false})
+        .then(event=>{
+          if(event.broadcastStatus==='live'||event.broadcastStatus==='interrupted')
+            throw new Error('End this live broadcast before deleting its event.');
+        });
+    }],
     beforeChange: [({data,originalDoc}) => {
       // Applies equally to the End Broadcast button and manual newsroom status edits.
       // Do not fill missing timestamps on unchanged historical ENDED records.
