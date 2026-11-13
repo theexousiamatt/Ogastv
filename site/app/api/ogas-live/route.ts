@@ -3,6 +3,7 @@ import config from '../../../payload.config';
 import { editorial, getStaff } from '../../../cms/access';
 import { NextRequest, NextResponse } from 'next/server';
 import { createHmac, timingSafeEqual, randomUUID } from 'node:crypto';
+import { cloudflareBroadcastHealth } from '../../../lib/broadcast-health';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -112,6 +113,15 @@ export async function POST(req:NextRequest) {
     if(body.action==='go-live') {
       if(!owns) return err('Broadcast ownership required',403);
       if(await anotherEventIsLive())return err('Another event went live while you were connecting. End it before continuing.',409);
+      // The browser has already negotiated WebRTC; verify that Cloudflare
+      // actually exposes both publisher tracks before making a LIVE claim.
+      let health=await cloudflareBroadcastHealth(body.sessionId);
+      for(let attempt=0;attempt<2&&health.status==='offline';attempt++){
+        await new Promise(resolve=>setTimeout(resolve,650));
+        health=await cloudflareBroadcastHealth(body.sessionId);
+      }
+      if(health.status!=='live')
+        return err('Camera/microphone publication is not confirmed by Cloudflare. Check your connection and try again.',409);
       await cms.update({collection:'live-events',id,overrideAccess:true,data:{
         _status:'published',sourceType:'cloudflare',broadcastStatus:'live',actualStart:new Date().toISOString()
       }});

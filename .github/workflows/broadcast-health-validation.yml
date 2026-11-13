@@ -1,0 +1,29 @@
+name: Broadcast health validation
+
+on:
+  push:
+    branches:
+      - feat/ogastv-broadcast-health-sync-2026-11-13
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/broadcast-health-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm run typecheck
+      - run: node --test tests/broadcast-health.test.mjs
