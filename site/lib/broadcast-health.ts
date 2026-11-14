@@ -5,7 +5,7 @@ const isYouTubeLiveVideoId = (value:unknown):value is string =>
 export type SourceHealth =
   | { status:'live'; startedAt?:string }
   | { status:'ended'; endedAt:string; startedAt?:string }
-  | { status:'offline' }
+  | { status:'offline'; reason?:string; startedAt?:string }
   | { status:'unknown'; reason:string };
 
 const validTime=(value:unknown):string|undefined=>
@@ -40,9 +40,13 @@ export async function youtubeBroadcastHealth(videoId:string):Promise<SourceHealt
     if(endedAt)return {status:'ended',endedAt,startedAt};
     if(video.snippet?.liveBroadcastContent==='live' && startedAt)
       return {status:'live',startedAt};
-    // A scheduled, private, processing or inaccessible broadcast is NOT proof
-    // that a previously active stream has ended.
-    if(video.snippet?.liveBroadcastContent==='upcoming')return {status:'offline'};
+    // YouTube reports "none" once the broadcast is no longer upcoming/live.
+    // An actualStartTime proves this was a broadcast. Sometimes actualEndTime
+    // appears later, so only conclude it stopped (not yet an exact end time).
+    if(video.snippet?.liveBroadcastContent==='none' && startedAt)
+      return {status:'offline',reason:'youtube_no_longer_live',startedAt};
+    if(video.snippet?.liveBroadcastContent==='upcoming')
+      return {status:'unknown',reason:'youtube_upcoming'};
     return {status:'unknown',reason:'youtube_not_confirmed_live_or_ended'};
   }catch{
     return {status:'unknown',reason:'youtube_unreachable'};
