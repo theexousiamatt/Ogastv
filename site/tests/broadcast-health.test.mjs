@@ -66,3 +66,21 @@ test('Cloudflare: API outage is unknown, not offline',async()=>{
   try{assert.equal((await cloudflareBroadcastHealth('12345678-aaaa-bbbb-cccc-ddddeeeeffff')).status,'unknown')}
   finally{restore();delete process.env.CLOUDFLARE_REALTIME_APP_ID;delete process.env.CLOUDFLARE_REALTIME_API_TOKEN}
 });
+
+test('YouTube: finished replay lacking actualEndTime is offline, not LIVE',async()=>{
+  process.env.YOUTUBE_API_KEY='test-key';
+  const restore=mockFetch({items:[{snippet:{liveBroadcastContent:'none'},liveStreamingDetails:{
+    actualStartTime:'2026-11-14T08:00:00Z'}}]});
+  try{
+    const result=await youtubeBroadcastHealth(youTubeId);
+    assert.equal(result.status,'offline');
+    assert.equal(result.reason,'youtube_no_longer_live');
+  }finally{restore();delete process.env.YOUTUBE_API_KEY}
+});
+test('YouTube: upcoming never auto-ends an event',async()=>{
+  process.env.YOUTUBE_API_KEY='test-key';
+  const restore=mockFetch({items:[{snippet:{liveBroadcastContent:'upcoming'},liveStreamingDetails:{
+    scheduledStartTime:'2026-11-15T08:00:00Z'}}]});
+  try{assert.equal((await youtubeBroadcastHealth(youTubeId)).status,'unknown')}
+  finally{restore();delete process.env.YOUTUBE_API_KEY}
+});
