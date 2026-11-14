@@ -1,6 +1,6 @@
 'use client';
 
-import { useDeferredValue, useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, Clapperboard, Grid2X2, Layers3, List, Radio, Search, X } from 'lucide-react';
 import { YouTubeArchivePlayer } from './YouTubeArchivePlayer';
 import styles from './StudioLibrary.module.css';
@@ -26,6 +26,15 @@ export function StudioLibrary({videos}:{videos:LibraryVideo[]}){
   const [view,setView]=useState<View>('grid');
   const [visibleCount,setVisibleCount]=useState(12);
   const input=useRef<HTMLInputElement>(null);
+  useEffect(()=>{
+    const onKey=(event:KeyboardEvent)=>{
+      if((event.metaKey||event.ctrlKey)&&event.key.toLowerCase()==='k'){
+        event.preventDefault();input.current?.focus();
+      }
+    };
+    window.addEventListener('keydown',onKey);
+    return ()=>window.removeEventListener('keydown',onKey);
+  },[]);
   const categories=useMemo(()=>{
     const counts=new Map<string,{name:string;count:number}>();
     videos.forEach(video=>{
