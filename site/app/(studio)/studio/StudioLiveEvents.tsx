@@ -38,6 +38,14 @@ export function StudioLiveEvents({role}:{role:string}){
   const load=useCallback(async(p=1)=>{
     setLoading(true);
     try{
+      // Reconcile YouTube's verified actual end time before showing LIVE badges.
+      // An API outage must not block the newsroom list or falsely end an event.
+      try{
+        const checked=await api('/api/studio/live-events/reconcile',{
+          method:'POST',headers:{'Content-Type':'application/json'}
+        });
+        if(checked.ended>0)setNotice(checked.ended+' completed YouTube broadcast'+(checked.ended===1?' was':'s were')+' moved to Completed.');
+      }catch(e){console.warn('[OgasTV] YouTube live verification unavailable',e);}
       const result=await api('/api/live-events?draft=false&depth=1&sort=-updatedAt&limit=20&page='+p);
       setEvents(Array.isArray(result.docs)?result.docs:[]);
       setHasNext(Boolean(result.hasNextPage));
@@ -46,6 +54,11 @@ export function StudioLiveEvents({role}:{role:string}){
     finally{setLoading(false)}
   },[]);
   useEffect(()=>{void load()},[load]);
+  // Keep an open dashboard current without a manual refresh.
+  useEffect(()=>{
+    const timer=setInterval(()=>{if(document.visibilityState==='visible')void load(page);},60_000);
+    return ()=>clearInterval(timer);
+  },[load,page]);
   useEffect(()=>{if(!selected)return;
     api('/api/media?limit=100&sort=-createdAt&depth=0').then(result=>
       setMedia(Array.isArray(result.docs)?result.docs:[])).catch(()=>setMedia([]));
@@ -76,6 +89,18 @@ export function StudioLiveEvents({role}:{role:string}){
       setSelected(null);setNotice('Event details saved. Published artwork and titles may appear in the public archive.');
       await load(page);
     }catch(e){setError(e instanceof Error?e.message:'Could not save event.')}
+    finally{setBusy(false)}
+  }
+  async function endOgasTVEvent(event:Event){
+    if(busy||event.sourceType!=='youtube'||event.broadcastStatus!=='live')return;
+    if(!window.confirm('End “'+event.title+'” on OgasTV? This removes the LIVE indicator and moves the recording to the archive. This does not end the broadcast on YouTube.'))return;
+    setBusy(true);setError('');setNotice('');
+    try{
+      await api('/api/ogas-live/youtube',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'end',eventId:Number(event.id)})});
+      setNotice('Broadcast ended on OgasTV and moved to Completed.');
+      await load(page);
+    }catch(e){setError(e instanceof Error?e.message:'Unable to end broadcast.')}
     finally{setBusy(false)}
   }
   async function remove(event:Event){
@@ -164,6 +189,9 @@ export function StudioLiveEvents({role}:{role:string}){
           <div className={styles.details}><span className={styles.status}>{event.broadcastStatus||'Scheduled'} · {event.sourceType==='youtube'?'YouTube':'Phone broadcast'}</span>
             <h2>{event.title}</h2><span className={styles.date}><CalendarDays size={14}/>{eventDate(event.actualEnd||event.actualStart||event.scheduledStart)}</span></div>
           <div className={styles.rowActions}><button onClick={()=>edit(event)}>View / edit</button>
+            {editable&&event.sourceType==='youtube'&&event.broadcastStatus==='live'&&
+              <button type="button" disabled={busy} title="Remove LIVE from OgasTV (does not stop YouTube)"
+                onClick={()=>void endOgasTVEvent(event)}>End on OgasTV</button>}
             {completed(event)&&event.sourceType==='youtube'&&event.youtubeVideoId&&
               <a href={'https://www.youtube.com/watch?v='+event.youtubeVideoId} target="_blank" rel="noopener noreferrer" aria-label="Open recording on YouTube"><ExternalLink size={18}/></a>}
             {deletable&&<button title="Delete event" aria-label={'Delete '+event.title} disabled={busy||['live','interrupted'].includes(event.broadcastStatus||'')}
